@@ -1,0 +1,25 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+stages:
+  - test
+  - deploy
+
+pytest:
+  stage: test
+  image: python:3.11
+  before_script:
+    - python -V
+    - python -m pip install --upgrade pip
+    - python -m pip install -U pdm
+    - pdm sync -d -G test
+  script:
+    - pdm run -v pytest tests
+
+railway-deploy:
+  stage: deploy
+  image: ghcr.io/railwayapp/cli:latest
+  variables:
+    SVC_ID: my-service-id
+  script:
+    - railway up --service=$RAILWAY_SERVICE_NAME

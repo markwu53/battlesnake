@@ -1,0 +1,31 @@
+[project]
+name = "battlesnakes"
+version = "0.1.0"
+description = "A starter Battlesnake server API complete with CI/CD deployment"
+authors = [
+    {name = "Zane Clark",email = "zanebclark@gmail.com"},
+    {name = "Zane Clark", email = "zane.clark@pwc.com"},
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "hypercorn>=0.17.3",
+    "fastapi[standard]>=0.115.12"
+
+]
+license = {text = "NONE"}
+
+[tool.pdm]
+distribution = true
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[dependency-groups]
+test = [
+    "pytest>=8.3.5",
+]
+lint = [
+    "black[d]>=25.1.0",
+    "pre-commit>=4.2.0",
+]
