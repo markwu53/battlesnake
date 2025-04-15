@@ -111,6 +111,34 @@ e.g. `zane.clark@encova.com`).
 git config --global user.email "zane.clark@encova.com"
 ```
 
+Configure Git to use the Windows certificate store. This tells Git to use the Secure Channel (schannel) library provided
+by Windows for SSL/TLS connections, which in turn uses the Windows certificate store.
+
+```bash
+git config --global http.sslBackend schannel
+````
+
+#### Warning: Remote Host Identification Has Changed!
+
+If the git server is ever migrated to a new server on the backend, you may see this warning:
+
+```
+Warning: Remote Host Identification Has Changed!
+```
+
+This will command remove the identity of the git server and allow you to "trust" the new identity:
+
+```bash
+ssh-keygen -R git.mmi.mig.corp
+```
+
+#### Account Deactivation
+
+Your account will be deactivated if you don't use your GitLab account for a significant period of time. Deactivating
+unused accounts helps Encova reduce licensing costs, as they only pay for active seats. **Your account has not been
+deleted.** It simply needs to be reactivated. Logining into https://git.mmi.mig.corp/ will automatically reactivate your
+account.
+
 ### Create an SSH Key Pair
 
 GitHub's [official documentation](https://docs.gitlab.com/ee/user/ssh.html) on configuring SSH Key Authentication is
@@ -136,11 +164,6 @@ very thorough. The following configuration is the most basic configuration:
      PreferredAuthentications publickey
      IdentityFile ~/.ssh/id_ed25519
    ```
-5. When you created the key above, a public key was also created. Copy that key to your clipboard to add to your GitLab
-   profile (next step).
-   ```
-   Get-Content ~/.ssh/id_ed25519.pub | clip
-   ```
 
 ### Add Public SSH Key to GitLab Profile
 
@@ -157,11 +180,26 @@ very thorough. The following configuration is the most basic configuration:
 5. Select Add new key.
 
    <img src="assets/setting_up_dev_env/04_gitlab_ssh_keys.png" alt="GitLab Keys" height="300">
-6. In the Key box, paste the contents of your public key. Naming the key is useful if you will have multiple devices
-   with a key (e.g. a laptop and a desktop). You can optionally alter the expiration date.
+6. When you created the key above, a public key was also created. Copy that key to your clipboard.
+   ```bash
+   Get-Content ~/.ssh/id_ed25519.pub | clip
+   ```
+
+7. In the Key box, paste the contents of your public key. Naming the key is useful if you will have multiple devices
+   with a key (e.g. a laptop and a desktop). Remove the expiration date.
 
    <img src="assets/setting_up_dev_env/05_gitlab_new_ssh_key.png" alt="GitLab New SSH Key" height="500">
-7. Select "Add Key" to save the key to your profile.
+8. Select "Add Key" to save the key to your profile.
+9. Execute the following to validate your SSH key configuration:
+   ```bash
+   ssh -T git@git.mmi.mig.corp
+   ```
+
+   If that command fails, add a `vvv` flag to increase the verbosity of the output. This can help you understand how to
+   fix the error:
+   ```bash
+   ssh -Tvvv git@git.mmi.mig.corp
+   ```
 
 ## Clone the Repository
 
