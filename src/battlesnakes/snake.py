@@ -91,7 +91,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     # Choose a random move from the safe ones
     #next_move = random.choice(safe_moves)
-    if len(my_body) <= 10:
+    if len(my_body) <= 20:
         if my_head["x"] < my_neck["x"] and my_head["x"] >= board_width // 2:
             next_move = "left"
         elif my_head["x"] > my_neck["x"] and my_head["x"] <= board_width // 2:
