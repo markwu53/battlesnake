@@ -12,8 +12,8 @@ def info() -> typing.Dict:
         "apiversion": "1",
         "author": "markwu2025",  # TODO: Your Battlesnake Username
         "color": "#FF0000",  # TODO: Choose color
-        "head": "default",  # TODO: Choose head
-        "tail": "default",  # TODO: Choose tail
+        "head": "all-seeing",  # TODO: Choose head
+        "tail": "flake",  # TODO: Choose tail
     }
 
 
