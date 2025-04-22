@@ -100,6 +100,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             next_move = "down"
         elif my_head["y"] > my_neck["y"] and my_head["y"] <= board_height // 2:
             next_move = "up"
+        else:
+            next_move = safe_moves[0]
     else:
         next_move = safe_moves[0]
 
