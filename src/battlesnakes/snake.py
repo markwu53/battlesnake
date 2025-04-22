@@ -91,7 +91,17 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     # Choose a random move from the safe ones
     #next_move = random.choice(safe_moves)
-    next_move = safe_moves[0]
+    if len(my_body) <= 10:
+        if my_head["x"] < my_neck["x"] and my_head["x"] >= board_width // 2:
+            next_move = "left"
+        elif my_head["x"] > my_neck["x"] and my_head["x"] <= board_width // 2:
+            next_move = "right"
+        elif my_head["y"] < my_neck["y"] and my_head["y"] >= board_height // 2:
+            next_move = "down"
+        elif my_head["y"] > my_neck["y"] and my_head["y"] <= board_height // 2:
+            next_move = "up"
+    else:
+        next_move = safe_moves[0]
 
     # TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
     # food = game_state['board']['food']
