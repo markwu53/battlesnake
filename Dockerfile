@@ -2,6 +2,7 @@
 #https://pdm-project.org/en/latest/usage/advanced/#use-pdm-in-a-multi-stage-dockerfile
 FROM python:3.11-buster AS builder
 
+RUN python -m pip install --upgrade pip
 # install PDM
 RUN pip install -U pdm
 # disable update check
