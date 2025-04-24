@@ -136,7 +136,7 @@ ssh-keygen -R git.mmi.mig.corp
 
 Your account will be deactivated if you don't use your GitLab account for a significant period of time. Deactivating
 unused accounts helps Encova reduce licensing costs, as they only pay for active seats. **Your account has not been
-deleted.** It simply needs to be reactivated. Logining into https://git.mmi.mig.corp/ will automatically reactivate your
+deleted.** It simply needs to be reactivated. Logging into https://git.mmi.mig.corp/ will automatically reactivate your
 account.
 
 ### Create an SSH Key Pair

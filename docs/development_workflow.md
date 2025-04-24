@@ -1,21 +1,34 @@
 # Development Workflow
 
 <!-- TOC -->
+
 * [Development Workflow](#development-workflow)
-  * [Set up your Development Environment](#set-up-your-development-environment)
-  * [Create and Checkout a Feature Branch](#create-and-checkout-a-feature-branch)
-  * [Make a change](#make-a-change)
-  * [Stage your changes](#stage-your-changes)
-  * [Commit your changes](#commit-your-changes)
-  * [Push your changes](#push-your-changes)
-  * [Keep Up To Date With Development](#keep-up-to-date-with-development)
+    * [Set up your Development Environment](#set-up-your-development-environment)
+    * [Create and Checkout a Feature Branch](#create-and-checkout-a-feature-branch)
+    * [Make a change](#make-a-change)
+    * [Stage your changes](#stage-your-changes)
+    * [Commit your changes](#commit-your-changes)
+    * [Push your changes](#push-your-changes)
+    * [Keep Up To Date With Development](#keep-up-to-date-with-development)
 * [Merge Request](#merge-request)
-  * [Creation](#creation)
-  * [Review](#review)
-  * [Merge](#merge)
-  * [Cleanup](#cleanup)
-    * [Delete your local feature branch](#delete-your-local-feature-branch)
+    * [Creation](#creation)
+    * [Review](#review)
+    * [Merge](#merge)
+    * [Cleanup](#cleanup)
+        * [Delete your local feature branch](#delete-your-local-feature-branch)
+
 <!-- TOC -->
+
+## Overview
+
+First, watch this [YouTube primer on Git](https://learngitbranching.js.org/. It does an excellent job of covering high
+level concepts that we'll be referring to here.
+
+Here's a link to a [browser-based git training game](https://learngitbranching.js.org/) that can be used to experiment
+with git without worrying about a file system. It has drills and descriptive tutorials that will make you comfortable
+with the tool in no time!
+
+This is ~~~~~~~~
 
 ![Branching_Strategy_1.png](./assets/development_workflow/Branching_Strategy_1.png)
 
@@ -34,8 +47,9 @@ troubleshooting step will be to verify that you followed each of the steps in th
 
    ![VS_Code_New_Branch_1.png](./assets/development_workflow/VS_Code_New_Branch_1.png)
 
-2. Type in `main`. If `main` is an option, it means you have already checked that branch out. Select that. Otherwise,
-   select `origin/main`. The `main` branch as it is in GitLab is referred to as `origin/main`
+2. Type in `master`. If `master` is an option, it means you have already checked that branch out. Select that.
+   Otherwise,
+   select `origin/master`. The `master` branch as it is in GitLab is referred to as `origin/master`
 
    ![VS_Code_New_Branch_2.png](./assets/development_workflow/VS_Code_New_Branch_2.png)
 
@@ -58,18 +72,18 @@ troubleshooting step will be to verify that you followed each of the steps in th
 
 **Terminal**
 
-1. Check out the `main` branch:
+1. Check out the `master` branch:
    ```bash
-   git checkout main
+   git checkout master
    ```
-2. Ensure you're working on the latest version of the `main` branch:
+2. Ensure you're working on the latest version of the `master` branch:
    ```bash
    git pull
    ```
 3. Run `git status`. The output should read:
-   > Your branch is up-to-date with 'origin/main'.
+   > Your branch is up-to-date with 'origin/master'.
    > nothing to commit, working tree clean
-4. Create a "feature" branch from the `main` branch.
+4. Create a "feature" branch from the `master` branch.
    ```bash
    git checkout -b Human-readable-description
    ```
@@ -161,10 +175,10 @@ Execute the following:
 
 ## Keep Up To Date With Development
 
-When you created your branch, it was a copy of `main`. Since that time, `main` may have changed.
+When you created your branch, it was a copy of `master`. Since that time, `master` may have changed.
 These changes could conflict with your changes and cause your work to be unable to merge. This is called a **merge
 conflict**. Merge conflicts are easier to handle when they are small and recent. To keep your conflicts small and
-recent, keep your branch up to date with the changes in `main` by **merging** `main` into your
+recent, keep your branch up to date with the changes in `master` by **merging** `master` into your
 feature branch. Make sure all of your changes are committed to your feature branch, and you have your feature
 branch checked out.
 
@@ -185,7 +199,7 @@ Find the development branch and select it
 Execute the following:
 
    ```bash
-   git merge main
+   git merge master
    ```
 
 # Merge Request
@@ -205,7 +219,7 @@ Execute the following:
    ![Pull_Request_3.png](./assets/development_workflow/Pull_Request_3.png)
 
     - **From + Into Branches**: Your feature branch will be the `From` branch. You may need to select `Change Branches`
-      to target the `main` branch.
+      to target the `master` branch.
     - **Title**: `Human Readable Description`
     - **Description**: This is your opportunity to tell a more cohesive story than what you might have told with
       individual commit messages. Include a link to the ticket and any available unit testing documentation.
@@ -233,9 +247,9 @@ there are no approval requirements. **Ensure the box is checked to delete the fe
 
 ## Cleanup
 
-After the merge is completed, check out and pull the latest from the `main` branch on your local machine by following
+After the merge is completed, check out and pull the latest from the `master` branch on your local machine by following
 steps 1-3 of [Create and Checkout a Feature Branch](#create-and-checkout-a-feature-branch). Your changes should now be
-reflected in your local `main` branch. Delete your local feature branch
+reflected in your local `master` branch. Delete your local feature branch
 
 ### Delete your local feature branch
 
