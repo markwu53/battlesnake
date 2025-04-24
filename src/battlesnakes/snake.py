@@ -26,11 +26,189 @@ def start(game_state: typing.Dict):
 def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
+def on_orbit(game_state: typing.Dict) -> bool:
+    my_head = game_state["you"]["body"][0]  # Coordinates of your head
+    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+    x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
+    y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
+    if my_head["x"] == my_neck["x"]:
+        if my_head["x"] in x_boarder:
+            return True
+    if my_head["y"] == my_neck["y"]:
+        if my_head["y"] in y_boarder:
+            return True
+    return False
 
+def orbit_corners(game_state: typing.Dict):
+    x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
+    y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
+    corners = [(x,y) for x in x_boarder for y in y_boarder]
+    return corners
+
+def at_corner(game_state: typing.Dict) -> bool:
+    my_head = game_state["you"]["body"][0]  # Coordinates of your head
+    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+    return (my_head["x"], my_head["y"]) in orbit_corners(game_state)
+
+def current_dir(game_state: typing.Dict) -> str:
+    my_head = game_state["you"]["body"][0]  # Coordinates of your head
+    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+    if my_head["x"] - my_neck["x"] == 1:
+        return "right"
+    if my_head["x"] - my_neck["x"] == -1:
+        return "left"
+    if my_head["y"] - my_neck["y"] == 1:
+        return "up"
+    return "down"
+
+def corner_move(game_state: typing.Dict) -> str:
+    #assume on orbit and head at corner
+    my_head = game_state["you"]["body"][0]  # Coordinates of your head
+    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+    if my_head["x"]-my_neck["x"] == 1:
+        if my_head["y"] == game_state["margin"]-1:
+            return "up"
+        return "down"
+    if my_head["x"]-my_neck["x"] == -1:
+        if my_head["y"] == game_state["margin"]-1:
+            return "down"
+        return "up"
+    if my_head["y"]-my_neck["y"] == 1:
+        if my_head["x"] == game_state["margin"]-1:
+            return "right"
+        return "left"
+    if my_head["x"] == game_state["margin"]-1:
+        return "left"
+    return "right"
+
+def right_case(game_state: typing.Dict) -> str:
+    # current_dir is right
+    # not on orbit
+    x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
+    y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
+    my_head = game_state["you"]["body"][0]  # Coordinates of your head
+    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+    if my_head["y"] <= y_boarder[0]:
+        if my_head["x"] < x_boarder[0]:
+            return "right"
+        return "up"
+    if my_head["y"] >= y_boarder[1]:
+        if my_head["x"] < x_boarder[0]:
+            return "right"
+        return "down"
+    # y in the middle part
+    if my_head["x"] < x_boarder[0]:
+        return "right"
+    if my_head["x"] == x_boarder[0]:
+        #return "down"
+        return "up"
+    if my_head["x"] < x_boarder[1]:
+        return "right"
+    return "up"
+
+def left_case(game_state: typing.Dict) -> str:
+    # current_dir is left
+    # not on orbit
+    x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
+    y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
+    my_head = game_state["you"]["body"][0]  # Coordinates of your head
+    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+    if my_head["y"] <= y_boarder[0]:
+        if my_head["x"] > x_boarder[1]:
+            return "left"
+        return "up"
+    if my_head["y"] >= y_boarder[1]:
+        if my_head["x"] > x_boarder[1]:
+            return "left"
+        return "down"
+    # y in the middle part
+    if my_head["x"] > x_boarder[1]:
+        return "left"
+    if my_head["x"] == x_boarder[1]:
+        #return "down"
+        return "up"
+    if my_head["x"] > x_boarder[0]:
+        return "left"
+    return "up"
+
+def up_case(game_state: typing.Dict) -> str:
+    # current_dir is up
+    # not on orbit
+    x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
+    y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
+    my_head = game_state["you"]["body"][0]  # Coordinates of your head
+    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+    if my_head["x"] <= x_boarder[0]:
+        if my_head["y"] < y_boarder[0]:
+            return "up"
+        return "right"
+    if my_head["x"] >= x_boarder[1]:
+        if my_head["y"] > y_boarder[1]:
+            return "up"
+        return "left"
+    # x in the middle part
+    if my_head["y"] < y_boarder[0]:
+        return "up"
+    if my_head["y"] == y_boarder[0]:
+        #return "down"
+        return "left"
+    if my_head["y"] > y_boarder[0]:
+        return "up"
+    return "left"
+
+def down_case(game_state: typing.Dict) -> str:
+    # current_dir is down
+    # not on orbit
+    x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
+    y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
+    my_head = game_state["you"]["body"][0]  # Coordinates of your head
+    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+    if my_head["x"] <= x_boarder[0]:
+        if my_head["y"] > y_boarder[1]:
+            return "down"
+        return "left"
+    if my_head["x"] >= x_boarder[1]:
+        if my_head["y"] > y_boarder[1]:
+            return "down"
+        return "right"
+    # x in the middle part
+    if my_head["y"] > y_boarder[1]:
+        return "down"
+    if my_head["y"] == y_boarder[1]:
+        #return "down"
+        return "left"
+    if my_head["y"] < y_boarder[1]:
+        return "down"
+    return "left"
+
+def move(game_state: typing.Dict) -> typing.Dict:
+    #orbit on a square route
+
+    #my var
+    game_state["margin"] = 3
+
+    if on_orbit(game_state):
+        if not at_corner(game_state):
+            return { "move": current_dir(game_state) }
+        # at corner
+        return { "move": corner_move(game_state) }
+    #not on orbit
+    move = "left"
+    if current_dir(game_state) == "right":
+        move = right_case(game_state)
+    elif current_dir(game_state) == "left":
+        move = left_case(game_state)
+    elif current_dir(game_state) == "up":
+        move = up_case(game_state)
+    elif current_dir(game_state) == "down":
+        move = down_case(game_state)
+
+    return { "move": move }
+    
 # move is called on every turn and returns your next move
 # Valid moves are "up", "down", "left", or "right"
 # See https://docs.battlesnake.com/api/example-move for available data
-def move(game_state: typing.Dict) -> typing.Dict:
+def move2(game_state: typing.Dict) -> typing.Dict:
 
     is_move_safe = {"up": True, "down": True, "left": True, "right": True}
 
