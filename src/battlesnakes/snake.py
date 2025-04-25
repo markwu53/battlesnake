@@ -181,7 +181,7 @@ def down_case(game_state: typing.Dict) -> str:
         return "down"
     return "left"
 
-def move2(game_state: typing.Dict) -> typing.Dict:
+def move(game_state: typing.Dict) -> typing.Dict:
     #orbit on a square route
 
     #my var
@@ -208,7 +208,7 @@ def move2(game_state: typing.Dict) -> typing.Dict:
 # move is called on every turn and returns your next move
 # Valid moves are "up", "down", "left", or "right"
 # See https://docs.battlesnake.com/api/example-move for available data
-def move(game_state: typing.Dict) -> typing.Dict:
+def move2(game_state: typing.Dict) -> typing.Dict:
 
     is_move_safe = {"up": True, "down": True, "left": True, "right": True}
 
