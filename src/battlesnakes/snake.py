@@ -71,8 +71,8 @@ def corner_move(game_state: typing.Dict) -> str:
         return "down"
     if my_head["x"]-my_neck["x"] == -1:
         if my_head["y"] == game_state["margin"]-1:
-            return "down"
-        return "up"
+            return "up"
+        return "down"
     if my_head["y"]-my_neck["y"] == 1:
         if my_head["x"] == game_state["margin"]-1:
             return "right"
