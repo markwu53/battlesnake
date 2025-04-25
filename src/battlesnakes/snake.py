@@ -77,9 +77,10 @@ def corner_move(game_state: typing.Dict) -> str:
         if my_head["x"] == game_state["margin"]-1:
             return "right"
         return "left"
+    #if my_head["y"]-my_neck["y"] == -1:
     if my_head["x"] == game_state["margin"]-1:
-        return "left"
-    return "right"
+        return "right"
+    return "left"
 
 def right_case(game_state: typing.Dict) -> str:
     # current_dir is right
