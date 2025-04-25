@@ -166,11 +166,11 @@ def down_case(game_state: typing.Dict) -> str:
     if my_head["x"] <= x_boarder[0]:
         if my_head["y"] > y_boarder[1]:
             return "down"
-        return "left"
+        return "right"
     if my_head["x"] >= x_boarder[1]:
         if my_head["y"] > y_boarder[1]:
             return "down"
-        return "right"
+        return "left"
     # x in the middle part
     if my_head["y"] > y_boarder[1]:
         return "down"
