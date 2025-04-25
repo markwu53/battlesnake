@@ -1,5 +1,6 @@
 workflow:
   rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 stages:
   - test
@@ -19,6 +20,8 @@ pytest:
 railway-deploy:
   stage: deploy
   image: ghcr.io/railwayapp/cli:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   variables:
     SVC_ID: my-service-id
   script:
