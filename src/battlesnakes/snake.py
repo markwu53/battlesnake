@@ -59,13 +59,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return False
         return True
 
-    def get_area_4x3() -> typing.Tuple:
+    def get_area() -> typing.Tuple:
         """
-        get a 4x3 rectangular area depend on the snake initial position
+        get a rectangular area depend on the snake initial position
         so that even when the snake moves, the area doesn't change
         """
         area_width = 4
-        area_height = 3
+        area_height = 4
         x_blocks = game_state["board"]["width"]//area_width
         if game_state["board"]["width"] % area_width != 0:
             x_blocks += 1
@@ -125,6 +125,25 @@ def move(game_state: typing.Dict) -> typing.Dict:
             (0,1),
         ]
 
+    def order_4x4() -> typing.List:
+        return [
+            (0,0),
+            (1,0),
+            (2,0),
+            (3,0),
+            (3,1),
+            (3,2),
+            (3,3),
+            (2,3),
+            (2,2),
+            (2,1),
+            (1,1),
+            (1,2),
+            (1,3),
+            (0,3),
+            (0,2),
+            (0,1),
+        ]
 
     def get_next_move(head_coord: typing.Tuple, next_head_coord: typing.Tuple) -> str:
         x,y = head_coord
@@ -139,7 +158,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     #1. determine the area dimension corners
     # determine my position dirs
-    area = get_area_4x3()
+    area = get_area()
     corner1 = area[0]
     my_head = game_state["you"]["body"][0]  # Coordinates of your head
     my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
@@ -147,7 +166,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     neck_coord = (my_neck["x"], my_neck["y"])
     normalized_head_coord = (head_coord[0]-corner1[0], head_coord[1]-corner1[1])
     normalized_neck_coord = (neck_coord[0]-corner1[0], neck_coord[1]-corner1[1])
-    order_list = order_4x3()
+    order_list = order_4x4()
     for head_pos in range(len(order_list)):
         if normalized_head_coord == order_list[head_pos]:
             break
