@@ -13,6 +13,7 @@ pytest:
     - python -V
     - python -m pip install --upgrade pip
     - python -m pip install -U pdm
+    - pdm install
     - pdm sync -d -G test
   script:
     - pdm run -v pytest tests
