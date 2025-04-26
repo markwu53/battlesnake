@@ -79,7 +79,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 x1 = x*area_width
                 y1 = y*area_height
                 x2 = x1+area_width-1
-                y2 = y2+area_height-1
+                y2 = y1+area_height-1
                 if x2 >= game_state["board"]["width"]:
                     x2 = game_state["board"]["width"]-1
                     x1 = x2-area_width+1
