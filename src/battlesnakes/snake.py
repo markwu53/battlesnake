@@ -47,10 +47,37 @@ def body_in_area(game_state: typing.Dict, area: typing.Tuple) -> bool:
 
 def get_area_4x3(game_state: typing.Dict) -> typing.Tuple:
     """
-    always get the first rectangle area that the body can fit in
-    this won't change even when the snake moves
+    get a 4x3 rectangular area depend on the snake initial position
+    so that even when the snake moves, the area doesn't change
     """
-    area = ((0,0), (3,2))
+    area_width = 4
+    area_height = 3
+    x_blocks = game_state["board"]["width"]//area_width
+    if game_state["board"]["width"] % area_width != 0:
+        x_blocks += 1
+    y_blocks = game_state["board"]["height"]//area_height
+    if game_state["board"]["height"] % area_height != 0:
+        y_blocks += 1
+
+    #find a fixed area
+    for x in range(x_blocks):
+        for y in range(y_blocks):
+            x1 = x*area_width
+            y1 = y*area_height
+            x2 = x1+area_width-1
+            y2 = y2+area_height-1
+            if x2 >= game_state["board"]["width"]:
+                x2 = game_state["board"]["width"]-1
+                x1 = x2-area_width+1
+            if y2 >= game_state["board"]["height"]:
+                y2 = game_state["board"]["height"]-1
+                y1 = y2-area_height+1
+            area = ((x1,y1), (x2,y2))
+            if valid_area(game_state, area):
+                return area
+
+    #if not found then find the first area that contains the snake
+    #this can move so that next time will find a fixed area
     for x1 in range(game_state["board"]["width"]):
         for y1 in range(game_state["board"]["height"]):
             #top-left corner (x1,y1)
@@ -61,6 +88,7 @@ def get_area_4x3(game_state: typing.Dict) -> typing.Tuple:
                 continue
             if body_in_area(game_state, area):
                 return area
+
     return area
 
 def order_4x3() -> typing.List:
