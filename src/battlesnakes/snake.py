@@ -286,11 +286,11 @@ def move3(game_state: typing.Dict) -> typing.Dict:
             return "down"
         return "left"
 
-    def get_up_coord(head_coord: dict[str, int]) -> dict[str, int]:
-        if "x" not in head_coord.keys() or "y" not in head_coord.keys():
-            raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
+def get_up_coord(head_coord: dict[str, int]) -> dict[str, int]:
+    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
+        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
 
-        return {"x": head_coord["x"], "y": head_coord["y"] + 1}
+    return {"x": head_coord["x"], "y": head_coord["y"] + 1}
 
     
     #orbit on a square route
