@@ -73,7 +73,7 @@ def get_area_4x3(game_state: typing.Dict) -> typing.Tuple:
                 y2 = game_state["board"]["height"]-1
                 y1 = y2-area_height+1
             area = ((x1,y1), (x2,y2))
-            if valid_area(game_state, area):
+            if body_in_area(game_state, area):
                 return area
 
     #if not found then find the first area that contains the snake
