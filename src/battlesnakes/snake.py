@@ -26,98 +26,6 @@ def start(game_state: typing.Dict):
 def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
-def valid_area(game_state: typing.Dict, area: typing.Tuple) -> bool:
-    ((x1,y1), (x2,y2)) = area
-    if not 0 <= x2 < game_state["board"]["width"]:
-        return False
-    if not 0 <= y2 < game_state["board"]["height"]:
-        return False
-    return True
-
-def body_in_area(game_state: typing.Dict, area: typing.Tuple) -> bool:
-    ((x1,y1), (x2,y2)) = area
-    for cell in game_state["you"]["body"]:
-        x = cell["x"]
-        y = cell["y"]
-        if not x1 <= x <= x2:
-            return False
-        if not y1 <= y <= y2:
-            return False
-    return True
-
-def get_area_4x3(game_state: typing.Dict) -> typing.Tuple:
-    """
-    get a 4x3 rectangular area depend on the snake initial position
-    so that even when the snake moves, the area doesn't change
-    """
-    area_width = 4
-    area_height = 3
-    x_blocks = game_state["board"]["width"]//area_width
-    if game_state["board"]["width"] % area_width != 0:
-        x_blocks += 1
-    y_blocks = game_state["board"]["height"]//area_height
-    if game_state["board"]["height"] % area_height != 0:
-        y_blocks += 1
-
-    #find a fixed area
-    for x in range(x_blocks):
-        for y in range(y_blocks):
-            x1 = x*area_width
-            y1 = y*area_height
-            x2 = x1+area_width-1
-            y2 = y2+area_height-1
-            if x2 >= game_state["board"]["width"]:
-                x2 = game_state["board"]["width"]-1
-                x1 = x2-area_width+1
-            if y2 >= game_state["board"]["height"]:
-                y2 = game_state["board"]["height"]-1
-                y1 = y2-area_height+1
-            area = ((x1,y1), (x2,y2))
-            if body_in_area(game_state, area):
-                return area
-
-    #if not found then find the first area that contains the snake
-    #this can move so that next time will find a fixed area
-    for x1 in range(game_state["board"]["width"]):
-        for y1 in range(game_state["board"]["height"]):
-            #top-left corner (x1,y1)
-            x2 = x1+3
-            y2 = y1+2
-            area = ((x1,y1), (x2,y2))
-            if not valid_area(game_state, area):
-                continue
-            if body_in_area(game_state, area):
-                return area
-
-    return area
-
-def order_4x3() -> typing.List:
-    return [
-        (0,0),
-        (1,0),
-        (2,0),
-        (3,0),
-        (3,1),
-        (3,2),
-        (2,2),
-        (2,1),
-        (1,1),
-        (1,2),
-        (0,2),
-        (0,1),
-    ]
-
-def get_next_move(head_coord: typing.Tuple, next_head_coord: typing.Tuple) -> str:
-    x,y = head_coord
-    nx,ny = next_head_coord
-    if nx > x:
-        return "right"
-    if nx < x:
-        return "left"
-    if ny > y:
-        return "up"
-    return "down"
-
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -130,17 +38,115 @@ def move(game_state: typing.Dict) -> typing.Dict:
     then 6x5, 6x6, 6x7, 6x8
     then 8x7, ...
     """
+
+
+    def valid_area(area: typing.Tuple) -> bool:
+        ((x1,y1), (x2,y2)) = area
+        if not 0 <= x2 < game_state["board"]["width"]:
+            return False
+        if not 0 <= y2 < game_state["board"]["height"]:
+            return False
+        return True
+
+    def body_in_area(area: typing.Tuple) -> bool:
+        ((x1,y1), (x2,y2)) = area
+        for cell in game_state["you"]["body"]:
+            x = cell["x"]
+            y = cell["y"]
+            if not x1 <= x <= x2:
+                return False
+            if not y1 <= y <= y2:
+                return False
+        return True
+
+    def get_area_4x3() -> typing.Tuple:
+        """
+        get a 4x3 rectangular area depend on the snake initial position
+        so that even when the snake moves, the area doesn't change
+        """
+        area_width = 4
+        area_height = 3
+        x_blocks = game_state["board"]["width"]//area_width
+        if game_state["board"]["width"] % area_width != 0:
+            x_blocks += 1
+        y_blocks = game_state["board"]["height"]//area_height
+        if game_state["board"]["height"] % area_height != 0:
+            y_blocks += 1
+
+        #find a fixed area
+        for x in range(x_blocks):
+            for y in range(y_blocks):
+                x1 = x*area_width
+                y1 = y*area_height
+                x2 = x1+area_width-1
+                y2 = y2+area_height-1
+                if x2 >= game_state["board"]["width"]:
+                    x2 = game_state["board"]["width"]-1
+                    x1 = x2-area_width+1
+                if y2 >= game_state["board"]["height"]:
+                    y2 = game_state["board"]["height"]-1
+                    y1 = y2-area_height+1
+                area = ((x1,y1), (x2,y2))
+                if body_in_area(area):
+                    print(f"mark_snake fixed area {area}")
+                    return area
+
+        #if not found then find the first area that contains the snake
+        #this can move so that next time will find a fixed area
+        for x1 in range(game_state["board"]["width"]):
+            for y1 in range(game_state["board"]["height"]):
+                #bottom-left corner (x1,y1)
+                x2 = x1+area_width-1
+                y2 = y1+area_height-1
+                area = ((x1,y1), (x2,y2))
+                if not valid_area(area):
+                    continue
+                if body_in_area(area):
+                    print(f"mark_snake moving area {area}")
+                    return area
+
+        print(f"mark_snake fallback area {area}")
+        return area
+
+
+    def order_4x3() -> typing.List:
+        return [
+            (0,0),
+            (1,0),
+            (2,0),
+            (3,0),
+            (3,1),
+            (3,2),
+            (2,2),
+            (2,1),
+            (1,1),
+            (1,2),
+            (0,2),
+            (0,1),
+        ]
+
+
+    def get_next_move(head_coord: typing.Tuple, next_head_coord: typing.Tuple) -> str:
+        x,y = head_coord
+        nx,ny = next_head_coord
+        if nx > x:
+            return "right"
+        if nx < x:
+            return "left"
+        if ny > y:
+            return "up"
+        return "down"
+
     #1. determine the area dimension corners
     # determine my position dirs
-    area = get_area_4x3(game_state)
-    top_left_corner = area[0]
+    area = get_area_4x3()
+    corner1 = area[0]
     my_head = game_state["you"]["body"][0]  # Coordinates of your head
     my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
     head_coord = (my_head["x"], my_head["y"])
     neck_coord = (my_neck["x"], my_neck["y"])
-    normalized_head_coord = (head_coord[0]-top_left_corner[0], head_coord[1]-top_left_corner[1])
-    normalized_neck_coord = (neck_coord[0]-top_left_corner[0], neck_coord[1]-top_left_corner[1])
-    head_neck_pair = (normalized_head_coord, normalized_neck_coord)
+    normalized_head_coord = (head_coord[0]-corner1[0], head_coord[1]-corner1[1])
+    normalized_neck_coord = (neck_coord[0]-corner1[0], neck_coord[1]-corner1[1])
     order_list = order_4x3()
     for head_pos in range(len(order_list)):
         if normalized_head_coord == order_list[head_pos]:
