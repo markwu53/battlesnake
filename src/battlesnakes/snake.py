@@ -88,7 +88,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     y1 = y2-area_height+1
                 area = ((x1,y1), (x2,y2))
                 if body_in_area(area):
-                    print(f"mark_snake fixed area {area}")
+                    print(f"my_print fixed area: {area}, turn: {game_state['turn']}, length: {game_state['you']['length']}")
                     return area
 
         #if not found then find the first area that contains the snake
@@ -102,7 +102,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if not valid_area(area):
                     continue
                 if body_in_area(area):
-                    print(f"mark_snake moving area {area}")
+                    print(f"my_print moving area: {area}, turn: {game_state['turn']}, length: {game_state['you']['length']}")
                     return area
 
         print(f"mark_snake fallback area {area}")
@@ -171,7 +171,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if normalized_head_coord == order_list[head_pos]:
             break
     next_head_pos = head_pos+1
-    if normalized_neck_coord == order_list[head_pos+1]:
+    next_head_pos %= len(order_list)
+    if normalized_neck_coord == order_list[next_head_pos]:
         next_head_pos = head_pos-1
     next_head_pos %= len(order_list)
     next_move = get_next_move(order_list[head_pos], order_list[next_head_pos])
