@@ -171,7 +171,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if normalized_head_coord == order_list[head_pos]:
             break
     next_head_pos = head_pos+1
-    if normalized_neck_coord == order_list[head_pos+1]:
+    next_head_pos %= len(order_list)
+    if normalized_neck_coord == order_list[next_head_pos]:
         next_head_pos = head_pos-1
     next_head_pos %= len(order_list)
     next_move = get_next_move(order_list[head_pos], order_list[next_head_pos])
