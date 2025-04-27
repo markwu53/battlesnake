@@ -1,5 +1,6 @@
 import random
 import typing
+import math
 
 
 # info is called when you create your Battlesnake on play.battlesnake.com
@@ -59,40 +60,31 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return False
         return True
 
-    def get_area() -> typing.Tuple:
-        """
-        get a rectangular area depend on the snake initial position
-        so that even when the snake moves, the area doesn't change
-        """
-        area_width = 4
-        area_height = 4
-        x_blocks = game_state["board"]["width"]//area_width
-        if game_state["board"]["width"] % area_width != 0:
-            x_blocks += 1
-        y_blocks = game_state["board"]["height"]//area_height
-        if game_state["board"]["height"] % area_height != 0:
-            y_blocks += 1
+    area_width = 4
+    area_height = 4
 
-        #find a fixed area
-        for x in range(x_blocks):
-            for y in range(y_blocks):
-                x1 = x*area_width
-                y1 = y*area_height
-                x2 = x1+area_width-1
-                y2 = y1+area_height-1
-                if x2 >= game_state["board"]["width"]:
-                    x2 = game_state["board"]["width"]-1
-                    x1 = x2-area_width+1
-                if y2 >= game_state["board"]["height"]:
-                    y2 = game_state["board"]["height"]-1
-                    y1 = y2-area_height+1
-                area = ((x1,y1), (x2,y2))
-                if body_in_area(area):
-                    print(f"my_print fixed area: {area}, turn: {game_state['turn']}, length: {game_state['you']['length']}")
-                    return area
+    def four_corner() -> typing.List:
+        x1,y1 = (0, 0)
+        x2,y2 = x1+area_width-1, y1+area_height-1
+        bottom_left_corner = ((x1,y1), (x2,y2))
+        x1,y1 = (game_state["board"]["width"]-area_width, 0)
+        x2,y2 = x1+area_width-1, y1+area_height-1
+        bottom_right_corner = ((x1,y1), (x2,y2))
+        x1,y1 = (0, game_state["board"]["height"]-area_height)
+        x2,y2 = x1+area_width-1, y1+area_height-1
+        top_left_corner = ((x1,y1), (x2,y2))
+        x1,y1 = (game_state["board"]["width"]-area_width, game_state["board"]["height"]-area_height)
+        x2,y2 = x1+area_width-1, y1+area_height-1
+        top_right_corner = ((x1,y1), (x2,y2))
+        return [
+            bottom_left_corner,
+            bottom_right_corner,
+            top_left_corner,
+            top_right_corner,
+        ]
 
-        #if not found then find the first area that contains the snake
-        #this can move so that next time will find a fixed area
+    def all_containing_area() -> typing.List:
+        all_area = []
         for x1 in range(game_state["board"]["width"]):
             for y1 in range(game_state["board"]["height"]):
                 #bottom-left corner (x1,y1)
@@ -103,11 +95,60 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     continue
                 if body_in_area(area):
                     print(f"my_print moving area: {area}, turn: {game_state['turn']}, length: {game_state['you']['length']}")
-                    return area
+                    all_area.append(area)
+        return all_area
 
-        print(f"mark_snake fallback area {area}")
-        return area
+    def target_corner() -> typing.Tuple:
+        body_center_x = sum([cell["x"] for cell in game_state["you"]["body"]]) / game_state["you"]["length"]
+        body_center_y = sum([cell["y"] for cell in game_state["you"]["body"]]) / game_state["you"]["length"]
+        corners = four_corner()
 
+        def sort_corner(corner: typing.Tuple):
+            ((x1,y1), (x2,y2)) = corner
+            xc = (x1+x2)/2
+            yc = (y1+y2)/2
+            return math.sqrt((xc-body_center_x)**2+(yc-body_center_y)**2)
+
+        corners = sorted(corners, key=sort_corner)
+        return corners[0]
+
+    def get_area() -> typing.Tuple:
+        """
+        get a rectangular area depend on the snake initial position
+        so that even when the snake moves, the area doesn't change
+        """
+        x_blocks = game_state["board"]["width"]//area_width
+        if game_state["board"]["width"] % area_width != 0:
+            x_blocks += 1
+        y_blocks = game_state["board"]["height"]//area_height
+        if game_state["board"]["height"] % area_height != 0:
+            y_blocks += 1
+
+        #prefer four corner
+        for area in four_corner():
+            if body_in_area(area):
+                print(f"my_print fixed area: {area}, turn: {game_state['turn']}, length: {game_state['you']['length']}")
+                return area
+
+        #if not in one of four corners, find one close to it,
+        #so that the area will move to the closest corner
+
+        #if not found then find the first area that contains the snake
+        #this can move so that next time will find a fixed area
+        target = target_corner()
+        areas = all_containing_area()
+
+        def sort_area(area: typing.Tuple):
+            ((x1,y1), (x2,y2)) = area
+            xc = (x1+x2)/2
+            yc = (y1+y2)/2
+            ((target_x1, target_y1), (target_x2, target_y2)) = target
+            target_xc = (target_x1+target_x2)/2
+            target_yc = (target_y1+target_y2)/2
+            return math.sqrt((xc-target_xc)**2+(yc-target_yc)**2)
+
+        areas = sorted(areas, key=sort_area)
+        return areas[0]
 
     def order_4x3() -> typing.List:
         return [
