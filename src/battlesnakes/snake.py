@@ -17,6 +17,11 @@ def info() -> typing.Dict:
         "tail": "flake",  # TODO: Choose tail
     }
 
+def get_up_coord(head_coord: dict[str, int]) -> dict[str, int]:
+    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
+        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
+
+    return {"x": head_coord["x"], "y": head_coord["y"] + 1}
 
 # start is called when your Battlesnake begins a game
 def start(game_state: typing.Dict):
