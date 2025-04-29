@@ -237,7 +237,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         return (x2,y2)
 
-    def check_border(body: typing.List) -> typing.Set:
+    def check_border() -> typing.Set:
         my_head = game_state["you"]["body"][0]  # Coordinates of your head
         my_head_coord = (my_head["x"], my_head["y"])
         x0,y0 = my_head_coord
