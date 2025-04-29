@@ -231,7 +231,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         next_head_pos %= len(order_list)
 
         #get next_head absolute coordinate
-        x2,y2 = order_list[head_pos]
+        x2,y2 = order_list[next_head_pos]
         x2 += x0
         y2 += y0
 
