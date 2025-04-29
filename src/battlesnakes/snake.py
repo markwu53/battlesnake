@@ -259,7 +259,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if y1 < game_state["board"]["height"]:
             move_set.add("up")
 
-        #left
+        #down
         x1,y1 = x0,y0-1
         if y1 >= 0:
             move_set.add("down")
@@ -316,6 +316,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     head_coord = (my_head["x"], my_head["y"])
     next_head_coord = get_next_head_coord()
     next_move = get_next_move(head_coord, next_head_coord)
+    print(f"next_move calc: {next_move}")
 
     move_set: typing.Set = check_border()
     for body in [s["body"] for s in game_state["board"]["snakes"]]:
@@ -323,8 +324,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     move_set = move_set.intersection(check_crash(game_state["you"]["body"]))
 
     move_list = list(move_set)
+    print(f"move_list: {len(move_list)} ", " ".join(move_list))
     if len(move_list) != 0:
         if next_move not in move_list:
             next_move = move_list[0]
+    print(f"next_move final: {next_move}")
 
     return {"move": next_move}
