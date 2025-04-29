@@ -318,7 +318,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
     next_move = get_next_move(head_coord, next_head_coord)
     print(f"next_move calc: {next_move}")
 
-    """
     move_set: typing.Set = check_border()
     for body in [s["body"] for s in game_state["board"]["snakes"]]:
         move_set = move_set.intersection(check_crash(body))
@@ -330,6 +329,5 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if next_move not in move_list:
             next_move = move_list[0]
     print(f"next_move final: {next_move}")
-    """
 
     return {"move": next_move}
