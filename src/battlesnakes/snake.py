@@ -266,50 +266,100 @@ def move(game_state: typing.Dict) -> typing.Dict:
         
         return move_set
 
-    def check_crash(body: typing.List) -> typing.Set:
+
+    def check_self(body: typing.List) -> typing.Set:
         my_head = game_state["you"]["body"][0]  # Coordinates of your head
         my_head_coord = (my_head["x"], my_head["y"])
         x0,y0 = my_head_coord
 
         move_set = set()
 
-        #left
-        x1,y1 = x0-1,y0
-        my_next_head_coord = x1,y1
         body_list = [(b["x"],b["y"]) for b in body]
         #tail should move - not considering eating food
         body_list = body_list[:-1]
+
+        #left
+        x1,y1 = x0-1,y0
+        my_next_head_coord = x1,y1
         if my_next_head_coord not in body_list:
             move_set.add("left")
         
         #right
         x1,y1 = x0+1,y0
         my_next_head_coord = x1,y1
-        body_list = [(b["x"],b["y"]) for b in body]
-        #tail should move - not considering eating food
-        body_list = body_list[:-1]
         if my_next_head_coord not in body_list:
             move_set.add("right")
         
         #up
         x1,y1 = x0,y0+1
         my_next_head_coord = x1,y1
-        body_list = [(b["x"],b["y"]) for b in body]
-        #tail should move - not considering eating food
-        body_list = body_list[:-1]
         if my_next_head_coord not in body_list:
             move_set.add("up")
         
         #down
         x1,y1 = x0,y0-1
         my_next_head_coord = x1,y1
-        body_list = [(b["x"],b["y"]) for b in body]
-        #tail should move - not considering eating food
-        body_list = body_list[:-1]
         if my_next_head_coord not in body_list:
             move_set.add("down")
 
         return move_set
+
+    def possible_head_to_head_die(my_next_head_coord: typing.Tuple, body: typing.List) -> bool:
+        if len(body) < len(game_state["you"]["body"]):
+            return False
+        x0,y0 = my_next_head_coord
+        x1,y1 = body[0]["x"], body[0]["y"]
+        if y0 == y1 and math.abs(x1-x0) == 1:
+            return True
+        if x0 == x1 and math.abs(y1-y0) == 1:
+            return True
+        return False
+
+    def check_opponent(body: typing.List) -> typing.Set:
+        my_head = game_state["you"]["body"][0]  # Coordinates of your head
+        my_head_coord = (my_head["x"], my_head["y"])
+        x0,y0 = my_head_coord
+
+        move_set = set()
+        safer_move_set = set()
+
+        body_list = [(b["x"],b["y"]) for b in body]
+        #tail should move - not considering eating food
+        body_list = body_list[:-1]
+
+        #left
+        x1,y1 = x0-1,y0
+        my_next_head_coord = x1,y1
+        if my_next_head_coord not in body_list:
+            move_set.add("left")
+            if not possible_head_to_head_die(my_next_head_coord, body):
+                safer_move_set.add("left")
+        
+        #right
+        x1,y1 = x0+1,y0
+        my_next_head_coord = x1,y1
+        if my_next_head_coord not in body_list:
+            move_set.add("right")
+            if not possible_head_to_head_die(my_next_head_coord, body):
+                safer_move_set.add("right")
+        
+        #up
+        x1,y1 = x0,y0+1
+        my_next_head_coord = x1,y1
+        if my_next_head_coord not in body_list:
+            move_set.add("up")
+            if not possible_head_to_head_die(my_next_head_coord, body):
+                safer_move_set.add("up")
+        
+        #down
+        x1,y1 = x0,y0-1
+        my_next_head_coord = x1,y1
+        if my_next_head_coord not in body_list:
+            move_set.add("down")
+            if not possible_head_to_head_die(my_next_head_coord, body):
+                safer_move_set.add("down")
+
+        return move_set, safer_move_set
 
     #main
     my_head = game_state["you"]["body"][0]
@@ -318,16 +368,28 @@ def move(game_state: typing.Dict) -> typing.Dict:
     next_move = get_next_move(head_coord, next_head_coord)
     print(f"next_move calc: {next_move}")
 
-    move_set: typing.Set = check_border()
+    move_set_result: typing.Set = check_border()
+    safer_move_set_result: typing.Set = check_border()
     for body in [s["body"] for s in game_state["board"]["snakes"]]:
-        move_set = move_set.intersection(check_crash(body))
-    move_set = move_set.intersection(check_crash(game_state["you"]["body"]))
+        move_set, safer_move_set = check_opponent(body)
+        move_set_result = move_set_result.intersection(move_set)
+        safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
+    move_set = check_self(game_state["you"]["body"])
+    move_set_result = move_set_result.intersection(move_set)
 
-    move_list = list(move_set)
-    print(f"move_list: {len(move_list)} ", " ".join(move_list))
-    if len(move_list) != 0:
-        if next_move not in move_list:
-            next_move = move_list[0]
+    danger_set = move_set_result - safer_move_set_result
+    if next_move in move_set_result:
+        if next_move in danger_set:
+            #prefer risk
+            pass
+        else:
+            #no doubt
+            pass
+    else:
+        if len(move_set_result) == 0:
+            pass
+        else:
+            next_move = next(iter(move_set_result))
     print(f"next_move final: {next_move}")
 
     return {"move": next_move}
