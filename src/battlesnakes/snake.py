@@ -59,9 +59,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return False
         return True
 
-    def body_in_area(area: typing.Tuple) -> bool:
+    def body_in_area(area: typing.Tuple, body: typing.List) -> bool:
         ((x1,y1), (x2,y2)) = area
-        for cell in game_state["you"]["body"]:
+        for cell in body:
             x = cell["x"]
             y = cell["y"]
             if not x1 <= x <= x2:
@@ -103,10 +103,27 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 area = ((x1,y1), (x2,y2))
                 if not valid_area(area):
                     continue
-                if body_in_area(area):
-                    print(f"my_print moving area: {area}, turn: {game_state['turn']}, length: {game_state['you']['length']}")
+                if body_in_area(area, game_state["you"]["body"]):
                     all_area.append(area)
+        if len(all_area) != 0:
+            return all_area
+        
+        #when the body is too long, this can be empty
+        #in this case, check the first 4 cells
+        #this ensure the function must return something
+        for x1 in range(game_state["board"]["width"]):
+            for y1 in range(game_state["board"]["height"]):
+                #bottom-left corner (x1,y1)
+                x2 = x1+area_width-1
+                y2 = y1+area_height-1
+                area = ((x1,y1), (x2,y2))
+                if not valid_area(area):
+                    continue
+                if body_in_area(area, game_state["you"]["body"][:area_width]):
+                    all_area.append(area)
+            
         return all_area
+        
 
     def target_corner() -> typing.Tuple:
         body_center_x = sum([cell["x"] for cell in game_state["you"]["body"]]) / game_state["you"]["length"]
@@ -136,8 +153,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #prefer four corner
         for area in four_corner():
-            if body_in_area(area):
-                print(f"my_print fixed area: {area}, turn: {game_state['turn']}, length: {game_state['you']['length']}")
+            if body_in_area(area, game_state["you"]["body"]):
                 return area
 
         #if not in one of four corners, find one close to it,
@@ -146,6 +162,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #if not found then find the first area that contains the snake
         #this can move so that next time will find a fixed area
         target = target_corner()
+
+        #when it's too long, this can be empty
         areas = all_containing_area()
 
         def sort_area(area: typing.Tuple):
