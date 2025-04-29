@@ -40,6 +40,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
     then 8x7, ...
     """
 
+    """
+    Then avoid immediate danger
+    check opponents and self
+    """
+
 
     def valid_area(area: typing.Tuple) -> bool:
         ((x1,y1), (x2,y2)) = area
@@ -199,298 +204,122 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     #1. determine the area dimension corners
     # determine my position dirs
-    area = get_area()
-    corner1 = area[0]
-    my_head = game_state["you"]["body"][0]  # Coordinates of your head
-    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+    def get_next_head_coord():
+        area = get_area()
+        order_list = order_4x4()
+
+        bottom_left_corner = area[0]
+        x0,y0 = bottom_left_corner
+        my_head = game_state["you"]["body"][0]  # Coordinates of your head
+        my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+        head_coord = (my_head["x"], my_head["y"])
+        neck_coord = (my_neck["x"], my_neck["y"])
+        relative_head_coord = (head_coord[0]-x0, head_coord[1]-y0)
+        relative_neck_coord = (neck_coord[0]-x0, neck_coord[1]-y0)
+        for head_pos in range(len(order_list)):
+            if relative_head_coord == order_list[head_pos]:
+                break
+        next_head_pos = head_pos+1
+        next_head_pos %= len(order_list)
+        if relative_neck_coord == order_list[next_head_pos]:
+            next_head_pos = head_pos-1
+        next_head_pos %= len(order_list)
+
+        #get next_head absolute coordinate
+        x2,y2 = order_list[head_pos]
+        x2 += x0
+        y2 += y0
+
+        return (x2,y2)
+
+    def check_border(body: typing.List) -> typing.Set:
+        my_head = game_state["you"]["body"][0]  # Coordinates of your head
+        my_head_coord = (my_head["x"], my_head["y"])
+        x0,y0 = my_head_coord
+
+        move_set = set()
+
+        #left
+        x1,y1 = x0-1,y0
+        if x1 >= 0:
+            move_set.add("left")
+
+        #right
+        x1,y1 = x0+1,y0
+        if x1 < game_state["board"]["width"]:
+            move_set.add("right")
+
+        #up
+        x1,y1 = x0,y0+1
+        if y1 < game_state["board"]["height"]:
+            move_set.add("up")
+
+        #left
+        x1,y1 = x0,y0-1
+        if y1 >= 0:
+            move_set.add("down")
+        
+        return move_set
+
+    def check_crash(body: typing.List) -> typing.Set:
+        my_head = game_state["you"]["body"][0]  # Coordinates of your head
+        my_head_coord = (my_head["x"], my_head["y"])
+        x0,y0 = my_head_coord
+
+        move_set = set()
+
+        #left
+        x1,y1 = x0-1,y0
+        my_next_head_coord = x1,y1
+        body_list = [(b["x"],b["y"]) for b in body]
+        #tail should move - not considering eating food
+        body_list = body_list[:-1]
+        if my_next_head_coord not in body_list:
+            move_set.add("left")
+        
+        #right
+        x1,y1 = x0+1,y0
+        my_next_head_coord = x1,y1
+        body_list = [(b["x"],b["y"]) for b in body]
+        #tail should move - not considering eating food
+        body_list = body_list[:-1]
+        if my_next_head_coord not in body_list:
+            move_set.add("right")
+        
+        #up
+        x1,y1 = x0,y0+1
+        my_next_head_coord = x1,y1
+        body_list = [(b["x"],b["y"]) for b in body]
+        #tail should move - not considering eating food
+        body_list = body_list[:-1]
+        if my_next_head_coord not in body_list:
+            move_set.add("up")
+        
+        #down
+        x1,y1 = x0,y0-1
+        my_next_head_coord = x1,y1
+        body_list = [(b["x"],b["y"]) for b in body]
+        #tail should move - not considering eating food
+        body_list = body_list[:-1]
+        if my_next_head_coord not in body_list:
+            move_set.add("down")
+
+        return move_set
+
+    #main
+    my_head = game_state["you"]["body"][0]
     head_coord = (my_head["x"], my_head["y"])
-    neck_coord = (my_neck["x"], my_neck["y"])
-    normalized_head_coord = (head_coord[0]-corner1[0], head_coord[1]-corner1[1])
-    normalized_neck_coord = (neck_coord[0]-corner1[0], neck_coord[1]-corner1[1])
-    order_list = order_4x4()
-    for head_pos in range(len(order_list)):
-        if normalized_head_coord == order_list[head_pos]:
-            break
-    next_head_pos = head_pos+1
-    next_head_pos %= len(order_list)
-    if normalized_neck_coord == order_list[next_head_pos]:
-        next_head_pos = head_pos-1
-    next_head_pos %= len(order_list)
-    next_move = get_next_move(order_list[head_pos], order_list[next_head_pos])
-    return {"move": next_move}
+    next_head_coord = get_next_head_coord()
+    next_move = get_next_move(head_coord, next_head_coord)
 
-def move3(game_state: typing.Dict) -> typing.Dict:
+    move_set: typing.Set = check_border()
+    for body in [s["body"] for s in game_state["board"]["snakes"]]:
+        move_set = move_set.intersection(check_crash(body))
+    move_set = move_set.intersection(check_crash(game_state["you"]["body"]))
 
-    """
-    move on a square orbit
-    """
+    move_list = list(move_set)
+    if len(move_list) != 0:
+        if next_move not in move_list:
+            next_move = move_list[0]
 
-    def on_orbit(game_state: typing.Dict) -> bool:
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-        x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
-        y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
-        if my_head["x"] == my_neck["x"]:
-            if my_head["x"] in x_boarder:
-                return True
-        if my_head["y"] == my_neck["y"]:
-            if my_head["y"] in y_boarder:
-                return True
-        return False
-
-    def orbit_corners(game_state: typing.Dict):
-        x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
-        y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
-        corners = [(x,y) for x in x_boarder for y in y_boarder]
-        return corners
-
-    def at_corner(game_state: typing.Dict) -> bool:
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-        return (my_head["x"], my_head["y"]) in orbit_corners(game_state)
-
-    def current_dir(game_state: typing.Dict) -> str:
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-        if my_head["x"] - my_neck["x"] == 1:
-            return "right"
-        if my_head["x"] - my_neck["x"] == -1:
-            return "left"
-        if my_head["y"] - my_neck["y"] == 1:
-            return "up"
-        return "down"
-
-    def corner_move(game_state: typing.Dict) -> str:
-        #assume on orbit and head at corner
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-        if my_head["x"]-my_neck["x"] == 1:
-            if my_head["y"] == game_state["margin"]-1:
-                return "up"
-            return "down"
-        if my_head["x"]-my_neck["x"] == -1:
-            if my_head["y"] == game_state["margin"]-1:
-                return "up"
-            return "down"
-        if my_head["y"]-my_neck["y"] == 1:
-            if my_head["x"] == game_state["margin"]-1:
-                return "right"
-            return "left"
-        #if my_head["y"]-my_neck["y"] == -1:
-        if my_head["x"] == game_state["margin"]-1:
-            return "right"
-        return "left"
-
-    def right_case(game_state: typing.Dict) -> str:
-        # current_dir is right
-        # not on orbit
-        x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
-        y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-        if my_head["y"] <= y_boarder[0]:
-            if my_head["x"] < x_boarder[0]:
-                return "right"
-            return "up"
-        if my_head["y"] >= y_boarder[1]:
-            if my_head["x"] < x_boarder[0]:
-                return "right"
-            return "down"
-        # y in the middle part
-        if my_head["x"] < x_boarder[0]:
-            return "right"
-        if my_head["x"] == x_boarder[0]:
-            #return "down"
-            return "up"
-        if my_head["x"] < x_boarder[1]:
-            return "right"
-        return "up"
-
-    def left_case(game_state: typing.Dict) -> str:
-        # current_dir is left
-        # not on orbit
-        x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
-        y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-        if my_head["y"] <= y_boarder[0]:
-            if my_head["x"] > x_boarder[1]:
-                return "left"
-            return "up"
-        if my_head["y"] >= y_boarder[1]:
-            if my_head["x"] > x_boarder[1]:
-                return "left"
-            return "down"
-        # y in the middle part
-        if my_head["x"] > x_boarder[1]:
-            return "left"
-        if my_head["x"] == x_boarder[1]:
-            #return "down"
-            return "up"
-        if my_head["x"] > x_boarder[0]:
-            return "left"
-        return "up"
-
-    def up_case(game_state: typing.Dict) -> str:
-        # current_dir is up
-        # not on orbit
-        x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
-        y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-        if my_head["x"] <= x_boarder[0]:
-            if my_head["y"] < y_boarder[0]:
-                return "up"
-            return "right"
-        if my_head["x"] >= x_boarder[1]:
-            if my_head["y"] > y_boarder[1]:
-                return "up"
-            return "left"
-        # x in the middle part
-        if my_head["y"] < y_boarder[0]:
-            return "up"
-        if my_head["y"] == y_boarder[0]:
-            #return "down"
-            return "left"
-        if my_head["y"] > y_boarder[0]:
-            return "up"
-        return "left"
-
-    def down_case(game_state: typing.Dict) -> str:
-        # current_dir is down
-        # not on orbit
-        x_boarder = [game_state["margin"]-1, game_state["board"]["width"]-game_state["margin"]]
-        y_boarder = [game_state["margin"]-1, game_state["board"]["height"]-game_state["margin"]]
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-        if my_head["x"] <= x_boarder[0]:
-            if my_head["y"] > y_boarder[1]:
-                return "down"
-            return "right"
-        if my_head["x"] >= x_boarder[1]:
-            if my_head["y"] > y_boarder[1]:
-                return "down"
-            return "left"
-        # x in the middle part
-        if my_head["y"] > y_boarder[1]:
-            return "down"
-        if my_head["y"] == y_boarder[1]:
-            #return "down"
-            return "left"
-        if my_head["y"] > y_boarder[0]:
-            return "down"
-        return "left"
-
-def get_up_coord(head_coord: dict[str, int]) -> dict[str, int]:
-    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
-        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
-
-    return {"x": head_coord["x"], "y": head_coord["y"] + 1}
-
-    
-    #orbit on a square route
-
-    #my var
-    game_state["margin"] = 3
-
-    if on_orbit(game_state):
-        if not at_corner(game_state):
-            return { "move": current_dir(game_state) }
-        # at corner
-        return { "move": corner_move(game_state) }
-    #not on orbit
-    move = "left"
-    if current_dir(game_state) == "right":
-        move = right_case(game_state)
-    elif current_dir(game_state) == "left":
-        move = left_case(game_state)
-    elif current_dir(game_state) == "up":
-        move = up_case(game_state)
-    elif current_dir(game_state) == "down":
-        move = down_case(game_state)
-
-    return { "move": move }
-    
-# move is called on every turn and returns your next move
-# Valid moves are "up", "down", "left", or "right"
-# See https://docs.battlesnake.com/api/example-move for available data
-def move2(game_state: typing.Dict) -> typing.Dict:
-
-    is_move_safe = {"up": True, "down": True, "left": True, "right": True}
-
-    # We've included code to prevent your Battlesnake from moving backwards
-    my_head = game_state["you"]["body"][0]  # Coordinates of your head
-    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-
-    if my_neck["x"] < my_head["x"]:  # Neck is left of head, don't move left
-        is_move_safe["left"] = False
-
-    elif my_neck["x"] > my_head["x"]:  # Neck is right of head, don't move right
-        is_move_safe["right"] = False
-
-    elif my_neck["y"] < my_head["y"]:  # Neck is below head, don't move down
-        is_move_safe["down"] = False
-
-    elif my_neck["y"] > my_head["y"]:  # Neck is above head, don't move up
-        is_move_safe["up"] = False
-
-    #redeploy
-    # TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
-    board_width = game_state['board']['width']
-    board_height = game_state['board']['height']
-    if my_head["x"] == 0:
-        is_move_safe["left"] = False
-    elif my_head["x"] == board_width - 1:
-        is_move_safe["right"] = False
-    if my_head["y"] == 0:
-        is_move_safe["down"] = False
-    elif my_head["y"] == board_height - 1:
-        is_move_safe["up"] = False
-
-    # TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-    my_body = game_state['you']['body']
-    for i in range(1, len(my_body)):
-        if my_head["x"] == my_body[i]["x"] and my_head["y"] == my_body[i]["y"]:
-            if my_head["x"] < my_body[i]["x"]:
-                is_move_safe["left"] = False
-            elif my_head["x"] > my_body[i]["x"]:
-                is_move_safe["right"] = False
-            elif my_head["y"] < my_body[i]["y"]:
-                is_move_safe["down"] = False
-            elif my_head["y"] > my_body[i]["y"]:
-                is_move_safe["up"] = False
-
-    # TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
-    opponents = game_state['board']['snakes']
-
-    # Are there any safe moves left?
-    safe_moves = []
-    for move, isSafe in is_move_safe.items():
-        if isSafe:
-            safe_moves.append(move)
-
-    if len(safe_moves) == 0:
-        print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
-        return {"move": "down"}
-
-    # Choose a random move from the safe ones
-    #next_move = random.choice(safe_moves)
-    if len(my_body) <= 20:
-        if my_head["x"] < my_neck["x"] and my_head["x"] >= board_width // 2:
-            next_move = "left"
-        elif my_head["x"] > my_neck["x"] and my_head["x"] <= board_width // 2:
-            next_move = "right"
-        elif my_head["y"] < my_neck["y"] and my_head["y"] >= board_height // 2:
-            next_move = "down"
-        elif my_head["y"] > my_neck["y"] and my_head["y"] <= board_height // 2:
-            next_move = "up"
-        else:
-            next_move = safe_moves[0]
-    else:
-        next_move = safe_moves[0]
-
-    # TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-    # food = game_state['board']['food']
-
-    print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
