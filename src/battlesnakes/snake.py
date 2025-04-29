@@ -309,9 +309,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return False
         x0,y0 = my_next_head_coord
         x1,y1 = body[0]["x"], body[0]["y"]
-        if y0 == y1 and math.abs(x1-x0) == 1:
+        if y0 == y1 and abs(x1-x0) == 1:
             return True
-        if x0 == x1 and math.abs(y1-y0) == 1:
+        if x0 == x1 and abs(y1-y0) == 1:
             return True
         return False
 
