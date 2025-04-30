@@ -23,6 +23,22 @@ def get_up_coord(head_coord: dict[str, int]) -> dict[str, int]:
 
     return {"x": head_coord["x"], "y": head_coord["y"] + 1}
 
+def get_direction_coord(direction: str, head_coord: dict[str, int]) -> dict[str, int]:
+    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
+        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
+
+    match direction:
+        case "up":
+            return {"x": head_coord["x"], "y": head_coord["y"] + 1}
+        case "down":
+            return {"x": head_coord["x"], "y": head_coord["y"] - 1}
+        case "left":
+            return {"x": head_coord["x"] - 1, "y": head_coord["y"]}
+        case "right":
+            return {"x": head_coord["x"] + 1, "y": head_coord["y"]}
+
+    raise ValueError(f"invalid direction: {direction}")
+
 # start is called when your Battlesnake begins a game
 def start(game_state: typing.Dict):
     print("GAME START")
