@@ -1,4 +1,3 @@
-import random
 import typing
 import math
 
@@ -23,6 +22,22 @@ def get_up_coord(head_coord: dict[str, int]) -> dict[str, int]:
 
     return {"x": head_coord["x"], "y": head_coord["y"] + 1}
 
+def get_direction_coord(direction: str, head_coord: dict[str, int]) -> dict[str, int]:
+    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
+        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
+
+    match direction:
+        case "up":
+            return {"x": head_coord["x"], "y": head_coord["y"] + 1}
+        case "down":
+            return {"x": head_coord["x"], "y": head_coord["y"] - 1}
+        case "left":
+            return {"x": head_coord["x"] - 1, "y": head_coord["y"]}
+        case "right":
+            return {"x": head_coord["x"] + 1, "y": head_coord["y"]}
+
+    raise ValueError(f"invalid direction: {direction}")
+
 # start is called when your Battlesnake begins a game
 def start(game_state: typing.Dict):
     print("GAME START")
@@ -31,6 +46,10 @@ def start(game_state: typing.Dict):
 # end is called when your Battlesnake finishes a game
 def end(game_state: typing.Dict):
     print("GAME OVER\n")
+
+
+
+
 
 def move(game_state: typing.Dict) -> typing.Dict:
     """
@@ -399,15 +418,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
     danger_set = move_set_result - safer_move_set_result
     if next_move in move_set_result:
         if next_move in danger_set:
-            #prefer risk
-            pass
+            #next_move can cause a head-to-head die, but not deterministic
+            if len(safer_move_set_result) != 0:
+                next_move = next(iter(safer_move_set_result))
         else:
-            #no doubt
+            #no doubt, move in routine
             pass
     else:
         if len(move_set_result) == 0:
+            #no move set, will die
             pass
         else:
+            #planned move not possible, choose the first dir allowed
             next_move = next(iter(move_set_result))
     print(f"next_move final: {next_move}")
 
