@@ -47,6 +47,10 @@ def start(game_state: typing.Dict):
 def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
+
+
+
+
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -414,15 +418,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
     danger_set = move_set_result - safer_move_set_result
     if next_move in move_set_result:
         if next_move in danger_set:
-            #prefer risk
-            pass
+            #next_move can cause a head-to-head die, but not deterministic
+            if len(safer_move_set_result) != 0:
+                next_move = next(iter(safer_move_set_result))
         else:
-            #no doubt
+            #no doubt, move in routine
             pass
     else:
         if len(move_set_result) == 0:
+            #no move set, will die
             pass
         else:
+            #planned move not possible, choose the first dir allowed
             next_move = next(iter(move_set_result))
     print(f"next_move final: {next_move}")
 
