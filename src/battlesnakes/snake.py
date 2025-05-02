@@ -418,7 +418,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
 
     danger_set = move_set_result - safer_move_set_result
-    print(f"head {head_coord}, move_set {move_set_result}, safer_move_set {safer_move_set_result}, danger_set {danger_set}")
+    print(f"trun {game_state["turn"]}, head {head_coord}, move_set {move_set_result}, safer_move_set {safer_move_set_result}, danger_set {danger_set}")
     if next_move in move_set_result:
         if next_move in danger_set:
             #next_move can cause a head-to-head die, but not deterministic
