@@ -339,7 +339,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if my_next_head_coord not in body_list:
             move_set.add("down")
         
-        safer_move_set = move_set
+        safer_move_set = set(move_set)
 
         return move_set, safer_move_set
 
@@ -409,10 +409,12 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     move_set_result = check_border()
     safer_move_set_result = check_border()
+    print(f"safer_move_set {safer_move_set_result}")
     for body in [s["body"] for s in game_state["board"]["snakes"]]:
         move_set, safer_move_set = check_opponent(body)
         move_set_result = move_set_result.intersection(move_set)
         safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
+        print(f"safer_move_set {safer_move_set_result}")
     move_set, safer_move_set = check_self(game_state["you"]["body"])
     move_set_result = move_set_result.intersection(move_set)
     safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
