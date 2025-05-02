@@ -304,7 +304,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return move_set
 
 
-    def check_self(body: typing.List) -> typing.Set:
+    def check_self(body: typing.List) -> typing.Tuple:
         my_head = game_state["you"]["body"][0]  # Coordinates of your head
         my_head_coord = (my_head["x"], my_head["y"])
         x0,y0 = my_head_coord
@@ -338,8 +338,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         my_next_head_coord = x1,y1
         if my_next_head_coord not in body_list:
             move_set.add("down")
+        
+        safer_move_set = move_set
 
-        return move_set
+        return move_set, safer_move_set
 
     def possible_head_to_head_die(my_next_head_coord: typing.Tuple, body: typing.List) -> bool:
         if len(body) < len(game_state["you"]["body"]):
@@ -405,18 +407,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
     next_move = get_next_move(head_coord, next_head_coord)
     print(f"next_move calc: {next_move}")
 
-    move_set_result: typing.Set = check_border()
-    safer_move_set_result: typing.Set = check_border()
+    move_set_result = check_border()
+    safer_move_set_result = check_border()
     for body in [s["body"] for s in game_state["board"]["snakes"]]:
         move_set, safer_move_set = check_opponent(body)
         move_set_result = move_set_result.intersection(move_set)
         safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
-    move_set = check_self(game_state["you"]["body"])
+    move_set, safer_move_set = check_self(game_state["you"]["body"])
     move_set_result = move_set_result.intersection(move_set)
-    safer_move_set_result = safer_move_set_result.intersection(move_set)
+    safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
 
     danger_set = move_set_result - safer_move_set_result
-    print(f"move_set {move_set_result}, safer_move_set {safer_move_set_result}, danger_set {danger_set}")
+    print(f"head {head_coord}, move_set {move_set_result}, safer_move_set {safer_move_set_result}, danger_set {danger_set}")
     if next_move in move_set_result:
         if next_move in danger_set:
             #next_move can cause a head-to-head die, but not deterministic
