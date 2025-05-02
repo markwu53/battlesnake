@@ -411,6 +411,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     safer_move_set_result = check_border()
     print(f"turn {game_state['turn']}, safer_move_set {safer_move_set_result}")
     for snake in game_state["board"]["snakes"]:
+        #game_state snakes include myself, need to exclude it
+        snake_head = snake["body"][0]
+        if (snake_head["x"], snake_head["y"]) == head_coord:
+            continue
         move_set, safer_move_set = check_opponent(snake["body"])
         move_set_result = move_set_result.intersection(move_set)
         safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
