@@ -421,6 +421,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #next_move can cause a head-to-head die, but not deterministic
             if len(safer_move_set_result) != 0:
                 next_move = next(iter(safer_move_set_result))
+            else:
+                #keep next_move
+                pass
         else:
             #no doubt, move in routine
             pass
