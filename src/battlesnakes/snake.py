@@ -409,12 +409,12 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     move_set_result = check_border()
     safer_move_set_result = check_border()
-    print(f"safer_move_set {safer_move_set_result}")
+    print(f"turn {game_state['turn']}, safer_move_set {safer_move_set_result}")
     for body in [s["body"] for s in game_state["board"]["snakes"]]:
         move_set, safer_move_set = check_opponent(body)
         move_set_result = move_set_result.intersection(move_set)
         safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
-        print(f"safer_move_set {safer_move_set_result}")
+        print(f"turn {game_state['turn']}, safer_move_set {safer_move_set_result}")
     move_set, safer_move_set = check_self(game_state["you"]["body"])
     move_set_result = move_set_result.intersection(move_set)
     safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
