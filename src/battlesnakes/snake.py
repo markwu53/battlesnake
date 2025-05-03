@@ -89,21 +89,28 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return False
         return True
 
-    area_width = 4
-    area_height = 4
+    def area_dim() -> typing.Tuple:
+        if len(game_state["board"]["snakes"] >= 4):
+            #3 or more opponents
+            return (4,3)
+        if len(game_state["board"]["snakes"] == 3):
+            #3 or more opponents
+            return (4,4)
+        #only 1 opponent
+        return (4,5)
 
     def four_corner() -> typing.List:
         x1,y1 = (0, 0)
-        x2,y2 = x1+area_width-1, y1+area_height-1
+        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
         bottom_left_corner = ((x1,y1), (x2,y2))
-        x1,y1 = (game_state["board"]["width"]-area_width, 0)
-        x2,y2 = x1+area_width-1, y1+area_height-1
+        x1,y1 = (game_state["board"]["width"]-area_dim()[0], 0)
+        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
         bottom_right_corner = ((x1,y1), (x2,y2))
-        x1,y1 = (0, game_state["board"]["height"]-area_height)
-        x2,y2 = x1+area_width-1, y1+area_height-1
+        x1,y1 = (0, game_state["board"]["height"]-area_dim()[1])
+        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
         top_left_corner = ((x1,y1), (x2,y2))
-        x1,y1 = (game_state["board"]["width"]-area_width, game_state["board"]["height"]-area_height)
-        x2,y2 = x1+area_width-1, y1+area_height-1
+        x1,y1 = (game_state["board"]["width"]-area_dim()[0], game_state["board"]["height"]-area_dim()[1])
+        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
         top_right_corner = ((x1,y1), (x2,y2))
         return [
             bottom_left_corner,
@@ -117,8 +124,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         for x1 in range(game_state["board"]["width"]):
             for y1 in range(game_state["board"]["height"]):
                 #bottom-left corner (x1,y1)
-                x2 = x1+area_width-1
-                y2 = y1+area_height-1
+                x2 = x1+area_dim()[0]-1
+                y2 = y1+area_dim()[1]-1
                 area = ((x1,y1), (x2,y2))
                 if not valid_area(area):
                     continue
@@ -133,12 +140,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
         for x1 in range(game_state["board"]["width"]):
             for y1 in range(game_state["board"]["height"]):
                 #bottom-left corner (x1,y1)
-                x2 = x1+area_width-1
-                y2 = y1+area_height-1
+                x2 = x1+area_dim()[0]-1
+                y2 = y1+area_dim()[1]-1
                 area = ((x1,y1), (x2,y2))
                 if not valid_area(area):
                     continue
-                if body_in_area(area, game_state["you"]["body"][:area_width]):
+                #4 is fixed, can change
+                if body_in_area(area, game_state["you"]["body"][:4]):
                     all_area.append(area)
             
         return all_area
@@ -163,12 +171,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
         get a rectangular area depend on the snake initial position
         so that even when the snake moves, the area doesn't change
         """
-        x_blocks = game_state["board"]["width"]//area_width
-        if game_state["board"]["width"] % area_width != 0:
-            x_blocks += 1
-        y_blocks = game_state["board"]["height"]//area_height
-        if game_state["board"]["height"] % area_height != 0:
-            y_blocks += 1
 
         #prefer four corner
         for area in four_corner():
@@ -233,6 +235,58 @@ def move(game_state: typing.Dict) -> typing.Dict:
             (0,1),
         ]
 
+    def order_4x5() -> typing.List:
+        return [
+            (0,0),
+            (1,0),
+            (2,0),
+            (3,0),
+            (3,1),
+            (3,2),
+            (3,3),
+            (3,4),
+            (2,4),
+            (2,3),
+            (2,2),
+            (2,1),
+            (1,1),
+            (1,2),
+            (1,3),
+            (1,4),
+            (0,4),
+            (0,3),
+            (0,2),
+            (0,1),
+        ]
+
+    def order_4x6() -> typing.List:
+        return [
+            (0,0),
+            (1,0),
+            (2,0),
+            (3,0),
+            (4,0),
+            (5,0),
+            (5,1),
+            (5,2),
+            (5,3),
+            (4,3),
+            (4,2),
+            (4,1),
+            (3,1),
+            (3,2),
+            (3,3),
+            (2,3),
+            (2,2),
+            (2,1),
+            (1,1),
+            (1,2),
+            (1,3),
+            (0,3),
+            (0,2),
+            (0,1),
+        ]
+
     def get_next_move(head_coord: typing.Tuple, next_head_coord: typing.Tuple) -> str:
         x,y = head_coord
         nx,ny = next_head_coord
@@ -248,7 +302,14 @@ def move(game_state: typing.Dict) -> typing.Dict:
     # determine my position dirs
     def get_next_head_coord():
         area = get_area()
+
         order_list = order_4x4()
+        if area_dim() == (4,3):
+            order_list = order_4x3()
+        elif area_dim() == (4,4):
+            order_list = order_4x4()
+        elif area_dim() == (4,5):
+            order_list = order_4x5()
 
         bottom_left_corner = area[0]
         x0,y0 = bottom_left_corner
@@ -400,31 +461,31 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         return move_set, safer_move_set
 
+    def next_move_set() -> typing.Tuple:
+        move_set_result = check_border()
+        safer_move_set_result = check_border()
+        for snake in game_state["board"]["snakes"]:
+            #game_state snakes include myself, need to exclude it
+            snake_head = snake["body"][0]
+            if (snake_head["x"], snake_head["y"]) == head_coord:
+                continue
+            move_set, safer_move_set = check_opponent(snake["body"])
+            move_set_result = move_set_result.intersection(move_set)
+            safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
+        move_set, safer_move_set = check_self(game_state["you"]["body"])
+        move_set_result = move_set_result.intersection(move_set)
+        safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
+        return move_set_result, safer_move_set_result
+
     #main
     my_head = game_state["you"]["body"][0]
     head_coord = (my_head["x"], my_head["y"])
     next_head_coord = get_next_head_coord()
     next_move = get_next_move(head_coord, next_head_coord)
-    print(f"next_move calc: {next_move}")
 
-    move_set_result = check_border()
-    safer_move_set_result = check_border()
-    print(f"turn {game_state['turn']}, safer_move_set {safer_move_set_result}")
-    for snake in game_state["board"]["snakes"]:
-        #game_state snakes include myself, need to exclude it
-        snake_head = snake["body"][0]
-        if (snake_head["x"], snake_head["y"]) == head_coord:
-            continue
-        move_set, safer_move_set = check_opponent(snake["body"])
-        move_set_result = move_set_result.intersection(move_set)
-        safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
-        print(f"turn {game_state['turn']}, name {snake['name']}, safer_move_set {safer_move_set_result}")
-    move_set, safer_move_set = check_self(game_state["you"]["body"])
-    move_set_result = move_set_result.intersection(move_set)
-    safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
+    move_set_result, safer_move_set_result = next_move_set()
 
     danger_set = move_set_result - safer_move_set_result
-    print(f"turn {game_state['turn']}, head {head_coord}, move_set {move_set_result}, safer_move_set {safer_move_set_result}, danger_set {danger_set}")
     if next_move in move_set_result:
         if next_move in danger_set:
             #next_move can cause a head-to-head die, but not deterministic
