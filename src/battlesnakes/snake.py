@@ -90,10 +90,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return True
 
     def area_dim() -> typing.Tuple:
-        if len(game_state["board"]["snakes"] >= 4):
+        if len(game_state["board"]["snakes"]) >= 4:
             #3 or more opponents
             return (4,3)
-        if len(game_state["board"]["snakes"] == 3):
+        if len(game_state["board"]["snakes"]) == 3:
             #3 or more opponents
             return (4,4)
         #only 1 opponent
