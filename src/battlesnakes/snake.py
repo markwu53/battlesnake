@@ -135,20 +135,30 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return all_area
         
         #when the body is too long, this can be empty
-        #in this case, check the first 4 cells
+        #in this case, check the first several cells
+        #we go from 6 to 3 cells 
+        #this is determined by the dimension of the area
+        #3 is the smallest dimension size
         #this ensure the function must return something
-        for x1 in range(game_state["board"]["width"]):
-            for y1 in range(game_state["board"]["height"]):
-                #bottom-left corner (x1,y1)
-                x2 = x1+area_dim()[0]-1
-                y2 = y1+area_dim()[1]-1
-                area = ((x1,y1), (x2,y2))
-                if not valid_area(area):
-                    continue
-                #4 is fixed, can change
-                if body_in_area(area, game_state["you"]["body"][:4]):
-                    all_area.append(area)
-            
+        def check_first_n(n: int) -> typing.List:
+            areas = []
+            for x1 in range(game_state["board"]["width"]):
+                for y1 in range(game_state["board"]["height"]):
+                    #bottom-left corner (x1,y1)
+                    x2 = x1+area_dim()[0]-1
+                    y2 = y1+area_dim()[1]-1
+                    area = ((x1,y1), (x2,y2))
+                    if not valid_area(area):
+                        continue
+                    if body_in_area(area, game_state["you"]["body"][:n]):
+                        areas.append(area)
+            return areas
+        for n in [6,5,4,3]:
+            areas = check_first_n(n)
+            if len(areas) != 0:
+                all_area += areas
+                break
+                
         return all_area
         
 
