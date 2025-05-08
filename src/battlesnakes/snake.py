@@ -100,16 +100,17 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return (4,5)
 
     def four_corner() -> typing.List:
-        x1,y1 = (0, 0)
+        #change to margin 1
+        x1,y1 = (1, 1)
         x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
         bottom_left_corner = ((x1,y1), (x2,y2))
-        x1,y1 = (game_state["board"]["width"]-area_dim()[0], 0)
+        x1,y1 = (game_state["board"]["width"]-area_dim()[0]-1, 1)
         x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
         bottom_right_corner = ((x1,y1), (x2,y2))
-        x1,y1 = (0, game_state["board"]["height"]-area_dim()[1])
+        x1,y1 = (1, game_state["board"]["height"]-area_dim()[1]-1)
         x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
         top_left_corner = ((x1,y1), (x2,y2))
-        x1,y1 = (game_state["board"]["width"]-area_dim()[0], game_state["board"]["height"]-area_dim()[1])
+        x1,y1 = (game_state["board"]["width"]-area_dim()[0]-1, game_state["board"]["height"]-area_dim()[1]-1)
         x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
         top_right_corner = ((x1,y1), (x2,y2))
         return [
