@@ -222,7 +222,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         foods = game_state["board"]["food"]
         foods = [f for f in foods if x1<=f["x"]<=x2 and y1<=f["y"]<=y2]
         food_density = len(foods)
-        food_dist = [abs(f["x"]-my_head["x"]+abs(f["y"]-my_head["y"])) for f in foods]
+        food_dist = [abs(f["x"]-my_head["x"])+abs(f["y"]-my_head["y"]) for f in foods]
         min_dist = 100 if len(food_dist) == 0 else min(food_dist)
 
         return (food_density, 100-min_dist)
