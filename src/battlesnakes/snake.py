@@ -215,11 +215,17 @@ def move(game_state: typing.Dict) -> typing.Dict:
         y2 = y1 + area_dim()[1]-1
         return ((x1,y1), (x2,y2))
 
-    def food_density(area) -> int:
+    def food_target(area) -> typing.Tuple:
+
+        my_head = game_state["you"]["body"][0]
         ((x1,y1), (x2,y2)) = area
         foods = game_state["board"]["food"]
         foods = [f for f in foods if x1<=f["x"]<=x2 and y1<=f["y"]<=y2]
-        return len(foods)
+        food_density = len(foods)
+        food_dist = [abs(f["x"]-my_head["x"]+abs(f["y"]-my_head["y"])) for f in foods]
+        min_dist = 100 if len(food_dist) == 0 else min(food_dist)
+
+        return (food_density, min_dist)
 
     def calc_target_area():
 
@@ -227,7 +233,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         # if health is good, only move when it's too crowded
         ################################################
 
-        if game_state["you"]["health"] >= 20:
+        if game_state["you"]["health"] >= 30:
             my_head = game_state["you"]["body"][0]
             if head_in_a_quadrant(my_head):
                 quadrant = head_quadrant(my_head)
@@ -247,13 +253,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
         # if health is bad, find food
         ################################################
 
-        #health < 20 ---> find food
+        #health < 30 ---> find food
         dimx, dimy = area_dim()
         all_areas = [((x,x+dimx-1), (y,y+dimy-1)) 
                      for x in range(game_state["board"]["width"])
                      for y in range(game_state["board"]["height"]) ]
         all_valid_areas = [a for a in all_areas if valid_area(a)]
-        areas_sorted = sorted(all_valid_areas, key=food_density, reverse=True)
+        areas_sorted = sorted(all_valid_areas, key=food_target, reverse=True)
         area = areas_sorted[0]
         return area
 
