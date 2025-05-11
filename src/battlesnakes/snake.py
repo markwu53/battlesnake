@@ -156,8 +156,14 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return True
     
     def head_quadrant(head) -> typing.Tuple:
-        xx = head["x"] // (game_state["board"]["width"] //2)
-        yy = head["y"] // (game_state["board"]["width"] //2)
+        if head["x"] < (game_state["board"]["width"] //2):
+            xx = 0
+        else:
+            xx = 1
+        if head["y"] < (game_state["board"]["height"] //2):
+            yy = 0
+        else:
+            yy = 1
         return (xx, yy)
     
     def opponent_head_count_in_quadrant(q):
