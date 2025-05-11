@@ -589,6 +589,24 @@ def move(game_state: typing.Dict) -> typing.Dict:
         else:
             #planned move not possible, choose the first dir allowed
             next_move = next(iter(move_set_result))
-    print(f"next_move final: {next_move}, turn: {game_state['turn']}, my pos: {game_state['you']['body'][0]}, health: {game_state['you']['health']}, target: {game_state['debug_target']}")
+    
+    log_move = f"next_move final: {next_move}"
+    log_turn = f"turn: {game_state['turn']}"
+    log_head = f"my pos: {game_state['you']['body'][0]}"
+    log_health = f"health: {game_state['you']['health']}"
+    log_target =f"target: {game_state['debug_target']}"
+    log_snakes = [s["name"] for s in opponents()]
+    log_snakes = "|".join(log_snakes)
+    log_opponents = f"oppo: {log_snakes}"
+    log = ", ".join([
+        log_move,
+        log_turn,
+        log_head,
+        log_health,
+        log_target,
+        log_opponents,
+    ])
+
+    print(log)
 
     return {"move": next_move}
