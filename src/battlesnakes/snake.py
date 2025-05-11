@@ -607,6 +607,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         log_opponents,
     ])
 
-    print(log)
+    if game_state["you"]["health"] < 40:
+        print(log)
 
     return {"move": next_move}
