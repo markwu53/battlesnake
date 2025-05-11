@@ -270,6 +270,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         """
 
         target = calc_target_area()
+        game_state["debug_target"] = target
 
         if body_in_area(target, game_state["you"]["body"]):
             return target
@@ -588,6 +589,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
         else:
             #planned move not possible, choose the first dir allowed
             next_move = next(iter(move_set_result))
-    print(f"next_move final: {next_move}, turn: {game_state['turn']}, my pos: {game_state['you']['body'][0]}")
+    print(f"next_move final: {next_move}, turn: {game_state['turn']}, my pos: {game_state['you']['body'][0]}, health: {game_state['you']['health']}, target: {game_state['debug_target']}")
 
     return {"move": next_move}
