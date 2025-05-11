@@ -255,7 +255,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #health < 30 ---> find food
         dimx, dimy = area_dim()
-        all_areas = [((x,x+dimx-1), (y,y+dimy-1)) 
+        all_areas = [((x,y), (x+dimx-1,y+dimy-1)) 
                      for x in range(game_state["board"]["width"])
                      for y in range(game_state["board"]["height"]) ]
         all_valid_areas = [a for a in all_areas if valid_area(a)]
