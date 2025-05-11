@@ -50,7 +50,7 @@ def end(game_state: typing.Dict):
 
 
 
-
+#this is a good move that give me 6719 #83 in leaderboard
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -94,10 +94,30 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #3 or more opponents
             return (4,3)
         if len(game_state["board"]["snakes"]) == 3:
-            #2 opponents
+            #3 or more opponents
             return (4,4)
         #only 1 opponent
         return (4,5)
+
+    def four_corner() -> typing.List:
+        x1,y1 = (0, 0)
+        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
+        bottom_left_corner = ((x1,y1), (x2,y2))
+        x1,y1 = (game_state["board"]["width"]-area_dim()[0], 0)
+        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
+        bottom_right_corner = ((x1,y1), (x2,y2))
+        x1,y1 = (0, game_state["board"]["height"]-area_dim()[1])
+        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
+        top_left_corner = ((x1,y1), (x2,y2))
+        x1,y1 = (game_state["board"]["width"]-area_dim()[0], game_state["board"]["height"]-area_dim()[1])
+        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
+        top_right_corner = ((x1,y1), (x2,y2))
+        return [
+            bottom_left_corner,
+            bottom_right_corner,
+            top_left_corner,
+            top_right_corner,
+        ]
 
     def all_containing_area() -> typing.List:
         all_area = []
@@ -141,127 +161,20 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 
         return all_area
         
-    def opponents():
-        my_head = game_state["you"]["body"][0]
-        snakes = [s for s in game_state["board"]["snakes"] 
-                if ( s["body"][0]["x"], s["body"][0]["x"]) != (my_head["x"], my_head["y"]) ]
-        return snakes
 
-    def head_in_a_quadrant(head) -> bool:
-        #head can be in a quadrant or in the middle line
-        if head["x"] == game_state["board"]["width"] //2:
-            return False
-        if head["y"] == game_state["board"]["height"] //2:
-            return False
-        return True
-    
-    def head_quadrant(head) -> typing.Tuple:
-        if head["x"] < (game_state["board"]["width"] //2):
-            xx = 0
-        else:
-            xx = 1
-        if head["y"] < (game_state["board"]["height"] //2):
-            yy = 0
-        else:
-            yy = 1
-        return (xx, yy)
-    
-    def opponent_head_count_in_quadrant(q):
-        snakes = opponents()
-        snake_heads = [s["body"][0] for s in snakes]
-        snake_heads = [sh for sh in snake_heads if head_in_a_quadrant(sh)]
-        snake_heads = [sh for sh in snake_heads if head_quadrant(sh) == q]
-        return len(snake_heads)
+    def target_corner() -> typing.Tuple:
+        body_center_x = sum([cell["x"] for cell in game_state["you"]["body"]]) / game_state["you"]["length"]
+        body_center_y = sum([cell["y"] for cell in game_state["you"]["body"]]) / game_state["you"]["length"]
+        corners = four_corner()
 
-    def quadrant_order():
-        #counterclockwise
-        return [
-            (0,0),
-            (1,0),
-            (1,1),
-            (0,1),
-        ]
+        def sort_corner(corner: typing.Tuple):
+            ((x1,y1), (x2,y2)) = corner
+            xc = (x1+x2)/2
+            yc = (y1+y2)/2
+            return math.sqrt((xc-body_center_x)**2+(yc-body_center_y)**2)
 
-    def next_quadrant(q):
-        qs = quadrant_order()
-        next_quadrant_dict = {a:b for a,b in zip(qs, qs[1:]+[qs[0]])}
-        return next_quadrant_dict[q]
-
-    def resolve_head_in_middle(head):
-        if head["x"] < game_state["board"]["width"] //2:
-            return (0,0)
-        if head["x"] > game_state["board"]["width"] //2:
-            return (1,1)
-        if head["y"] < game_state["board"]["height"] //2:
-            return (1,0)
-        if head["y"] > game_state["board"]["height"] //2:
-            return (0,1)
-        return (0,0)
-
-    def quadrant_area(q):
-        x,y = q
-        if x == 0:
-            x1 = 1
-        else:
-            x2 = game_state["board"]["width"] -2
-            x1 = x2 - area_dim()[0]+1
-        if y == 0:
-            y1 = 1
-        else:
-            y2 = game_state["board"]["height"] -2
-            y1 = y2 - area_dim()[1]+1
-
-        x2 = x1 + area_dim()[0]-1
-        y2 = y1 + area_dim()[1]-1
-        return ((x1,y1), (x2,y2))
-
-    def food_target(area) -> typing.Tuple:
-
-        my_head = game_state["you"]["body"][0]
-        ((x1,y1), (x2,y2)) = area
-        foods = game_state["board"]["food"]
-        foods = [f for f in foods if x1<=f["x"]<=x2 and y1<=f["y"]<=y2]
-        food_density = len(foods)
-        food_dist = [abs(f["x"]-my_head["x"])+abs(f["y"]-my_head["y"]) for f in foods]
-        min_dist = 100 if len(food_dist) == 0 else min(food_dist)
-
-        return (food_density, 100-min_dist)
-
-    def calc_target_area():
-
-        ################################################
-        # if health is good, only move when it's too crowded
-        ################################################
-
-        if game_state["you"]["health"] >= 30:
-            my_head = game_state["you"]["body"][0]
-            if head_in_a_quadrant(my_head):
-                quadrant = head_quadrant(my_head)
-                count = opponent_head_count_in_quadrant(quadrant)
-                if count >= 2:
-                    #too crowded --> move to diagonal opposite corner
-                    area = quadrant_area(next_quadrant(quadrant))
-                else:
-                    #stay
-                    area = quadrant_area(quadrant)
-            else:
-                #resolve head in the middle line
-                area = quadrant_area(resolve_head_in_middle(my_head))
-            return area
-
-        ################################################
-        # if health is bad, find food
-        ################################################
-
-        #health < 30 ---> find food
-        dimx, dimy = area_dim()
-        all_areas = [((x,y), (x+dimx-1,y+dimy-1)) 
-                     for x in range(game_state["board"]["width"])
-                     for y in range(game_state["board"]["height"]) ]
-        all_valid_areas = [a for a in all_areas if valid_area(a)]
-        areas_sorted = sorted(all_valid_areas, key=food_target, reverse=True)
-        area = areas_sorted[0]
-        return area
+        corners = sorted(corners, key=sort_corner)
+        return corners[0]
 
     def get_area() -> typing.Tuple:
         """
@@ -269,21 +182,31 @@ def move(game_state: typing.Dict) -> typing.Dict:
         so that even when the snake moves, the area doesn't change
         """
 
-        target = calc_target_area()
-        game_state["debug_target"] = target
+        #prefer four corner
+        for area in four_corner():
+            if body_in_area(area, game_state["you"]["body"]):
+                return area
 
-        if body_in_area(target, game_state["you"]["body"]):
-            return target
+        #if not in one of four corners, find one close to it,
+        #so that the area will move to the closest corner
 
+        #if not found then find the first area that contains the snake
+        #this can move so that next time will find a fixed area
+        target = target_corner()
+
+        #when it's too long, this can be empty
         areas = all_containing_area()
 
-        def sort_area_to_target(area: typing.Tuple):
+        def sort_area(area: typing.Tuple):
             ((x1,y1), (x2,y2)) = area
-            ((xx1,yy1), (xx2,yy2)) = target
-            dist = abs(x1-xx1)+abs(y1-yy1)
-            return dist
+            xc = (x1+x2)/2
+            yc = (y1+y2)/2
+            ((target_x1, target_y1), (target_x2, target_y2)) = target
+            target_xc = (target_x1+target_x2)/2
+            target_yc = (target_y1+target_y2)/2
+            return math.sqrt((xc-target_xc)**2+(yc-target_yc)**2)
 
-        areas = sorted(areas, key=sort_area_to_target)
+        areas = sorted(areas, key=sort_area)
         return areas[0]
 
     def order_4x3() -> typing.List:
@@ -496,7 +419,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return False
         x0,y0 = my_next_head_coord
         x1,y1 = body[0]["x"], body[0]["y"]
-        if abs(x1-x0)+abs(y1-y0) == 1:
+        if y0 == y1 and abs(x1-x0) == 1:
+            return True
+        if x0 == x1 and abs(y1-y0) == 1:
             return True
         return False
 
@@ -589,25 +514,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         else:
             #planned move not possible, choose the first dir allowed
             next_move = next(iter(move_set_result))
-    
-    log_move = f"next_move final: {next_move}"
-    log_turn = f"turn: {game_state['turn']}"
-    log_head = f"my pos: {game_state['you']['body'][0]}"
-    log_health = f"health: {game_state['you']['health']}"
-    log_target =f"target: {game_state['debug_target']}"
-    log_snakes = [s["name"] for s in opponents()]
-    log_snakes = "|".join(log_snakes)
-    log_opponents = f"oppo: {log_snakes}"
-    log = ", ".join([
-        log_move,
-        log_turn,
-        log_head,
-        log_health,
-        log_target,
-        log_opponents,
-    ])
-
-    if game_state["you"]["health"] < 40:
-        print(log)
+    print(f"next_move final: {next_move}")
 
     return {"move": next_move}
+
