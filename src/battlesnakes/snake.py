@@ -94,7 +94,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #3 or more opponents
             return (4,3)
         if len(game_state["board"]["snakes"]) == 3:
-            #3 or more opponents
+            #2 opponents
             return (4,4)
         #only 1 opponent
         return (4,5)
@@ -276,16 +276,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         areas = all_containing_area()
 
-        def sort_area(area: typing.Tuple):
+        def sort_area_to_target(area: typing.Tuple):
             ((x1,y1), (x2,y2)) = area
-            xc = (x1+x2)/2
-            yc = (y1+y2)/2
-            ((target_x1, target_y1), (target_x2, target_y2)) = target
-            target_xc = (target_x1+target_x2)/2
-            target_yc = (target_y1+target_y2)/2
-            return math.sqrt((xc-target_xc)**2+(yc-target_yc)**2)
+            ((xx1,yy1), (xx2,yy2)) = target
+            dist = abs(x1-xx1)+abs(y1-yy1)
+            return dist
 
-        areas = sorted(areas, key=sort_area)
+        areas = sorted(areas, key=sort_area_to_target)
         return areas[0]
 
     def order_4x3() -> typing.List:
