@@ -310,7 +310,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     #1. determine the area dimension corners
     # determine my position dirs
-    def get_next_head_coord():
+    def routine_move():
         area = get_area()
 
         order_list = order_4x4()
@@ -336,7 +336,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         next_head_pos %= len(order_list)
         if relative_neck_coord == order_list[next_head_pos]:
             next_head_pos = head_pos-1
-        next_head_pos %= len(order_list)
+            next_head_pos %= len(order_list)
 
         #get next_head absolute coordinate
         x2,y2 = order_list[next_head_pos]
@@ -345,162 +345,107 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         return (x2,y2)
 
-    def check_border() -> typing.Set:
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_head_coord = (my_head["x"], my_head["y"])
-        x0,y0 = my_head_coord
-
-        move_set = set()
-
-        #left
-        x1,y1 = x0-1,y0
-        if x1 >= 0:
-            move_set.add("left")
-
-        #right
-        x1,y1 = x0+1,y0
-        if x1 < game_state["board"]["width"]:
-            move_set.add("right")
-
-        #up
-        x1,y1 = x0,y0+1
-        if y1 < game_state["board"]["height"]:
-            move_set.add("up")
-
-        #down
-        x1,y1 = x0,y0-1
-        if y1 >= 0:
-            move_set.add("down")
-        
-        return move_set
-
-
-    def check_self(body: typing.List) -> typing.Tuple:
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_head_coord = (my_head["x"], my_head["y"])
-        x0,y0 = my_head_coord
-
-        move_set = set()
-
-        body_list = [(b["x"],b["y"]) for b in body]
-        #tail should move - not considering eating food
-        body_list = body_list[:-1]
-
-        #left
-        x1,y1 = x0-1,y0
-        my_next_head_coord = x1,y1
-        if my_next_head_coord not in body_list:
-            move_set.add("left")
-        
-        #right
-        x1,y1 = x0+1,y0
-        my_next_head_coord = x1,y1
-        if my_next_head_coord not in body_list:
-            move_set.add("right")
-        
-        #up
-        x1,y1 = x0,y0+1
-        my_next_head_coord = x1,y1
-        if my_next_head_coord not in body_list:
-            move_set.add("up")
-        
-        #down
-        x1,y1 = x0,y0-1
-        my_next_head_coord = x1,y1
-        if my_next_head_coord not in body_list:
-            move_set.add("down")
-        
-        safer_move_set = set(move_set)
-
-        return move_set, safer_move_set
-
-    def possible_head_to_head_die(my_next_head_coord: typing.Tuple, body: typing.List) -> bool:
-        if len(body) < len(game_state["you"]["body"]):
+    def pos_on_board(pos: typing.Tuple) -> bool:
+        x,y = pos
+        if x < 0:
             return False
-        x0,y0 = my_next_head_coord
-        x1,y1 = body[0]["x"], body[0]["y"]
-        if y0 == y1 and abs(x1-x0) == 1:
+        if y < 0:
+            return False
+        if x >= game_state["board"]["width"]:
+            return False
+        if y >= game_state["board"]["height"]:
+            return False
+        return True
+
+    def adj_cells(pos: typing.Tuple) -> typing.List:
+        x,y = pos
+        moves = [(1,0), (-1,0), (0,1), (0,-1)]
+        npos = [(a+x,b+y) for a,b in moves]
+        npos = [p for p in npos if pos_on_board(p)]
+        return npos
+
+    def permissible_first_step(head: typing.Tuple) -> typing.List:
+        #head is the head coordinate
+        npos = adj_cells(head)
+        allowed = []
+        for p in npos:
+            for s in game_state["board"]["snakes"]:
+                #including self
+                body = [(c["x"],c["y"]) for c in s["body"]]
+                if s["health"] == 100:
+                    #just eat food, tail will not move
+                    check_body = body
+                else:
+                    #tail will move, no need to check
+                    check_body = body[:-1]
+                if not p in check_body:
+                    allowed.append(p)
+        return allowed
+
+    def permissible_second_step(head: typing.Tuple) -> typing.List:
+        #head is the head coordinate
+        npos = adj_cells(head)
+        allowed = []
+        for p in npos:
+            for s in game_state["board"]["snakes"]:
+                #including self
+                body = [(c["x"],c["y"]) for c in s["body"]]
+                if s["health"] == 100:
+                    check_body = body[:-1]
+                else:
+                    check_body = body[:-2]
+                if not p in check_body:
+                    allowed.append(p)
+        return allowed
+
+    def allowed_next_move():
+        my_head = game_state["you"]["body"][0]
+        head = (my_head["x"], my_head["y"])
+        allowed = permissible_first_step(head)
+        allowed = [p for p in allowed if len(permissible_second_step(p)) != 0]
+        return allowed
+
+    def opponent_snakes() -> typing.List:
+        my_head = game_state["you"]["body"][0]
+        head = (my_head["x"], my_head["y"])
+        snakes = [s for s in game_state["board"]["snakes"]]
+        snakes = [s for s in snakes if (s["body"][0]["x"], s["body"][0]["y"]) != head]
+        return snakes
+
+    def is_adjacent(p1: typing.Tuple, p2: typing.Tuple) -> bool:
+        x1,y1 = p1
+        x2,y2 = p2
+        if x1 == x2 and abs(y1-y2) == 1:
             return True
-        if x0 == x1 and abs(y1-y0) == 1:
+        if y1 == y2 and abs(x1-x2) == 1:
             return True
         return False
 
-    def check_opponent(body: typing.List) -> typing.Tuple:
-        my_head = game_state["you"]["body"][0]  # Coordinates of your head
-        my_head_coord = (my_head["x"], my_head["y"])
-        x0,y0 = my_head_coord
+    def is_head_to_head_danger(pos):
+        for s in opponent_snakes():
+            shead = s["body"][0]
+            shead = shead["x"], shead["y"]
+            if is_adjacent(pos, shead):
+                return True
+        return False
 
-        move_set = set()
-        safer_move_set = set()
-
-        body_list = [(b["x"],b["y"]) for b in body]
-        #tail should move - not considering eating food
-        body_list = body_list[:-1]
-
-        #left
-        x1,y1 = x0-1,y0
-        my_next_head_coord = x1,y1
-        if my_next_head_coord not in body_list:
-            move_set.add("left")
-            if not possible_head_to_head_die(my_next_head_coord, body):
-                safer_move_set.add("left")
-        
-        #right
-        x1,y1 = x0+1,y0
-        my_next_head_coord = x1,y1
-        if my_next_head_coord not in body_list:
-            move_set.add("right")
-            if not possible_head_to_head_die(my_next_head_coord, body):
-                safer_move_set.add("right")
-        
-        #up
-        x1,y1 = x0,y0+1
-        my_next_head_coord = x1,y1
-        if my_next_head_coord not in body_list:
-            move_set.add("up")
-            if not possible_head_to_head_die(my_next_head_coord, body):
-                safer_move_set.add("up")
-        
-        #down
-        x1,y1 = x0,y0-1
-        my_next_head_coord = x1,y1
-        if my_next_head_coord not in body_list:
-            move_set.add("down")
-            if not possible_head_to_head_die(my_next_head_coord, body):
-                safer_move_set.add("down")
-
-        return move_set, safer_move_set
-
-    def next_move_set() -> typing.Tuple:
-        move_set_result = check_border()
-        safer_move_set_result = check_border()
-        for snake in game_state["board"]["snakes"]:
-            #game_state snakes include myself, need to exclude it
-            snake_head = snake["body"][0]
-            if (snake_head["x"], snake_head["y"]) == head_coord:
-                continue
-            move_set, safer_move_set = check_opponent(snake["body"])
-            move_set_result = move_set_result.intersection(move_set)
-            safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
-        move_set, safer_move_set = check_self(game_state["you"]["body"])
-        move_set_result = move_set_result.intersection(move_set)
-        safer_move_set_result = safer_move_set_result.intersection(safer_move_set)
-        return move_set_result, safer_move_set_result
+    def get_my_head() -> typing.Tuple:
+        my_head = game_state["you"]["body"][0]
+        head_coord = (my_head["x"], my_head["y"])
+        return head_coord
 
     #main
-    my_head = game_state["you"]["body"][0]
-    head_coord = (my_head["x"], my_head["y"])
-    next_head_coord = get_next_head_coord()
-    next_move = get_next_move(head_coord, next_head_coord)
 
-    move_set_result, safer_move_set_result = next_move_set()
+    next_head_coord = routine_move()
 
-    danger_set = move_set_result - safer_move_set_result
-    if next_move in move_set_result:
-        if next_move in danger_set:
-            #next_move can cause a head-to-head die, but not deterministic
-            if len(safer_move_set_result) != 0:
-                next_move = next(iter(safer_move_set_result))
+    allowed = allowed_next_move(get_my_head())
+    dangered = [p for p in allowed if is_head_to_head_danger(p)]
+    safed = [p for p in allowed if not p in dangered]
+
+    if next_head_coord in allowed:
+        if next_head_coord in dangered:
+            if len(safed) != 0:
+                next_head_coord = safed[0]
             else:
                 #keep next_move
                 pass
@@ -508,13 +453,37 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #no doubt, move in routine
             pass
     else:
-        if len(move_set_result) == 0:
-            #no move set, will die
+        if len(allowed) == 0:
+            #no allowed move
             pass
         else:
-            #planned move not possible, choose the first dir allowed
-            next_move = next(iter(move_set_result))
-    print(f"next_move final: {next_move}")
+            next_head_coord = allowed[0]
+
+    next_move = get_next_move(get_my_head(), next_head_coord)
+
+    #logging
+    log_move = next_move
+    log_head = get_my_head()
+    log_health = game_state["you"]["health"]
+    log_length = game_state["you"]["length"]
+    log_turn = game_state["turn"]
+    log_food_count = len(game_state["food"])
+    snakes = opponent_snakes()
+    snakes = sorted(snakes, key=lambda s: s["name"])
+    log_snake_count = len(snakes)
+    log_snake_names = [s["name"] for s in snakes]
+    log_snake_heads = [s["body"][0] for s in snakes]
+    log_snake_health = [s["health"] for s in snakes]
+    log_snake_length = [s["length"] for s in snakes]
+
+    log_text = ", ".join([
+        f"move: {log_move}",
+        f"turn: {log_turn}",
+        f"health: {log_health}",
+        f"health: {log_head}",
+        f"scount: {log_snake_count}",
+    ])
+    print(log_text)
 
     return {"move": next_move}
 
