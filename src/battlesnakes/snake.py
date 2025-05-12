@@ -466,7 +466,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_health = game_state["you"]["health"]
     log_length = game_state["you"]["length"]
     log_turn = game_state["turn"]
-    log_food_count = len(game_state["food"])
+    log_food_count = len(game_state["board"]["food"])
     snakes = opponent_snakes()
     snakes = sorted(snakes, key=lambda s: s["name"])
     log_snake_count = len(snakes)
