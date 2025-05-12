@@ -368,18 +368,20 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #head is the head coordinate
         npos = adj_cells(head)
         allowed = []
+
+        def run_into(p, s):
+            body = [(c["x"],c["y"]) for c in s["body"]]
+            if s["health"] == 100:
+                #just eat food, tail will not move
+                check_body = body
+            else:
+                #tail will move, no need to check
+                check_body = body[:-1]
+            return p in check_body
+
         for p in npos:
-            for s in game_state["board"]["snakes"]:
-                #including self
-                body = [(c["x"],c["y"]) for c in s["body"]]
-                if s["health"] == 100:
-                    #just eat food, tail will not move
-                    check_body = body
-                else:
-                    #tail will move, no need to check
-                    check_body = body[:-1]
-                if not p in check_body:
-                    allowed.append(p)
+            if not any([run_into(p, s) for s in game_state["board"]["snakes"]]):
+                allowed.append(p)
         return allowed
 
     def permissible_second_step(head: typing.Tuple) -> typing.List:
@@ -479,7 +481,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"move: {log_move}",
         f"turn: {log_turn}",
         f"health: {log_health}",
-        f"health: {log_head}",
+        f"head: {log_head}",
         f"scount: {log_snake_count}",
     ])
     print(log_text)
