@@ -399,8 +399,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return allowed
 
     def allowed_next_move():
-        my_head = game_state["you"]["body"][0]
-        head = (my_head["x"], my_head["y"])
+        head = get_my_head()
         allowed = permissible_first_step(head)
         allowed = [p for p in allowed if len(permissible_second_step(p)) != 0]
         return allowed
@@ -438,7 +437,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     next_head_coord = routine_move()
 
-    allowed = allowed_next_move(get_my_head())
+    allowed = allowed_next_move()
     dangered = [p for p in allowed if is_head_to_head_danger(p)]
     safed = [p for p in allowed if not p in dangered]
 
