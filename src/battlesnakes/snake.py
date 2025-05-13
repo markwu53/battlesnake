@@ -468,7 +468,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         return next_head_coord
 
-    def open_area_index(next_head):
+    def open_area_index(next_head: typing.Tuple) -> typing.Tuple:
         #check opponent snake heads in 5x5 area
         x0,y0 = get_my_head()
         x1,y1 = next_head
@@ -482,12 +482,17 @@ def move(game_state: typing.Dict) -> typing.Dict:
             corner1 = (x0-5, y0-2)
         corner2 = (n+4 for n in corner1)
         snakes = opponent_snakes()
-        snakes = [s["body"][0] for s in snakes]
-        snakes = [(s["x"], s["y"]) for s in snakes]
+        snake_heads = [s["body"][0] for s in snakes]
+        snake_heads = [(s["x"], s["y"]) for s in snake_heads]
         a1,b1 = corner1
         a2,b2 = corner2
-        count = len([x for x,y in snakes if a1<=x<=a2 and b1<=y<=b2])
-        return count
+        head_count = len([x for x,y in snake_heads if a1<=x<=a2 and b1<=y<=b2])
+        open_cell_count = len([(x,y) for x in range(a1,a2+1) for y in range(b1,b2+1) 
+                           if pos_on_board((x,y))
+                           and not (x,y) in [(p["x"], p["y"]) for s in snakes for p in s["body"]]
+                           ])
+
+        return head_count, 1000-open_cell_count #reverse order
 
 
     #main
