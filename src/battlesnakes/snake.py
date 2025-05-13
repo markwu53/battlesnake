@@ -388,16 +388,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #head is the head coordinate
         npos = adj_cells(head)
         allowed = []
+
+        def run_into(p, s):
+            body = [(c["x"],c["y"]) for c in s["body"]]
+            if s["health"] == 100:
+                check_body = body[:-1]
+            else:
+                check_body = body[:-2]
+            return p in check_body
+
         for p in npos:
-            for s in game_state["board"]["snakes"]:
-                #including self
-                body = [(c["x"],c["y"]) for c in s["body"]]
-                if s["health"] == 100:
-                    check_body = body[:-1]
-                else:
-                    check_body = body[:-2]
-                if not p in check_body:
-                    allowed.append(p)
+            if not any([run_into(p, s) for s in game_state["board"]["snakes"]]):
+                allowed.append(p)
         return allowed
 
     def allowed_next_move():
@@ -427,7 +429,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             shead = s["body"][0]
             shead = shead["x"], shead["y"]
             if is_adjacent(pos, shead):
-                return True
+                if game_state["you"]["length"] <= s["length"]:
+                    return True
         return False
 
     def get_my_head() -> typing.Tuple:
