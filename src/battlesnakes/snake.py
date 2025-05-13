@@ -468,6 +468,28 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         return next_head_coord
 
+    def open_area_index(next_head):
+        #check opponent snake heads in 5x5 area
+        x0,y0 = get_my_head()
+        x1,y1 = next_head
+        if y1-y0 == 1:
+            corner1 = (x0-2, y0+1)
+        elif y1-y0 == -1:
+            corner1 = (x0-2, y0-5)
+        elif x1-x0 == 1:
+            corner1 = (x0+1, y0-2)
+        else:
+            corner1 = (x0-5, y0-2)
+        corner2 = (n+4 for n in corner1)
+        snakes = opponent_snakes()
+        snakes = [s["body"][0] for s in snakes]
+        snakes = [(s["x"], s["y"]) for s in snakes]
+        a1,b1 = corner1
+        a2,b2 = corner2
+        count = len([x for x,y in snakes if a1<=x<=a2 and b1<=y<=b2])
+        return count
+
+
     #main
 
 
@@ -478,6 +500,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
     dangered_2step = [p for p in allowed if is_2step_head_to_head_danger(p)]
     safed = [p for p in allowed if not p in dangered]
     safed_2step = [p for p in safed if not p in dangered_2step]
+
+    #sort choices by open area index
+    allowed = sorted(allowed, key=open_area_index)
+    safed = sorted(safed, key=open_area_index)
+    safed_2step = sorted(safed_2step, key=open_area_index)
 
     #next_head_coord = old_choice(next_head_coord, allowed, dangered, safed)
 
