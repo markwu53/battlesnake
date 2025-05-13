@@ -501,6 +501,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     next_head_coord = routine_move()
 
+    def head_count_and_routine(next_head):
+        head_count, _ = open_area_index(next_head)
+        return head_count, 0 if next_head == next_head_coord else 1
+
     allowed = allowed_next_move()
     dangered = [p for p in allowed if is_head_to_head_danger(p)]
     dangered_2step = [p for p in allowed if is_2step_head_to_head_danger(p)]
@@ -532,6 +536,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if not next_head_coord in safed_2step:
                 if len(safed_2step) != 0:
                     next_head_coord = safed_2step[0]
+                else:
+                    #choose between routine and better safed
+                    #choose opponent head count over routine
+                    safed2 = sorted(safed, key=head_count_and_routine)
+                    next_head_coord = safed2[0]
 
     next_move = get_next_move(get_my_head(), next_head_coord)
 
