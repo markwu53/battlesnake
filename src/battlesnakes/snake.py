@@ -493,6 +493,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     #main
 
 
+
     next_head_coord = routine_move()
 
     allowed = allowed_next_move()
