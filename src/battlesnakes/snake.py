@@ -415,13 +415,22 @@ def move(game_state: typing.Dict) -> typing.Dict:
         snakes = [s for s in snakes if (s["body"][0]["x"], s["body"][0]["y"]) != head]
         return snakes
 
+    def distance_pq(p: typing.Tuple, q: typing.Tuple) -> int:
+        x1,y1 = p
+        x2,y2 = q
+        distance = abs(x1-x2) + abs(y1-y2)
+        return distance
+
     def is_adjacent(p1: typing.Tuple, p2: typing.Tuple) -> bool:
-        x1,y1 = p1
-        x2,y2 = p2
-        if x1 == x2 and abs(y1-y2) == 1:
-            return True
-        if y1 == y2 and abs(x1-x2) == 1:
-            return True
+        return distance_pq(p1, p2) == 1
+
+    def is_2step_head_to_head_danger(pos):
+        for s in opponent_snakes():
+            shead = s["body"][0]
+            shead = shead["x"], shead["y"]
+            if distance_pq(pos, shead) == 3:
+                if game_state["you"]["length"] <= s["length"]:
+                    return True
         return False
 
     def is_head_to_head_danger(pos):
@@ -438,30 +447,58 @@ def move(game_state: typing.Dict) -> typing.Dict:
         head_coord = (my_head["x"], my_head["y"])
         return head_coord
 
+    def old_choice(next_head_coord, allowed, dangered, safed):
+
+        if next_head_coord in allowed:
+            if next_head_coord in dangered:
+                if len(safed) != 0:
+                    next_head_coord = safed[0]
+                else:
+                    #keep next_move
+                    pass
+            else:
+                #no doubt, move in routine
+                pass
+        else:
+            if len(allowed) == 0:
+                #no allowed move
+                pass
+            else:
+                next_head_coord = allowed[0]
+
+        return next_head_coord
+
     #main
+
 
     next_head_coord = routine_move()
 
     allowed = allowed_next_move()
     dangered = [p for p in allowed if is_head_to_head_danger(p)]
+    dangered_2step = [p for p in allowed if is_2step_head_to_head_danger(p)]
     safed = [p for p in allowed if not p in dangered]
+    safed_2step = [p for p in safed if not p in dangered_2step]
 
-    if next_head_coord in allowed:
-        if next_head_coord in dangered:
+    #next_head_coord = old_choice(next_head_coord, allowed, dangered, safed)
+
+    #modify next_head_coord
+    if not next_head_coord in allowed:
+        if len(allowed) != 0:
+            next_head_coord = allowed[0]
             if len(safed) != 0:
                 next_head_coord = safed[0]
-            else:
-                #keep next_move
-                pass
-        else:
-            #no doubt, move in routine
-            pass
+                if len(safed_2step) != 0:
+                    next_head_coord = safed_2step[0]
     else:
-        if len(allowed) == 0:
-            #no allowed move
-            pass
+        if not next_head_coord in safed:
+            if len(safed) != 0:
+                next_head_coord = safed[0]
+                if len(safed_2step) != 0:
+                    next_head_coord = safed_2step[0]
         else:
-            next_head_coord = allowed[0]
+            if not next_head_coord in safed_2step:
+                if len(safed_2step) != 0:
+                    next_head_coord = safed_2step[0]
 
     next_move = get_next_move(get_my_head(), next_head_coord)
 
