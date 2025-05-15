@@ -100,7 +100,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return (4,5)
 
     def four_corner() -> typing.List:
-        if game_state["board"]["snakes"] >= 4:
+        if len(game_state["board"]["snakes"]) >= 4:
             #3 or more apponents
             return [
                 ((1,1), (4,3)),
@@ -108,7 +108,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 ((1,7), (4,9)),
                 ((6,7), (9,9)),
             ]
-        if game_state["board"]["snakes"] == 3:
+        if len(game_state["board"]["snakes"]) == 3:
             #2 opponents
             return [
                 ((1,1), (4,4)),
@@ -116,7 +116,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 ((1,6), (4,9)),
                 ((6,6), (9,9)),
             ]
-        if game_state["board"]["snakes"] <= 2:
+        if len(game_state["board"]["snakes"]) <= 2:
             #1 opponent
             return [
                 ((0,0), (3,4)),
