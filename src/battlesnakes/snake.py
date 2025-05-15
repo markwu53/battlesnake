@@ -100,6 +100,35 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return (4,5)
 
     def four_corner() -> typing.List:
+        if game_state["board"]["snakes"] >= 4:
+            #3 or more apponents
+            return [
+                ((1,1), (4,3)),
+                ((6,1), (9,3)),
+                ((1,7), (4,9)),
+                ((6,7), (9,9)),
+            ]
+        if game_state["board"]["snakes"] == 3:
+            #2 opponents
+            return [
+                ((1,1), (4,4)),
+                ((6,1), (9,4)),
+                ((1,6), (4,9)),
+                ((6,6), (9,9)),
+            ]
+        if game_state["board"]["snakes"] <= 2:
+            #1 opponent
+            return [
+                ((0,0), (3,4)),
+                ((7,0), (10,4)),
+                ((0,6), (3,10)),
+                ((7,6), (10,10)),
+            ]
+        #fallback
+        #not used actually
+        return four_corner_orig()
+
+    def four_corner_orig() -> typing.List:
         x1,y1 = (0, 0)
         x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
         bottom_left_corner = ((x1,y1), (x2,y2))
