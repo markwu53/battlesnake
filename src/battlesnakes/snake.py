@@ -297,9 +297,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
             (0,1),
         ]
 
-    def get_next_move(head_coord: typing.Tuple, next_head_coord: typing.Tuple) -> str:
-        x,y = head_coord
-        nx,ny = next_head_coord
+    def get_adjacent_dir(p: typing.Tuple, q: typing.Tuple) -> str:
+        assert(is_adjacent(p, q))
+        x,y = p
+        nx,ny = q
         if nx > x:
             return "right"
         if nx < x:
@@ -307,6 +308,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if ny > y:
             return "up"
         return "down"
+
+    def get_next_move(head_coord: typing.Tuple, next_head_coord: typing.Tuple) -> str:
+        return get_adjacent_dir(head_coord, next_head_coord)
 
     #1. determine the area dimension corners
     # determine my position dirs
@@ -343,7 +347,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         x2 += x0
         y2 += y0
 
-        return (x2,y2)
+        #save in global var
+        game_state["next_head_coord"] = (x2,y2)
 
     def pos_on_board(pos: typing.Tuple) -> bool:
         x,y = pos
@@ -494,55 +499,149 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         return head_count, 1000-open_cell_count #reverse order
 
+    def food_path(food: typing.Tuple) -> typing.List:
+        x0,y0 = get_my_head()
+        x1,y1 = food
+        mx = min(x0,x1)
+        Mx = max(x0,x1)
+        my = min(y0,y1)
+        My = max(y0,y1)
+        region = [(x,y) for x in range(mx,Mx+1) for y in range(my, My+1)]
+        if len(region) != distance_pq(get_my_head(), food)+1:
+            #has a rectangular region
+            border = [(x,y) for x,y in region if not (mx<x<Mx and my<y<My)]
+            line1 = sorted([(x,y) for x,y in border if x==mx])
+            line2 = sorted([(x,y) for x,y in border if y==my])
+            line3 = sorted([(x,y) for x,y in border if x==Mx])
+            line4 = sorted([(x,y) for x,y in border if y==My])
+
+            if x1 > x0 and y1 > y0:
+                #upper right
+                path1 = line2+line3[1:]
+                path2 = line1+line4[1:]
+            if x1 < x0 and y1 > y0:
+                #upper left
+                path1 = line3+reversed(line4[1:])
+                path2 = reversed(line2)+line1[1:]
+            if x1 < x0 and y1 < y0:
+                #lower left
+                path1 = reversed(line4)+reversed(line1[1:])
+                path2 = reversed(line3)+reversed(line2[1:])
+            if x1 < x0 and y1 < y0:
+                #lower right
+                path1 = reversed(line1)+line2[1:]
+                path2 = line4+reversed(line3[1:])
+            paths = [path1, path2]
+        else:
+            #straight line to food
+            path = sorted(region)
+            if x1 < x0 or y1 < y0:
+                path = reversed(path)
+            paths = [path]
+
+        return paths
+    
+    def good_path(path: typing.List) -> bool:
+        for snake in opponent_snakes():
+            for cell in snake["body"]:
+                x = cell["x"]
+                y = cell["y"]
+                if (x,y) in path:
+                    return False
+        for cell in game_state["you"]["body"][1:]:
+            x = cell["x"]
+            y = cell["y"]
+            if (x,y) in path:
+                return False
+        return True
+
+    def head_count_and_routine(next_head_coord):
+        def fn(next_head):
+            head_count, _ = open_area_index(next_head)
+            return head_count, 0 if next_head == next_head_coord else 1
+        return fn
+
+    def avoid_danger():
+
+        next_head_coord = game_state["next_head_coord"]
+
+        allowed = allowed_next_move()
+        dangered = [p for p in allowed if is_head_to_head_danger(p)]
+        dangered_2step = [p for p in allowed if is_2step_head_to_head_danger(p)]
+        safed = [p for p in allowed if not p in dangered]
+        safed_2step = [p for p in safed if not p in dangered_2step]
+
+        #sort choices by open area index
+        allowed = sorted(allowed, key=open_area_index)
+        safed = sorted(safed, key=open_area_index)
+        safed_2step = sorted(safed_2step, key=open_area_index)
+
+        #next_head_coord = old_choice(next_head_coord, allowed, dangered, safed)
+
+        #modify next_head_coord
+        if not next_head_coord in allowed:
+            if len(allowed) != 0:
+                next_head_coord = allowed[0]
+                if len(safed) != 0:
+                    next_head_coord = safed[0]
+                    if len(safed_2step) != 0:
+                        next_head_coord = safed_2step[0]
+        else:
+            if not next_head_coord in safed:
+                if len(safed) != 0:
+                    next_head_coord = safed[0]
+                    if len(safed_2step) != 0:
+                        next_head_coord = safed_2step[0]
+            else:
+                if not next_head_coord in safed_2step:
+                    if len(safed_2step) != 0:
+                        next_head_coord = safed_2step[0]
+                    else:
+                        #choose between routine and better safed
+                        #choose opponent head count over routine
+                        safed2 = sorted(safed, key=head_count_and_routine(next_head_coord))
+                        next_head_coord = safed2[0]
+
+        #save in the global var
+        game_state["next_head_coord"] = next_head_coord
+
+    def find_food():
+
+        next_head_coord = game_state["next_head_coord"]
+
+        #if opponent snake == 1 and health < 20 find food
+        snakes = opponent_snakes()
+        if len(snakes) == 1 and game_state["you"]["health"] < 20:
+            snake = snakes[0]
+            snake_head = snake["body"][0]
+            snake_head = (snake_head["x"], snake_head["y"])
+            food_target = [(food["x"], food["y"]) for food in game_state["board"]["food"]]
+            food_target = [p for p in food_target if distance_pq(p, get_my_head()) < distance_pq(p, snake_head)]
+            food_target = [(food, [path for path in food_path(food) if good_path(path)]) for food in food_target]
+            food_target = [(food, paths) for food, paths in food_target if len(paths) != 0]
+            food_target = sorted(food_target, key=lambda food,_: distance_pq(get_my_head(), food))
+            if len(food_target) != 0:
+                food, paths = food_target[0]
+                my_neck = game_state["you"]["body"][1]
+                my_neck = (my_neck["x"], my_neck["y"])
+                paths = sorted(paths, key=lambda path: 0 if get_adjacent_dir(path[0], path[1]) == get_adjacent_dir(my_neck, path[0]) else 1)
+                path = paths[0]
+                next_head_coord = path[1]
+
+        #save in the global var
+        game_state["next_head_coord"] = next_head_coord
+
 
     #main
 
+    #must do routine_move first - it populate game_state["next_head_coord"]
+    routine_move()
 
+    #modification from routine move
+    avoid_danger()
+    find_food()
 
-    next_head_coord = routine_move()
-
-    def head_count_and_routine(next_head):
-        head_count, _ = open_area_index(next_head)
-        return head_count, 0 if next_head == next_head_coord else 1
-
-    allowed = allowed_next_move()
-    dangered = [p for p in allowed if is_head_to_head_danger(p)]
-    dangered_2step = [p for p in allowed if is_2step_head_to_head_danger(p)]
-    safed = [p for p in allowed if not p in dangered]
-    safed_2step = [p for p in safed if not p in dangered_2step]
-
-    #sort choices by open area index
-    allowed = sorted(allowed, key=open_area_index)
-    safed = sorted(safed, key=open_area_index)
-    safed_2step = sorted(safed_2step, key=open_area_index)
-
-    #next_head_coord = old_choice(next_head_coord, allowed, dangered, safed)
-
-    #modify next_head_coord
-    if not next_head_coord in allowed:
-        if len(allowed) != 0:
-            next_head_coord = allowed[0]
-            if len(safed) != 0:
-                next_head_coord = safed[0]
-                if len(safed_2step) != 0:
-                    next_head_coord = safed_2step[0]
-    else:
-        if not next_head_coord in safed:
-            if len(safed) != 0:
-                next_head_coord = safed[0]
-                if len(safed_2step) != 0:
-                    next_head_coord = safed_2step[0]
-        else:
-            if not next_head_coord in safed_2step:
-                if len(safed_2step) != 0:
-                    next_head_coord = safed_2step[0]
-                else:
-                    #choose between routine and better safed
-                    #choose opponent head count over routine
-                    safed2 = sorted(safed, key=head_count_and_routine)
-                    next_head_coord = safed2[0]
-
-    next_move = get_next_move(get_my_head(), next_head_coord)
+    next_move = get_next_move(get_my_head(), game_state["next_head_coord"])
 
     #logging
     log_move = next_move
