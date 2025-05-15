@@ -521,16 +521,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 path2 = line1+line4[1:]
             if x1 < x0 and y1 > y0:
                 #upper left
-                path1 = line3+reversed(line4[1:])
-                path2 = reversed(line2)+line1[1:]
+                path1 = line3 + list(reversed(line4[1:]))
+                path2 = list(reversed(line2)) + line1[1:]
             if x1 < x0 and y1 < y0:
                 #lower left
-                path1 = reversed(line4)+reversed(line1[1:])
-                path2 = reversed(line3)+reversed(line2[1:])
+                path1 = list(reversed(line4)) + list(reversed(line1[1:]))
+                path2 = list(reversed(line3)) + list(reversed(line2[1:]))
             if x1 < x0 and y1 < y0:
                 #lower right
-                path1 = reversed(line1)+line2[1:]
-                path2 = line4+reversed(line3[1:])
+                path1 = list(reversed(line1)) + line2[1:]
+                path2 = line4 + list(reversed(line3[1:]))
             paths = [path1, path2]
         else:
             #straight line to food
