@@ -207,7 +207,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return math.sqrt((xc-target_xc)**2+(yc-target_yc)**2)
 
         areas = sorted(areas, key=sort_area)
-        return areas[0]
+        area = areas[0]
+        return area
 
     def order_4x3() -> typing.List:
         return [
@@ -316,6 +317,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     # determine my position dirs
     def routine_move():
         area = get_area()
+        game_state["boxing_area"] = area
 
         order_list = order_4x4()
         if area_dim() == (4,3):
@@ -663,6 +665,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_snake_heads = [s["body"][0] for s in snakes]
     log_snake_health = [s["health"] for s in snakes]
     log_snake_length = [s["length"] for s in snakes]
+    log_boxing_area = game_state["boxing_area"]
 
     log_text = ", ".join([
         f"move: {log_move}",
