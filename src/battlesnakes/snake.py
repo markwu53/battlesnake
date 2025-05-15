@@ -536,7 +536,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #straight line to food
             path = sorted(region)
             if x1 < x0 or y1 < y0:
-                path = reversed(path)
+                path = list(reversed(path))
             paths = [path]
 
         return paths
