@@ -619,7 +619,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             food_target = [p for p in food_target if distance_pq(p, get_my_head()) < distance_pq(p, snake_head)]
             food_target = [(food, [path for path in food_path(food) if good_path(path)]) for food in food_target]
             food_target = [(food, paths) for food, paths in food_target if len(paths) != 0]
-            food_target = sorted(food_target, key=lambda food,_: distance_pq(get_my_head(), food))
+            food_target = sorted(food_target, key=lambda f: distance_pq(get_my_head(), f[0]))
             if len(food_target) != 0:
                 food, paths = food_target[0]
                 my_neck = game_state["you"]["body"][1]
@@ -631,6 +631,12 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #save in the global var
         game_state["next_head_coord"] = next_head_coord
 
+    def too_crowded():
+        #when I'm at a corner - not near the center
+        #when I'm all contained in 5x5 corner
+        #when two or more opponent snakes are entering
+
+        pass
 
     #main
 
