@@ -520,6 +520,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         odir = opposite_dir(sdir)
                         assert(sdir in pdirs or odir in pdirs)
                         others = [d for d in pdirs if d not in [sdir, odir]]
+
+
+                        #THIS IS WRONG
+                        #others can be empty as both sdir and odir are in pdirs
+
+
+
                         print("assert(len(others) == 1)", len(others))
                         assert(len(others) == 1)
                         other = others[0]
