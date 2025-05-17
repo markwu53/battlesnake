@@ -48,7 +48,7 @@ def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
 
-# this is a good move that gives me 6976 #76 on 5/16/25
+# this is a work in progress
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
