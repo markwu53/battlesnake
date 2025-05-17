@@ -564,7 +564,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def avoid_danger():
         game_state["avoid_danger"] = []
-        return
 
         my_body = get_body_coord(game_state["you"]["body"])
         for snake in opponent_snakes():
