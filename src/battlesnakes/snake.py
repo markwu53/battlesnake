@@ -686,10 +686,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     def off_border(p: typing.Tuple) -> bool:
         x,y = p
         if x == 0 or y == 0:
-            return True
+            return False
         if x == game_state["board"]["width"]-1 or y == game_state["board"]["height"]-1:
-            return True
-        return False
+            return False
+        return True
 
     def best_choice():
 
