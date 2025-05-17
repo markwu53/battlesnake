@@ -527,6 +527,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         adjs = adj_cells(my_head)
         choices = [p for p in adjs if p not in collinding_points+[my_neck]]
         #choices can have 1 or 2 points
+        if len(choices) == 0:
+            return
         if len(choices) == 1:
             suggest = [choices]
         else:
