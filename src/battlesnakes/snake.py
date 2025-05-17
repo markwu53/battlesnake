@@ -478,6 +478,17 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if is_cell_occupied(colliding_point):
             return
 
+        def dir_to_coord(d: str) -> typing.Tuple:
+            x,y = get_my_head()
+            if d == "left":
+                return (x-1, y)
+            if d == "right":
+                return (x+1, y)
+            if d == "up":
+                return (x, y+1)
+            if d == "down":
+                return (x, y-1)
+
         my_head = my_body[0]
         my_neck = my_body[1]
         snake_head = snake_body[0]
@@ -516,6 +527,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         else:
                             suggest = [[other], [sdir]]
                     #save in the global var
+                    suggest = [[dir_to_coord(d) for d in g] for g in suggest]
                     game_state["avoid_danger"].append((snake_head, "pattern1", suggest))
 
     def colliding_pattern_2(my_body: typing.List, snake_body: typing.List, collinding_points: typing.List):
