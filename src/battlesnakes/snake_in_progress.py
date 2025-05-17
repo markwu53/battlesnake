@@ -48,7 +48,6 @@ def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
 
-
 # this is a good move that gives me 6976 #76 on 5/16/25
 def move(game_state: typing.Dict) -> typing.Dict:
     """
@@ -521,19 +520,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         assert(sdir in pdirs or odir in pdirs)
                         others = [d for d in pdirs if d not in [sdir, odir]]
 
-
-                        #THIS IS WRONG
-                        #others can be empty as both sdir and odir are in pdirs
-
-
-
-                        print("assert(len(others) == 1)", len(others))
-                        assert(len(others) == 1)
-                        other = others[0]
-                        if odir in pdirs:
-                            suggest = [[odir], [other]]
+                        if len(others) == 0:
+                            suggest = [[odir], [sdir]]
                         else:
-                            suggest = [[other], [sdir]]
+                            assert(len(others) == 1)
+                            other = others[0]
+                            if odir in pdirs:
+                                suggest = [[odir], [other]]
+                            else:
+                                suggest = [[other], [sdir]]
+
                     #save in the global var
                     suggest = [[dir_to_coord(d) for d in g] for g in suggest]
                     game_state["avoid_danger"].append((snake_head, "pattern1", suggest))
@@ -718,63 +714,63 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if len(game_state["allowed_move"]) == 0:
             return
 
+        if game_state["next_head_coord"] not in game_state["allowed_move"]:
+            game_state["next_head_coord"] = game_state["allowed_move"][0]
+
         if len(game_state["find_food"]) != 0:
             game_state["next_head_coord"] = game_state["find_food"][0]
 
-        if not off_border(game_state["next_head_coord"]):
+        if not off_border(get_my_head()):
             off_border_coord = [p for p in game_state["allowed_move"] if off_border(p)]
             if len(off_border_coord) != 0:
                 game_state["next_head_coord"] = off_border_coord[0]
-            else:
-                game_state["next_head_coord"] = game_state["allowed_move"][0]
 
-        if len(game_state["avoid_danger"]) == 0:
-            return
+        if len(game_state["avoid_danger"]) != 0:
 
-        #consider the first collision and use as the default
-        snake_head, pattern, suggest = game_state["avoid_danger"][0]
-        if pattern == "pattern1":
-            if len(suggest) == 1:
-                #suggest = [[a,b]]
-                assert(len(suggest[0]) == 2)
-                suggest = suggest[0]
-                suggest = [p for p in suggest if p in game_state["allowed_move"]]
+            #consider the first collision and use as the default
+            snake_head, pattern, suggest = game_state["avoid_danger"][0]
+            if pattern == "pattern1":
                 if len(suggest) == 1:
-                    game_state["next_head_coord"] = suggest[0]
-                elif len(suggest) == 2:
+                    #suggest = [[a,b]]
+                    assert(len(suggest[0]) == 2)
+                    suggest = suggest[0]
+                    suggest = [p for p in suggest if p in game_state["allowed_move"]]
+                    if len(suggest) == 1:
+                        game_state["next_head_coord"] = suggest[0]
+                    elif len(suggest) == 2:
+                        a,b = suggest
+                        if off_border(a):
+                            game_state["next_head_coord"] = a
+                        elif off_border(b):
+                            game_state["next_head_coord"] = b
+                        else:
+                            game_state["next_head_coord"] = a
+
+                else:
+                    #two suggestions
+                    #suggest = [[a],[b]]
+                    assert(len(suggest) == 2)
                     a,b = suggest
-                    if off_border(a):
+                    a = a[0]
+                    b = b[0]
+                    if a in game_state["allowed_move"]:
                         game_state["next_head_coord"] = a
-                    elif off_border(b):
+                    if b in game_state["allowed_move"]:
                         game_state["next_head_coord"] = b
-                    else:
-                        game_state["next_head_coord"] = a
+            elif pattern == "pattern2":
+                suggest = [s for s in suggest if s in game_state["allowed_move"]]
+                if len(suggest) != 0:
+                    game_state["next_head_coord"] = suggest[0]
 
-            else:
-                #two suggestions
-                #suggest = [[a],[b]]
-                assert(len(suggest) == 2)
-                a,b = suggest
-                a = a[0]
-                b = b[0]
-                if a in game_state["allowed_move"]:
-                    game_state["next_head_coord"] = a
-                if b in game_state["allowed_move"]:
-                    game_state["next_head_coord"] = b
-        elif pattern == "pattern2":
-            suggest = [s for s in suggest if s in game_state["allowed_move"]]
-            if len(suggest) != 0:
-                game_state["next_head_coord"] = suggest[0]
-
-        if len(game_state["avoid_danger"]) > 1:
-            #multiple collisions
-            _,__, suggest = game_state["avoid_danger"][0]
-            sset = set([p for g in suggest for p in g])
-            for _,__, suggest in game_state["avoid_danger"][1:]:
-                sset = sset.intersection(set([p for g in suggest for p in g]))
-            suggest = [p for p in sset if p in game_state["allowed_move"]]
-            if len(suggest) != 0:
-                game_state["next_head_coord"] = suggest[0]
+            if len(game_state["avoid_danger"]) > 1:
+                #multiple collisions
+                _,__, suggest = game_state["avoid_danger"][0]
+                sset = set([p for g in suggest for p in g])
+                for _,__, suggest in game_state["avoid_danger"][1:]:
+                    sset = sset.intersection(set([p for g in suggest for p in g]))
+                suggest = [p for p in sset if p in game_state["allowed_move"]]
+                if len(suggest) != 0:
+                    game_state["next_head_coord"] = suggest[0]
 
 
 
@@ -812,15 +808,23 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_snake_health = [s["health"] for s in snakes]
     log_snake_length = [s["length"] for s in snakes]
     log_boxing_area = game_state["boxing_area"]
+    log_game_id = game_state["game"]["id"]
+    log_routine_move = game_state["routine_move"]
+    log_avoid_danger = game_state["avoid_danger"]
 
     log_text = ", ".join([
+        f"game_id: {log_game_id}",
         f"move: {log_move}",
         f"turn: {log_turn}",
         f"health: {log_health}",
         f"head: {log_head}",
         f"scount: {log_snake_count}",
         f"boxing_area: {log_boxing_area}",
+        f"routine_move: {log_routine_move}",
+        f"avoid_danger: {log_avoid_danger}",
     ])
     print(log_text)
 
     return {"move": next_move}
+
+
