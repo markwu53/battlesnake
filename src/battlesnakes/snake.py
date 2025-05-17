@@ -49,8 +49,7 @@ def end(game_state: typing.Dict):
 
 
 
-
-#this is a good move that give me 6719 #83 in leaderboard
+# this is a good move that gives me 6976 #76 on 5/16/25
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -380,6 +379,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #save in global var
         game_state["next_head_coord"] = (x2,y2)
+        game_state["routine_move"] = (x2,y2)
 
     def pos_on_board(pos: typing.Tuple) -> bool:
         x,y = pos
@@ -438,11 +438,139 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 allowed.append(p)
         return allowed
 
-    def allowed_next_move():
+    def allowed_move():
         head = get_my_head()
         allowed = permissible_first_step(head)
         allowed = [p for p in allowed if len(permissible_second_step(p)) != 0]
-        return allowed
+        game_state["allowed_move"] = allowed
+
+    def get_body_coord(body) -> typing.List:
+        return [(c["x"], c["y"]) for c in body]
+
+    def head_colliding_points(head1: typing.Tuple, head2: typing.Tuple) -> typing.List:
+        assert(distance_pq(head1, head2) == 2)
+
+        adj1 = set(adj_cells(head1))
+        adj2 = set(adj_cells(head2))
+        common = adj1.intersection(adj2)
+        return list(common)
+
+    def is_cell_occupied(p: typing.Tuple) -> bool:
+        for snake in game_state["board"]["snakes"]:
+            #including myself
+            if p in get_body_coord(snake["body"]):
+                return True
+        return False
+
+    def opposite_dir(d):
+        if d == "left": return "right"
+        if d == "right": return "left"
+        if d == "up": return "down"
+        if d == "down": return "up"
+    
+    def is_perpendicular(d1, d2):
+        if d1 == d2:
+            return False
+        if opposite_dir(d1) == d2:
+            return False
+        return True
+
+    def colliding_pattern_1(my_body: typing.List, snake_body: typing.List, colliding_point: typing.Tuple):
+        if is_cell_occupied(colliding_point):
+            return
+
+        my_head = my_body[0]
+        my_neck = my_body[1]
+        snake_head = snake_body[0]
+        snake_neck = snake_body[1]
+
+        mdir0 = get_adjacent_dir(my_neck, my_head)
+        sdir0 = get_adjacent_dir(snake_neck, snake_head)
+        cdir0 = get_adjacent_dir(my_head, colliding_point)
+
+        adirs = ["left", "right", "up", "down"]
+        for cdir in adirs:
+            mdirs = [d for d in adirs if d != opposite_dir(cdir)]
+            sdirs = [d for d in adirs if d != cdir]
+            for mdir in mdirs:
+                assert(cdir != opposite_dir(mdir))
+                for sdir in sdirs:
+                    if not (mdir == mdir0 and sdir == sdir0 and cdir == cdir0):
+                        continue
+
+                    #we get two dirs
+                    pdirs = [d for d in adirs if d not in [cdir, opposite_dir(mdir)]]
+                    assert(len(pdirs) == 2)
+                    if mdir == cdir and mdir == opposite_dir(sdir):
+                        #straight head-to-head, no preference of two dirs
+                        suggest = [pdirs]
+                    else:
+                        #either sdir or opposite exists
+                        #prefer opposite the first, sdir the last, the other one in the middle
+                        odir = opposite_dir(sdir)
+                        assert(sdir in [pdirs] or odir in [pdirs])
+                        others = [d for d in pdirs if d not in [sdir, odir]]
+                        assert(len(others) == 1)
+                        other = others[0]
+                        if odir in pdirs:
+                            suggest = [[odir], [other]]
+                        else:
+                            suggest = [[other], [sdir]]
+                    #save in the global var
+                    game_state["avoid_danger"].append((snake_head, "pattern1", suggest))
+
+    def colliding_pattern_2(my_body: typing.List, snake_body: typing.List, collinding_points: typing.List):
+        if all([is_cell_occupied(p) for p in collinding_points]):
+            return
+
+        my_head = my_body[0]
+        my_neck = my_body[1]
+        adjs = adj_cells(my_head)
+        choices = [p for p in adjs if p not in collinding_points+[my_neck]]
+        #choices can have 1 or 2 points
+        if len(choices) == 1:
+            suggest = [choices]
+        else:
+            assert(len(choices) == 2)
+            #one perpendicular one parallel
+            a, b = choices
+            if is_perpendicular(get_adjacent_dir(my_head, a), get_adjacent_dir(my_neck, my_head)):
+                suggest = [a, b]
+            else:
+                suggest = [b, a]
+        game_state["avoid_danger"].append((snake_body[0], "pattern2", suggest))
+
+    def head_to_head_danger(my_body: typing.List, snake_body: typing.List):
+        if len(my_body) > len(snake_body):
+            return
+
+        my_head = get_my_head()
+        snake_head = snake_body[0]
+        colliding_points = head_colliding_points(my_head, snake_head)
+
+        assert(len(colliding_points) in [1,2])
+
+        x0,y0 = my_head
+        x1,y1 = snake_head
+        if x0 == x1 or y0 == y1:
+            #single colliding point
+            assert(len(colliding_points) == 1)
+            colliding_pattern_1(my_body, snake_body, colliding_points[0])
+        else:
+            #2 colliding points
+            assert(len(colliding_points) == 2)
+            colliding_pattern_2(my_body, snake_body, colliding_points)
+
+    def avoid_danger():
+        game_state["avoid_danger"] = []
+
+        my_body = get_body_coord(game_state["you"]["body"])
+        for snake in opponent_snakes():
+            snake_body = get_body_coord(snake["body"])
+            snake_head = snake_body[0]
+            my_head = get_my_head()
+            if distance_pq(my_head, snake_head) == 2:
+                head_to_head_danger(my_body, snake_body)
 
     def opponent_snakes() -> typing.List:
         my_head = game_state["you"]["body"][0]
@@ -460,75 +588,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     def is_adjacent(p1: typing.Tuple, p2: typing.Tuple) -> bool:
         return distance_pq(p1, p2) == 1
 
-    def is_2step_head_to_head_danger(pos):
-        for s in opponent_snakes():
-            shead = s["body"][0]
-            shead = shead["x"], shead["y"]
-            if distance_pq(pos, shead) == 3:
-                if game_state["you"]["length"] <= s["length"]:
-                    return True
-        return False
-
-    def is_head_to_head_danger(pos):
-        for s in opponent_snakes():
-            shead = s["body"][0]
-            shead = shead["x"], shead["y"]
-            if is_adjacent(pos, shead):
-                if game_state["you"]["length"] <= s["length"]:
-                    return True
-        return False
-
     def get_my_head() -> typing.Tuple:
         my_head = game_state["you"]["body"][0]
         head_coord = (my_head["x"], my_head["y"])
         return head_coord
-
-    def old_choice(next_head_coord, allowed, dangered, safed):
-
-        if next_head_coord in allowed:
-            if next_head_coord in dangered:
-                if len(safed) != 0:
-                    next_head_coord = safed[0]
-                else:
-                    #keep next_move
-                    pass
-            else:
-                #no doubt, move in routine
-                pass
-        else:
-            if len(allowed) == 0:
-                #no allowed move
-                pass
-            else:
-                next_head_coord = allowed[0]
-
-        return next_head_coord
-
-    def open_area_index(next_head: typing.Tuple) -> typing.Tuple:
-        #check opponent snake heads in 5x5 area
-        x0,y0 = get_my_head()
-        x1,y1 = next_head
-        if y1-y0 == 1:
-            corner1 = (x0-2, y0+1)
-        elif y1-y0 == -1:
-            corner1 = (x0-2, y0-5)
-        elif x1-x0 == 1:
-            corner1 = (x0+1, y0-2)
-        else:
-            corner1 = (x0-5, y0-2)
-        corner2 = (n+4 for n in corner1)
-        snakes = opponent_snakes()
-        snake_heads = [s["body"][0] for s in snakes]
-        snake_heads = [(s["x"], s["y"]) for s in snake_heads]
-        a1,b1 = corner1
-        a2,b2 = corner2
-        head_count = len([x for x,y in snake_heads if a1<=x<=a2 and b1<=y<=b2])
-        open_cell_count = len([(x,y) for x in range(a1,a2+1) for y in range(b1,b2+1) 
-                           if pos_on_board((x,y))
-                           and not (x,y) in [(p["x"], p["y"]) for s in snakes for p in s["body"]]
-                           ])
-
-        return head_count, 1000-open_cell_count #reverse order
 
     def food_path(food: typing.Tuple) -> typing.List:
         x0,y0 = get_my_head()
@@ -586,59 +649,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return False
         return True
 
-    def head_count_and_routine(next_head_coord):
-        def fn(next_head):
-            head_count, _ = open_area_index(next_head)
-            return head_count, 0 if next_head == next_head_coord else 1
-        return fn
-
-    def avoid_danger():
-
-        next_head_coord = game_state["next_head_coord"]
-
-        allowed = allowed_next_move()
-        dangered = [p for p in allowed if is_head_to_head_danger(p)]
-        dangered_2step = [p for p in allowed if is_2step_head_to_head_danger(p)]
-        safed = [p for p in allowed if not p in dangered]
-        safed_2step = [p for p in safed if not p in dangered_2step]
-
-        #sort choices by open area index
-        allowed = sorted(allowed, key=open_area_index)
-        safed = sorted(safed, key=open_area_index)
-        safed_2step = sorted(safed_2step, key=open_area_index)
-
-        #next_head_coord = old_choice(next_head_coord, allowed, dangered, safed)
-
-        #modify next_head_coord
-        if not next_head_coord in allowed:
-            if len(allowed) != 0:
-                next_head_coord = allowed[0]
-                if len(safed) != 0:
-                    next_head_coord = safed[0]
-                    if len(safed_2step) != 0:
-                        next_head_coord = safed_2step[0]
-        else:
-            if not next_head_coord in safed:
-                if len(safed) != 0:
-                    next_head_coord = safed[0]
-                    if len(safed_2step) != 0:
-                        next_head_coord = safed_2step[0]
-            else:
-                if not next_head_coord in safed_2step:
-                    if len(safed_2step) != 0:
-                        next_head_coord = safed_2step[0]
-                    else:
-                        #choose between routine and better safed
-                        #choose opponent head count over routine
-                        safed2 = sorted(safed, key=head_count_and_routine(next_head_coord))
-                        next_head_coord = safed2[0]
-
-        #save in the global var
-        game_state["next_head_coord"] = next_head_coord
-
     def find_food():
 
-        next_head_coord = game_state["next_head_coord"]
+        game_state["find_food"] = []
 
         #if opponent snake == 1 and health < 20 find food
         snakes = opponent_snakes()
@@ -658,9 +671,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 paths = sorted(paths, key=lambda path: 0 if get_adjacent_dir(path[0], path[1]) == get_adjacent_dir(my_neck, path[0]) else 1)
                 path = paths[0]
                 next_head_coord = path[1]
-
-        #save in the global var
-        game_state["next_head_coord"] = next_head_coord
+                #save in the global var
+                game_state["find_food"].append(next_head_coord)
 
     def too_crowded():
         #when I'm at a corner - not near the center
@@ -669,14 +681,97 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         pass
 
+    def off_border(p: typing.Tuple) -> bool:
+        x,y = p
+        if x == 0 or y == 0:
+            return True
+        if x == game_state["board"]["width"]-1 or y == game_state["board"]["height"]-1:
+            return True
+        return False
+
+    def best_choice():
+
+        #routine move always exists and set as default
+        game_state["next_head_coord"] = game_state["routine_move"]
+
+        if len(game_state["allowed_move"]) == 0:
+            return
+
+        if len(game_state["find_food"]) != 0:
+            game_state["next_head_coord"] = game_state["find_food"][0]
+
+        off_border_coord = [p for p in game_state["allowed_move"] if off_border(p)]
+        if len(off_border_coord) != 0:
+            game_state["next_head_coord"] = off_border_coord[0]
+        else:
+            game_state["next_head_coord"] = game_state["allowed_move"][0]
+
+        if len(game_state["avoid_danger"]) == 0:
+            return
+
+        #consider the first collision and use as the default
+        snake_head, pattern, suggest = game_state["avoid_danger"][0]
+        if pattern == "pattern1":
+            if len(suggest) == 1:
+                #suggest = [[a,b]]
+                assert(len(suggest[0]) == 2)
+                suggest = suggest[0]
+                suggest = [p for p in suggest if p in game_state["allowed_move"]]
+                if len(suggest) == 1:
+                    game_state["next_head_coord"] = suggest[0]
+                elif len(suggest) == 2:
+                    a,b = suggest
+                    if off_border(a):
+                        game_state["next_head_coord"] = a
+                    elif off_border(b):
+                        game_state["next_head_coord"] = b
+                    else:
+                        game_state["next_head_coord"] = a
+
+            else:
+                #two suggestions
+                #suggest = [[a],[b]]
+                assert(len(suggest) == 2)
+                a,b = suggest
+                a = a[0]
+                b = b[0]
+                if a in game_state["allowed_move"]:
+                    game_state["next_head_coord"] = a
+                if b in game_state["allowed_move"]:
+                    game_state["next_head_coord"] = b
+        elif pattern == "pattern2":
+            suggest = [s for s in suggest if s in game_state["allowed_move"]]
+            if len(suggest) != 0:
+                game_state["next_head_coord"] = suggest[0]
+
+        if len(game_state["avoid_danger"]) > 1:
+            #multiple collisions
+            _,__, suggest = game_state["avoid_danger"][0]
+            sset = set([p for g in suggest for p in g])
+            for _,__, suggest in game_state["avoid_danger"][1:]:
+                sset = sset.intersection(set([p for g in suggest for p in g]))
+            suggest = [p for p in sset if p in game_state["allowed_move"]]
+            if len(suggest) != 0:
+                game_state["next_head_coord"] = suggest[0]
+
+
+
     #main
 
-    #must do routine_move first - it populate game_state["next_head_coord"]
-    routine_move()
+    #ideas
+    #next routine path
+    #calculated space filling path
+    #longer lookahead
 
-    #modification from routine move
+    #must satisfy
+    allowed_move()
+
+    #priority: avoid danger, find food, routine move
+    routine_move()
     avoid_danger()
     find_food()
+
+    best_choice()
 
     next_move = get_next_move(get_my_head(), game_state["next_head_coord"])
 
@@ -707,4 +802,3 @@ def move(game_state: typing.Dict) -> typing.Dict:
     print(log_text)
 
     return {"move": next_move}
-
