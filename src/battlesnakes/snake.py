@@ -530,7 +530,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if len(choices) == 0:
             return
         if len(choices) == 1:
-            suggest = [choices]
+            suggest = choices
         else:
             assert(len(choices) == 2)
             #one perpendicular one parallel
