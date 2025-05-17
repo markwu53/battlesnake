@@ -808,8 +808,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_snake_health = [s["health"] for s in snakes]
     log_snake_length = [s["length"] for s in snakes]
     log_boxing_area = game_state["boxing_area"]
+    log_game_id = game_state["game"]["id"]
 
     log_text = ", ".join([
+        f"game_id: {log_game_id}",
         f"move: {log_move}",
         f"turn: {log_turn}",
         f"health: {log_health}",
