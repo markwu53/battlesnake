@@ -700,11 +700,12 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if len(game_state["find_food"]) != 0:
             game_state["next_head_coord"] = game_state["find_food"][0]
 
-        off_border_coord = [p for p in game_state["allowed_move"] if off_border(p)]
-        if len(off_border_coord) != 0:
-            game_state["next_head_coord"] = off_border_coord[0]
-        else:
-            game_state["next_head_coord"] = game_state["allowed_move"][0]
+        if not off_border(game_state["next_head_coord"]):
+            off_border_coord = [p for p in game_state["allowed_move"] if off_border(p)]
+            if len(off_border_coord) != 0:
+                game_state["next_head_coord"] = off_border_coord[0]
+            else:
+                game_state["next_head_coord"] = game_state["allowed_move"][0]
 
         if len(game_state["avoid_danger"]) == 0:
             return
