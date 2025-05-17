@@ -507,7 +507,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         #either sdir or opposite exists
                         #prefer opposite the first, sdir the last, the other one in the middle
                         odir = opposite_dir(sdir)
-                        assert(sdir in [pdirs] or odir in [pdirs])
+                        assert(sdir in pdirs or odir in pdirs)
                         others = [d for d in pdirs if d not in [sdir, odir]]
                         assert(len(others) == 1)
                         other = others[0]
@@ -692,7 +692,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #routine move always exists and set as default
         game_state["next_head_coord"] = game_state["routine_move"]
-        return
 
         if len(game_state["allowed_move"]) == 0:
             return
