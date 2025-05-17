@@ -378,7 +378,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
         y2 += y0
 
         #save in global var
-        game_state["next_head_coord"] = (x2,y2)
         game_state["routine_move"] = (x2,y2)
 
     def pos_on_board(pos: typing.Tuple) -> bool:
@@ -693,6 +692,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #routine move always exists and set as default
         game_state["next_head_coord"] = game_state["routine_move"]
+        return
 
         if len(game_state["allowed_move"]) == 0:
             return
