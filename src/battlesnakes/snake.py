@@ -360,7 +360,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def permissible_nstep(n):
         paths = [[get_my_head()]]
-        for step in range(n):
+        for step in range(1, n+1):
             occupied = occupied_cells(step)
             paths = [npath for path in paths 
                      for npath in [path+[p] for p in adj_cells(path[-1])
