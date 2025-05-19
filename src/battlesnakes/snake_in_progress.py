@@ -76,7 +76,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return False
         return True
 
-    def body_in_area(area: typing.Tuple, body: typing.List) -> bool:
+    def body_in_box(area: typing.Tuple, body: typing.List) -> bool:
         ((x1,y1), (x2,y2)) = area
         for cell in body:
             x = cell["x"]
@@ -86,113 +86,110 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if not y1 <= y <= y2:
                 return False
         return True
-
-    def area_dim() -> typing.Tuple:
-        if len(game_state["board"]["snakes"]) >= 4:
-            #3 or more opponents
-            return (4,3)
-        if len(game_state["board"]["snakes"]) == 3:
-            #3 or more opponents
-            return (4,4)
-        #only 1 opponent
-        return (4,5)
-
-    def four_corner() -> typing.List:
-        if len(game_state["board"]["snakes"]) >= 4:
-            #3 or more apponents
-            return [
-                ((1,1), (4,3)),
-                ((6,1), (9,3)),
-                ((1,7), (4,9)),
-                ((6,7), (9,9)),
-            ]
-        if len(game_state["board"]["snakes"]) == 3:
-            #2 opponents
-            return [
-                ((1,1), (4,4)),
-                ((6,1), (9,4)),
-                ((1,6), (4,9)),
-                ((6,6), (9,9)),
-            ]
-        if len(game_state["board"]["snakes"]) <= 2:
-            #1 opponent
-            return [
-                ((0,0), (3,4)),
-                ((7,0), (10,4)),
-                ((0,6), (3,10)),
-                ((7,6), (10,10)),
-            ]
-        #fallback
-        #not used actually
-        return four_corner_orig()
-
-    def four_corner_orig() -> typing.List:
-        x1,y1 = (0, 0)
-        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
-        bottom_left_corner = ((x1,y1), (x2,y2))
-        x1,y1 = (game_state["board"]["width"]-area_dim()[0], 0)
-        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
-        bottom_right_corner = ((x1,y1), (x2,y2))
-        x1,y1 = (0, game_state["board"]["height"]-area_dim()[1])
-        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
-        top_left_corner = ((x1,y1), (x2,y2))
-        x1,y1 = (game_state["board"]["width"]-area_dim()[0], game_state["board"]["height"]-area_dim()[1])
-        x2,y2 = x1+area_dim()[0]-1, y1+area_dim()[1]-1
-        top_right_corner = ((x1,y1), (x2,y2))
-        return [
-            bottom_left_corner,
-            bottom_right_corner,
-            top_left_corner,
-            top_right_corner,
-        ]
-
-    def all_containing_area() -> typing.List:
-        all_area = []
+    
+    def find_containing_boxes(body: typing.List) -> typing.List:
+        boxes = []
+        width, height = area_dim()
         for x1 in range(game_state["board"]["width"]):
             for y1 in range(game_state["board"]["height"]):
                 #bottom-left corner (x1,y1)
-                x2 = x1+area_dim()[0]-1
-                y2 = y1+area_dim()[1]-1
-                area = ((x1,y1), (x2,y2))
-                if not valid_area(area):
+                x2 = x1+width-1
+                y2 = y1+height-1
+                box = ((x1,y1), (x2,y2))
+                if not valid_area(box):
                     continue
-                if body_in_area(area, game_state["you"]["body"]):
-                    all_area.append(area)
-        if len(all_area) != 0:
-            return all_area
-        
-        #when the body is too long, this can be empty
-        #in this case, check the first several cells
-        #we go from 6 to 3 cells 
-        #this is determined by the dimension of the area
-        #3 is the smallest dimension size
-        #this ensure the function must return something
-        def check_first_n(n: int) -> typing.List:
-            areas = []
-            for x1 in range(game_state["board"]["width"]):
-                for y1 in range(game_state["board"]["height"]):
-                    #bottom-left corner (x1,y1)
-                    x2 = x1+area_dim()[0]-1
-                    y2 = y1+area_dim()[1]-1
-                    area = ((x1,y1), (x2,y2))
-                    if not valid_area(area):
-                        continue
-                    if body_in_area(area, game_state["you"]["body"][:n]):
-                        areas.append(area)
-            return areas
-        for n in [6,5,4,3]:
-            areas = check_first_n(n)
-            if len(areas) != 0:
-                all_area += areas
-                break
-                
-        return all_area
-        
+                if body_in_box(box, body):
+                    boxes.append(box)
+        return boxes
 
-    def target_corner() -> typing.Tuple:
-        body_center_x = sum([cell["x"] for cell in game_state["you"]["body"]]) / game_state["you"]["length"]
-        body_center_y = sum([cell["y"] for cell in game_state["you"]["body"]]) / game_state["you"]["length"]
-        corners = four_corner()
+    def all_moving_boxes() -> typing.List:
+        body = game_state["you"]["body"]
+
+        #only check first 3
+        body = body[:3]
+
+        boxes = []
+        width, height = area_dim()
+        for x1 in range(game_state["board"]["width"]):
+            for y1 in range(game_state["board"]["height"]):
+                #bottom-left corner (x1,y1)
+                x2 = x1+width-1
+                y2 = y1+height-1
+                box = ((x1,y1), (x2,y2))
+                if not valid_area(box):
+                    continue
+                if body_in_box(box, body):
+                    boxes.append(box)
+
+        assert(len(boxes) != 0)
+        return boxes
+
+    def space_filling_path(width, height):
+        assert(width % 2 == 0)
+        base = [(x, 0) for x in range(width)]
+        vert_lines = [[(x, y) for y in range(1, height)] for x in range(width)]
+        vert_lines = [line if index % 2 != 0 else list(reversed(line)) for index, line in enumerate(vert_lines)]
+        vert_lines = list(reversed(vert_lines))
+        path = base + [p for line in vert_lines for p in line]
+        return path
+
+    def area_dim() -> typing.Tuple:
+        nsnakes = len(game_state["board"]["snakes"])
+        length = game_state["you"]["length"]
+        if nsnakes >= 4:
+            return (4,3)
+        if nsnakes == 3:
+            return (4,4)
+        if nsnakes <= 2:
+            if length <= 15:
+                return (4,5)
+            if length <= 20:
+                return (4,7)
+            return (4,9)
+        raise(ValueError("area_dim"))
+
+    def attractor_boxes() -> typing.List:
+        adim = area_dim()
+        if adim == (4,3):
+            return [
+                ((1,2), (4,4)),
+                ((1,6), (4,8)),
+                ((6,2), (9,4)),
+                ((6,6), (9,8)),
+            ]
+        if adim == (4,4):
+            return [
+                ((1,1), (4,4)),
+                ((1,6), (4,9)),
+                ((6,1), (9,4)),
+                ((6,6), (9,9)),
+            ]
+        if adim == (4,5):
+            return [
+                ((1,0), (4,4)),
+                ((1,6), (4,10)),
+                ((6,0), (9,4)),
+                ((6,6), (9,10)),
+            ]
+        if adim == (4,7):
+            return [
+                ((1,2), (4,8)),
+                ((6,2), (9,8)),
+            ]
+        if adim == (4,9):
+            return [
+                ((1,1), (4,9)),
+                ((6,1), (9,1)),
+            ]
+
+        raise(ValueError("BOX DIMENSION"))
+
+    def target_bounding_box() -> typing.Tuple:
+        #also only check first 4
+        body = game_state["you"]["body"][:3]
+        body_center_x = sum([cell["x"] for cell in body]) / len(body)
+        body_center_y = sum([cell["y"] for cell in body]) / len(body)
+        boxes = attractor_boxes()
 
         def sort_corner(corner: typing.Tuple):
             ((x1,y1), (x2,y2)) = corner
@@ -200,32 +197,34 @@ def move(game_state: typing.Dict) -> typing.Dict:
             yc = (y1+y2)/2
             return math.sqrt((xc-body_center_x)**2+(yc-body_center_y)**2)
 
-        corners = sorted(corners, key=sort_corner)
-        return corners[0]
+        boxes = sorted(boxes, key=sort_corner)
+        return boxes[0]
 
-    def get_area() -> typing.Tuple:
+    def get_bounding_box() -> typing.Tuple:
         """
         get a rectangular area depend on the snake initial position
         so that even when the snake moves, the area doesn't change
         """
 
-        #prefer four corner
-        for area in four_corner():
-            if body_in_area(area, game_state["you"]["body"]):
-                return area
+        #prefer the attactor boxes
+        for box in attractor_boxes():
 
-        #if not in one of four corners, find one close to it,
-        #so that the area will move to the closest corner
+            #experiment first 3
+            body = game_state["you"]["body"][:3]
 
-        #if not found then find the first area that contains the snake
-        #this can move so that next time will find a fixed area
-        target = target_corner()
+            if body_in_box(box, body):
+                return box
 
-        #when it's too long, this can be empty
-        areas = all_containing_area()
+        #if not in one of attractor boxes, find one close to it,
+        #so that the area will move to the closest attractor box
 
-        def sort_area(area: typing.Tuple):
-            ((x1,y1), (x2,y2)) = area
+        target = target_bounding_box()
+
+        #find boxes that contain my snake body or the first n of it
+        boxes = all_moving_boxes()
+
+        def sort_box(box: typing.Tuple):
+            ((x1,y1), (x2,y2)) = box
             xc = (x1+x2)/2
             yc = (y1+y2)/2
             ((target_x1, target_y1), (target_x2, target_y2)) = target
@@ -233,97 +232,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
             target_yc = (target_y1+target_y2)/2
             return math.sqrt((xc-target_xc)**2+(yc-target_yc)**2)
 
-        areas = sorted(areas, key=sort_area)
-        area = areas[0]
-        return area
-
-    def order_4x3() -> typing.List:
-        return [
-            (0,0),
-            (1,0),
-            (2,0),
-            (3,0),
-            (3,1),
-            (3,2),
-            (2,2),
-            (2,1),
-            (1,1),
-            (1,2),
-            (0,2),
-            (0,1),
-        ]
-
-    def order_4x4() -> typing.List:
-        return [
-            (0,0),
-            (1,0),
-            (2,0),
-            (3,0),
-            (3,1),
-            (3,2),
-            (3,3),
-            (2,3),
-            (2,2),
-            (2,1),
-            (1,1),
-            (1,2),
-            (1,3),
-            (0,3),
-            (0,2),
-            (0,1),
-        ]
-
-    def order_4x5() -> typing.List:
-        return [
-            (0,0),
-            (1,0),
-            (2,0),
-            (3,0),
-            (3,1),
-            (3,2),
-            (3,3),
-            (3,4),
-            (2,4),
-            (2,3),
-            (2,2),
-            (2,1),
-            (1,1),
-            (1,2),
-            (1,3),
-            (1,4),
-            (0,4),
-            (0,3),
-            (0,2),
-            (0,1),
-        ]
-
-    def order_4x6() -> typing.List:
-        return [
-            (0,0),
-            (1,0),
-            (2,0),
-            (3,0),
-            (4,0),
-            (5,0),
-            (5,1),
-            (5,2),
-            (5,3),
-            (4,3),
-            (4,2),
-            (4,1),
-            (3,1),
-            (3,2),
-            (3,3),
-            (2,3),
-            (2,2),
-            (2,1),
-            (1,1),
-            (1,2),
-            (1,3),
-            (0,3),
-            (0,2),
-            (0,1),
-        ]
+        boxes = sorted(boxes, key=sort_box)
+        box = boxes[0]
+        return box
 
     def get_adjacent_dir(p: typing.Tuple, q: typing.Tuple) -> str:
         assert(is_adjacent(p, q))
@@ -343,16 +254,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     #1. determine the area dimension corners
     # determine my position dirs
     def routine_move():
-        area = get_area()
+        area = get_bounding_box()
         game_state["boxing_area"] = area
 
-        order_list = order_4x4()
-        if area_dim() == (4,3):
-            order_list = order_4x3()
-        elif area_dim() == (4,4):
-            order_list = order_4x4()
-        elif area_dim() == (4,5):
-            order_list = order_4x5()
+        order_list = space_filling_path(*area_dim())
 
         bottom_left_corner = area[0]
         x0,y0 = bottom_left_corner
@@ -362,6 +267,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         neck_coord = (my_neck["x"], my_neck["y"])
         relative_head_coord = (head_coord[0]-x0, head_coord[1]-y0)
         relative_neck_coord = (neck_coord[0]-x0, neck_coord[1]-y0)
+        head_pos = 0
         for head_pos in range(len(order_list)):
             if relative_head_coord == order_list[head_pos]:
                 break
@@ -436,10 +342,37 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 allowed.append(p)
         return allowed
 
+    def occupied_cells(step):
+        #not including head
+        #assuming no die
+        #assuming no eating food
+        #if eating food it will be more
+        snakes = game_state["board"]["snakes"]
+        sbody = []
+        for s in snakes:
+            body = get_body_coord(s["body"])
+            if s["health"] == 100:
+                #eat food, tail will not move in the next step
+                body += [body[-1]]
+            sbody.append(body)
+        cells = [c for s in snakes for c in s]
+        return cells
+
+    def permissible_nstep(n):
+        paths = [[get_my_head()]]
+        for step in range(n):
+            occupied = occupied_cells(step)
+            paths = [npath for path in paths 
+                     for npath in [path+[p] for p in adj_cells(path[-1])
+                     if p not in occupied and p not in path] ]
+        result = list(set([path[1] for path in paths]))
+        return result
+
     def allowed_move():
-        head = get_my_head()
-        allowed = permissible_first_step(head)
-        allowed = [p for p in allowed if len(permissible_second_step(p)) != 0]
+        #head = get_my_head()
+        #allowed = permissible_first_step(head)
+        #allowed = [p for p in allowed if len(permissible_second_step(p)) != 0]
+        allowed = permissible_nstep(5)
         game_state["allowed_move"] = allowed
 
     def get_body_coord(body) -> typing.List:
@@ -473,20 +406,21 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return False
         return True
 
+    def dir_to_coord(head: typing.Tuple, d: str) -> typing.Tuple:
+        x,y = head
+        if d == "left":
+            return (x-1, y)
+        if d == "right":
+            return (x+1, y)
+        if d == "up":
+            return (x, y+1)
+        if d == "down":
+            return (x, y-1)
+        raise(ValueError("dir_to_coord"))
+
     def colliding_pattern_1(my_body: typing.List, snake_body: typing.List, colliding_point: typing.Tuple):
         if is_cell_occupied(colliding_point):
             return
-
-        def dir_to_coord(d: str) -> typing.Tuple:
-            x,y = get_my_head()
-            if d == "left":
-                return (x-1, y)
-            if d == "right":
-                return (x+1, y)
-            if d == "up":
-                return (x, y+1)
-            if d == "down":
-                return (x, y-1)
 
         my_head = my_body[0]
         my_neck = my_body[1]
@@ -531,7 +465,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                                 suggest = [[other], [sdir]]
 
                     #save in the global var
-                    suggest = [[dir_to_coord(d) for d in g] for g in suggest]
+                    suggest = [[dir_to_coord(my_head, d) for d in g] for g in suggest]
                     game_state["avoid_danger"].append((snake_head, "pattern1", suggest))
 
     def colliding_pattern_2(my_body: typing.List, snake_body: typing.List, collinding_points: typing.List):
@@ -630,15 +564,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 #upper right
                 path1 = line2 + line3[1:]
                 path2 = line1 + line4[1:]
-            if x1 < x0 and y1 > y0:
+            elif x1 < x0 and y1 > y0:
                 #upper left
                 path1 = line3 + list(reversed(line4[1:]))
                 path2 = list(reversed(line2)) + line1[1:]
-            if x1 < x0 and y1 < y0:
+            elif x1 < x0 and y1 < y0:
                 #lower left
                 path1 = list(reversed(line4)) + list(reversed(line1[1:]))
                 path2 = list(reversed(line3)) + list(reversed(line2[1:]))
-            if x1 > x0 and y1 < y0:
+            else:
+                #if x1 > x0 and y1 < y0:
                 #lower right
                 path1 = list(reversed(line1)) + line2[1:]
                 path2 = line4 + list(reversed(line3[1:]))
@@ -708,11 +643,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def best_choice():
 
+        #lower priority first, higher priority will override lower priority
+
         #routine move always exists and set as default
         game_state["next_head_coord"] = game_state["routine_move"]
 
         if len(game_state["allowed_move"]) == 0:
+            #no allowed move, will die
             return
+
+        #set to the first of the allowed moves, then let other considerations override it
 
         if game_state["next_head_coord"] not in game_state["allowed_move"]:
             game_state["next_head_coord"] = game_state["allowed_move"][0]
@@ -720,10 +660,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if len(game_state["find_food"]) != 0:
             game_state["next_head_coord"] = game_state["find_food"][0]
 
-        if not off_border(get_my_head()):
-            off_border_coord = [p for p in game_state["allowed_move"] if off_border(p)]
-            if len(off_border_coord) != 0:
-                game_state["next_head_coord"] = off_border_coord[0]
+        #do not check off-border anymore
+        #instead let attractor boxes move the snake off-border
+
+        def sort_collision_choice(p: typing.Tuple) -> typing.Tuple:
+            #two considerations:
+            #off-border
+            #not changing previous choice
+            check_off_border = 0 if off_border(p) else 1
+            check_change = 0 if p == game_state["next_head_coord"] else 1
+            return check_off_border, check_change
 
         if len(game_state["avoid_danger"]) != 0:
 
@@ -738,13 +684,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     if len(suggest) == 1:
                         game_state["next_head_coord"] = suggest[0]
                     elif len(suggest) == 2:
-                        a,b = suggest
-                        if off_border(a):
-                            game_state["next_head_coord"] = a
-                        elif off_border(b):
-                            game_state["next_head_coord"] = b
-                        else:
-                            game_state["next_head_coord"] = a
+                        suggest = sorted(suggest, key=sort_collision_choice)
+                        game_state["next_head_coord"] = suggest[0]
 
                 else:
                     #two suggestions
@@ -764,6 +705,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             if len(game_state["avoid_danger"]) > 1:
                 #multiple collisions
+                #at most one common suggestion, take it
                 _,__, suggest = game_state["avoid_danger"][0]
                 sset = set([p for g in suggest for p in g])
                 for _,__, suggest in game_state["avoid_danger"][1:]:
@@ -826,5 +768,4 @@ def move(game_state: typing.Dict) -> typing.Dict:
     print(log_text)
 
     return {"move": next_move}
-
 
