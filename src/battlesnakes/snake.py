@@ -350,9 +350,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return list(common)
 
     def is_cell_occupied(p: typing.Tuple) -> bool:
+        #check not including tail
         for snake in game_state["board"]["snakes"]:
             #including myself
-            if p in get_body_coord(snake["body"]):
+            if p in get_body_coord(snake["body"])[:-1]:
                 return True
         return False
 
