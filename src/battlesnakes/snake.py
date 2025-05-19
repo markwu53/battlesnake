@@ -354,8 +354,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if s["health"] == 100:
                 #eat food, tail will not move in the next step
                 body += [body[-1]]
-            sbody.append(body)
-        cells = [c for s in snakes for c in s]
+            sbody.append(body[:-step])
+        cells = [c for s in sbody for c in s]
         return cells
 
     def permissible_nstep(n):
