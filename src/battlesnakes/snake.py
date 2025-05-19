@@ -304,44 +304,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
         npos = [p for p in npos if pos_on_board(p)]
         return npos
 
-    def permissible_first_step(head: typing.Tuple) -> typing.List:
-        #head is the head coordinate
-        npos = adj_cells(head)
-        allowed = []
-
-        def run_into(p, s):
-            body = [(c["x"],c["y"]) for c in s["body"]]
-            if s["health"] == 100:
-                #just eat food, tail will not move
-                check_body = body
-            else:
-                #tail will move, no need to check
-                check_body = body[:-1]
-            return p in check_body
-
-        for p in npos:
-            if not any([run_into(p, s) for s in game_state["board"]["snakes"]]):
-                allowed.append(p)
-        return allowed
-
-    def permissible_second_step(head: typing.Tuple) -> typing.List:
-        #head is the head coordinate
-        npos = adj_cells(head)
-        allowed = []
-
-        def run_into(p, s):
-            body = [(c["x"],c["y"]) for c in s["body"]]
-            if s["health"] == 100:
-                check_body = body[:-1]
-            else:
-                check_body = body[:-2]
-            return p in check_body
-
-        for p in npos:
-            if not any([run_into(p, s) for s in game_state["board"]["snakes"]]):
-                allowed.append(p)
-        return allowed
-
     def occupied_cells(step):
         #not including head
         #assuming no die
@@ -362,9 +324,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         paths = [[get_my_head()]]
         for step in range(1, n+1):
             occupied = occupied_cells(step)
-            paths = [npath for path in paths 
-                     for npath in [path+[p] for p in adj_cells(path[-1])
-                     if p not in occupied and p not in path] ]
+            paths = [ npath 
+                     for path in paths 
+                     for npath in [path+[p] for p in adj_cells(path[-1]) 
+                              if p not in occupied and p not in path] ]
         result = list(set([path[1] for path in paths]))
         return result
 
@@ -601,31 +564,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return False
         return True
 
-    def find_food2():
-
-        game_state["find_food"] = []
-
-        #if opponent snake == 1 and health < 20 find food
-        snakes = opponent_snakes()
-        if len(snakes) == 1 and game_state["you"]["health"] < 20:
-            snake = snakes[0]
-            snake_head = snake["body"][0]
-            snake_head = (snake_head["x"], snake_head["y"])
-            food_target = [(food["x"], food["y"]) for food in game_state["board"]["food"]]
-            food_target = [p for p in food_target if distance_pq(p, get_my_head()) < distance_pq(p, snake_head)]
-            food_target = [(food, [path for path in food_path(food) if good_path(path)]) for food in food_target]
-            food_target = [(food, paths) for food, paths in food_target if len(paths) != 0]
-            food_target = sorted(food_target, key=lambda f: distance_pq(get_my_head(), f[0]))
-            if len(food_target) != 0:
-                food, paths = food_target[0]
-                my_neck = game_state["you"]["body"][1]
-                my_neck = (my_neck["x"], my_neck["y"])
-                paths = sorted(paths, key=lambda path: 0 if get_adjacent_dir(path[0], path[1]) == get_adjacent_dir(my_neck, path[0]) else 1)
-                path = paths[0]
-                next_head_coord = path[1]
-                #save in the global var
-                game_state["find_food"].append(next_head_coord)
-
     def find_food():
 
         game_state["find_food"] = []
@@ -682,7 +620,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             game_state["next_head_coord"] = game_state["allowed_move"][0]
 
         if len(game_state["find_food"]) != 0:
-            game_state["next_head_coord"] = game_state["find_food"][0]
+            if game_state["find_food"][0] in game_state["allowed_move"]:
+                game_state["next_head_coord"] = game_state["find_food"][0]
 
         #do not check off-border anymore
         #instead let attractor boxes move the snake off-border
