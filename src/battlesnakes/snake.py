@@ -660,7 +660,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     b = b[0]
                     if a in game_state["allowed_move"]:
                         game_state["next_head_coord"] = a
-                    if b in game_state["allowed_move"]:
+                    elif b in game_state["allowed_move"]:
                         game_state["next_head_coord"] = b
             elif pattern == "pattern2":
                 suggest = [s for s in suggest if s in game_state["allowed_move"]]
