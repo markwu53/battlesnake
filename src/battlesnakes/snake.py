@@ -1,5 +1,6 @@
 import typing
 import math
+import itertools
 
 
 # info is called when you create your Battlesnake on play.battlesnake.com
@@ -320,8 +321,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         cells = [c for s in sbody for c in s]
         return cells
 
-    def permissible_nstep(n):
-        paths = [[get_my_head()]]
+    def permissible_nstep(head, n):
+        paths = [[head]]
         for step in range(1, n+1):
             occupied = occupied_cells(step)
             paths = [ npath 
@@ -335,7 +336,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #head = get_my_head()
         #allowed = permissible_first_step(head)
         #allowed = [p for p in allowed if len(permissible_second_step(p)) != 0]
-        allowed = permissible_nstep(5)
+        allowed = permissible_nstep(get_my_head(), 5)
         game_state["allowed_move"] = allowed
 
     def get_body_coord(body) -> typing.List:
@@ -476,16 +477,34 @@ def move(game_state: typing.Dict) -> typing.Dict:
             assert(len(colliding_points) == 2)
             colliding_pattern_2(my_body, snake_body, colliding_points)
 
+    def no_multiple_distance_2(my_head: typing.Tuple, snake_moves: typing.List) -> bool:
+        return min([min([distance_pq(my_head, head) for head in config]) 
+             for config in itertools.product(*snake_moves)]) > 2
+
     def avoid_danger():
         game_state["avoid_danger"] = []
+        game_state["avoid_danger_4"] = []
 
         my_body = get_body_coord(game_state["you"]["body"])
-        for snake in opponent_snakes():
-            snake_body = get_body_coord(snake["body"])
-            snake_head = snake_body[0]
-            my_head = get_my_head()
-            if distance_pq(my_head, snake_head) == 2:
-                head_to_head_danger(my_body, snake_body)
+        my_head = my_body[0]
+        snake_heads = [get_body_coord(snake["body"])[0] for snake in opponent_snakes()]
+        snake_dist = [distance_pq(my_head, snake_head) for snake_head in snake_heads]
+
+        #process distance == 4 danger
+        if min(snake_dist) == 4 and len([d for d in snake_dist if d == 4]) > 1:
+            #avoid the situation that in the next step it becomes multiple distance == 2
+            snake_moves = [permissible_nstep(head, 1) for head in snake_heads]
+            my_moves = [permissible_nstep(my_head, 1)]
+            choices = [move for move in my_moves if no_multiple_distance_2(move, snake_moves)]
+            game_state["avoid_danger_4"].append(choices) 
+
+        #process distance == 2 danger
+        if min(snake_dist) == 2:
+            for snake in opponent_snakes():
+                snake_body = get_body_coord(snake["body"])
+                snake_head = snake_body[0]
+                if distance_pq(my_head, snake_head) == 2:
+                    head_to_head_danger(my_body, snake_body)
 
     def opponent_snakes() -> typing.List:
         my_head = game_state["you"]["body"][0]
@@ -571,7 +590,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #if opponent snake == 1 and health < 20 find food
         snakes = opponent_snakes()
-        if len(snakes) <= 2 and game_state["you"]["health"] < 20:
+        if ((len(snakes) <= 2 and game_state["you"]["health"] < 20) 
+            or (len(snakes) == 1 and game_state["you"]["health"] < 50)):
             snakes = [get_body_coord(s["body"]) for s in snakes]
             snake_heads = [s[0] for s in snakes]
             food_target = [(food["x"], food["y"]) for food in game_state["board"]["food"]]
@@ -633,6 +653,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #do not check off-border anymore
         #instead let attractor boxes move the snake off-border
+
+        if len(game_state["avoid_danger_4"]) != 0:
+            #there are distance == 4 danger
+            choices = game_state["avoid_danger_4"][0]
+            choice = [p for p in choices if p in game_state["allowed_move"]]
+            if len(choice) != 0:
+                if game_state["next_head_coord"] not in choice:
+                    #if the current choice is not in the distance == 4 danger
+                    #then use the first of the distance == 4 danger
+                    game_state["next_head_coord"] = choice[0]
 
         def sort_collision_choice(p: typing.Tuple) -> typing.Tuple:
             #two considerations:
