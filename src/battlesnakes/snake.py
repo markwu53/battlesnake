@@ -478,9 +478,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             colliding_pattern_2(my_body, snake_body, colliding_points)
 
     def no_multiple_distance_2(my_head: typing.Tuple, snake_moves: typing.List) -> bool:
-        return min([min(
-            [distance_pq(my_head, head) for head in config]
-            ) 
+        return min([min([distance_pq(my_head, head) for head in config]) 
              for config in itertools.product(*snake_moves)]) > 2
 
     def avoid_danger():
@@ -493,20 +491,20 @@ def move(game_state: typing.Dict) -> typing.Dict:
         snake_dist = [distance_pq(my_head, head) for head in snake_heads]
 
         #process distance == 4 danger
-        if min(snake_dist) == 4 and len([d for d in snake_dist if d == 4]) > 1:
+        if min(snake_dist, default=0) == 4 and len([d for d in snake_dist if d == 4]) > 1:
             #avoid the situation that in the next step it becomes multiple distance == 2
             snake_moves = [permissible_nstep(head, 1) for head in snake_heads]
-            my_moves = [permissible_nstep(my_head, 1)]
+            my_moves = permissible_nstep(my_head, 1)
             choices = [move for move in my_moves if no_multiple_distance_2(move, snake_moves)]
             game_state["avoid_danger_4"].append(choices) 
 
         #process distance == 2 danger
-        #if min(snake_dist) == 2:
-        for snake in opponent_snakes():
-            snake_body = get_body_coord(snake["body"])
-            snake_head = snake_body[0]
-            if distance_pq(my_head, snake_head) == 2:
-                head_to_head_danger(my_body, snake_body)
+        if min(snake_dist, default=0) == 2:
+            for snake in opponent_snakes():
+                snake_body = get_body_coord(snake["body"])
+                snake_head = snake_body[0]
+                if distance_pq(my_head, snake_head) == 2:
+                    head_to_head_danger(my_body, snake_body)
 
     def opponent_snakes() -> typing.List:
         my_head = game_state["you"]["body"][0]
