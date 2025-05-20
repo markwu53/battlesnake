@@ -604,6 +604,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return False
         return True
 
+    def unwrap_suggest(suggest: typing.List, pattern: str) -> typing.List:
+        if pattern == "pattern1":
+            return [s for g in suggest for s in g]
+        if pattern == "pattern2":
+            return suggest
+        raise(ValueError("unwrap_suggest"))
+
     def best_choice():
 
         #lower priority first, higher priority will override lower priority
@@ -670,13 +677,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if len(game_state["avoid_danger"]) > 1:
                 #multiple collisions
                 #at most one common suggestion, take it
-                _,__, suggest = game_state["avoid_danger"][0]
-                sset = set([p for g in suggest for p in g])
-                for _,__, suggest in game_state["avoid_danger"][1:]:
-                    sset = sset.intersection(set([p for g in suggest for p in g]))
-                suggest = [p for p in sset if p in game_state["allowed_move"]]
-                if len(suggest) != 0:
-                    game_state["next_head_coord"] = suggest[0]
+                suggestions = [set(unwrap_suggest(suggest, pattern)) for _, pattern, suggest in game_state["avoid_danger"]]
+                common = list(set.intersection(*suggestions))
+                common = [p for p in common if p in game_state["allowed_move"]]
+                if len(common) != 0:
+                    game_state["next_head_coord"] = common[0]
 
 
 
