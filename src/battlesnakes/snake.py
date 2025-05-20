@@ -49,7 +49,9 @@ def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
 
-# this is a work in progress
+# this is a good place to backup
+# it encorages growth in the beginning
+# it check distance 4 danger
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -584,21 +586,32 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return False
         return True
 
+    def find_food_condition() -> bool:
+        snakes = opponent_snakes()
+        if len(snakes) >= 2 and game_state["you"]["length"] < 8:
+            return True
+        if len(snakes) >= 3 and game_state["you"]["health"] < 60:
+            return True
+        if len(snakes) >= 2 and game_state["you"]["health"] < 40:
+            return True
+        if len(snakes) >= 0 and game_state["you"]["health"] < 20:
+            return True
+        return False
+
     def find_food():
 
         game_state["find_food"] = []
 
         #if opponent snake == 1 and health < 20 find food
         snakes = opponent_snakes()
-        if (1 == 0
-            or (len(snakes) >= 3 and game_state["you"]["health"] < 50)
-            or (len(snakes) >= 2 and game_state["you"]["health"] < 40) 
-            or (len(snakes) >= 0 and game_state["you"]["health"] < 20) 
-            ):
+        if find_food_condition():
             snakes = [get_body_coord(s["body"]) for s in snakes]
             snake_heads = [s[0] for s in snakes]
             food_target = [(food["x"], food["y"]) for food in game_state["board"]["food"]]
-            food_target = [p for p in food_target if all([distance_pq(p, get_my_head()) < distance_pq(p, snake_head) for snake_head in snake_heads])]
+            food_target = [p 
+                           for p in food_target 
+                           if all([distance_pq(p, get_my_head()) < distance_pq(p, snake_head) 
+                                   for snake_head in snake_heads ])]
             food_target = [(food, [path for path in food_path(food) if good_path(path)]) for food in food_target]
             food_target = [(food, paths) for food, paths in food_target if len(paths) != 0]
             food_target = sorted(food_target, key=lambda f: distance_pq(get_my_head(), f[0]))
