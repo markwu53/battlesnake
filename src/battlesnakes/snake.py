@@ -490,13 +490,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
         snake_heads = [get_body_coord(snake["body"])[0] for snake in opponent_snakes()]
         snake_dist = [distance_pq(my_head, snake_head) for snake_head in snake_heads]
 
-        #process distance == 4 danger
-        if min(snake_dist) == 4 and len([d for d in snake_dist if d == 4]) > 1:
-            #avoid the situation that in the next step it becomes multiple distance == 2
-            snake_moves = [permissible_nstep(head, 1) for head in snake_heads]
-            my_moves = [permissible_nstep(my_head, 1)]
-            choices = [move for move in my_moves if no_multiple_distance_2(move, snake_moves)]
-            game_state["avoid_danger_4"].append(choices) 
+        # #process distance == 4 danger
+        # if min(snake_dist) == 4 and len([d for d in snake_dist if d == 4]) > 1:
+        #     #avoid the situation that in the next step it becomes multiple distance == 2
+        #     snake_moves = [permissible_nstep(head, 1) for head in snake_heads]
+        #     my_moves = [permissible_nstep(my_head, 1)]
+        #     choices = [move for move in my_moves if no_multiple_distance_2(move, snake_moves)]
+        #     game_state["avoid_danger_4"].append(choices) 
 
         #process distance == 2 danger
         if min(snake_dist) == 2:
@@ -590,8 +590,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #if opponent snake == 1 and health < 20 find food
         snakes = opponent_snakes()
-        if ((len(snakes) <= 2 and game_state["you"]["health"] < 20) 
-            or (len(snakes) >= 3 and game_state["you"]["health"] < 50)):
+        if (1 == 0
+            or (len(snakes) >= 3 and game_state["you"]["health"] < 50)
+            or (len(snakes) >= 2 and game_state["you"]["health"] < 40) 
+            or (len(snakes) >= 0 and game_state["you"]["health"] < 20) 
+            ):
             snakes = [get_body_coord(s["body"]) for s in snakes]
             snake_heads = [s[0] for s in snakes]
             food_target = [(food["x"], food["y"]) for food in game_state["board"]["food"]]
