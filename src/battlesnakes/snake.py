@@ -591,7 +591,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #if opponent snake == 1 and health < 20 find food
         snakes = opponent_snakes()
         if ((len(snakes) <= 2 and game_state["you"]["health"] < 20) 
-            or (len(snakes) == 1 and game_state["you"]["health"] < 50)):
+            or (len(snakes) >= 3 and game_state["you"]["health"] < 50)):
             snakes = [get_body_coord(s["body"]) for s in snakes]
             snake_heads = [s[0] for s in snakes]
             food_target = [(food["x"], food["y"]) for food in game_state["board"]["food"]]
