@@ -335,11 +335,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return result
 
     def allowed_move():
-        #head = get_my_head()
-        #allowed = permissible_first_step(head)
-        #allowed = [p for p in allowed if len(permissible_second_step(p)) != 0]
-        allowed = permissible_nstep(get_my_head(), 5)
+        head = get_my_head()
+        allowed = permissible_nstep(head, 5)
+        allowed_1 = permissible_nstep(head, 1)
         game_state["allowed_move"] = allowed
+        game_state["allowed_move_1"] = allowed_1
 
     def get_body_coord(body) -> typing.List:
         return [(c["x"], c["y"]) for c in body]
@@ -655,7 +655,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
         game_state["next_head_coord"] = game_state["routine_move"]
 
         if len(game_state["allowed_move"]) == 0:
-            #no allowed move, will die
+            #most strict allowed move empty
+            #immediate allowed move may still have some
+            if len(game_state["allowed_move_1"]) != 0:
+                #use the first of the allowed move
+                game_state["next_head_coord"] = game_state["allowed_move_1"][0]
             return
 
         #set to the first of the allowed moves, then let other considerations override it
