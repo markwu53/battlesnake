@@ -140,14 +140,14 @@ def move(game_state: typing.Dict) -> typing.Dict:
         nsnakes = len(game_state["board"]["snakes"])
         length = game_state["you"]["length"]
         if nsnakes >= 4:
-            return (4,3)
-        if nsnakes == 3:
+            #return (4,3)
             return (4,4)
+        if nsnakes == 3:
+            #return (4,4)
+            return (4,5)
         if nsnakes <= 2:
-            if length <= 15:
-                return (4,5)
-            if length <= 20:
-                return (4,7)
+            #if length <= 15: return (4,5)
+            #if length <= 20: return (4,7)
             return (4,9)
         raise(ValueError("area_dim"))
 
