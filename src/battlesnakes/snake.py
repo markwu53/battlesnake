@@ -92,7 +92,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     
     def find_containing_boxes(body: typing.List) -> typing.List:
         boxes = []
-        width, height = area_dim()
+        width, height = box_dim()
         for x1 in range(game_state["board"]["width"]):
             for y1 in range(game_state["board"]["height"]):
                 #bottom-left corner (x1,y1)
@@ -112,7 +112,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         body = body[:3]
 
         boxes = []
-        width, height = area_dim()
+        width, height = box_dim()
         for x1 in range(game_state["board"]["width"]):
             for y1 in range(game_state["board"]["height"]):
                 #bottom-left corner (x1,y1)
@@ -136,7 +136,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         path = base + [p for line in vert_lines for p in line]
         return path
 
-    def area_dim() -> typing.Tuple:
+    def box_dim() -> typing.Tuple:
         nsnakes = len(game_state["board"]["snakes"])
         length = game_state["you"]["length"]
         if nsnakes >= 4:
@@ -152,7 +152,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         raise(ValueError("area_dim"))
 
     def attractor_boxes() -> typing.List:
-        adim = area_dim()
+        adim = box_dim()
         if adim == (4,3):
             return [
                 ((1,2), (4,4)),
@@ -182,7 +182,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if adim == (4,9):
             return [
                 ((1,1), (4,9)),
-                ((6,1), (9,1)),
+                ((6,1), (9,9)),
             ]
 
         raise(ValueError("BOX DIMENSION"))
@@ -260,7 +260,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         area = get_bounding_box()
         game_state["boxing_area"] = area
 
-        order_list = space_filling_path(*area_dim())
+        order_list = space_filling_path(*box_dim())
 
         bottom_left_corner = area[0]
         x0,y0 = bottom_left_corner
