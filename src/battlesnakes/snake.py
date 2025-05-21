@@ -532,7 +532,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         my_moves = permissible_nstep(my_head, 1)
         my_moves = [(danger_rank(move, snake_moves), move) for move in my_moves]
-        my_moves = [move for rank, move in my_moves if rank < 2]
+        my_moves = [(rank, move) for rank, move in my_moves if rank < 2]
         my_moves = sorted(my_moves, key=lambda x: x[0])
         choices = [move for _, move in my_moves]
         #choices can be empty
