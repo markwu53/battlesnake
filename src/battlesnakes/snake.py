@@ -480,8 +480,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             colliding_pattern_2(my_body, snake_body, colliding_points)
 
     def no_multiple_distance_2(my_head: typing.Tuple, snake_moves: typing.List) -> bool:
-        return min([min([distance_pq(my_head, head) for head in config]) 
-             for config in itertools.product(*snake_moves)]) > 2
+        return min([min([distance_pq(my_head, head) for head in config], default=100) 
+             for config in itertools.product(*snake_moves)], default=100) > 2
 
     def avoid_danger():
         game_state["avoid_danger"] = []
