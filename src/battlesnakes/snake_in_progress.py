@@ -1,5 +1,6 @@
 import typing
 import math
+import itertools
 
 
 # info is called when you create your Battlesnake on play.battlesnake.com
@@ -48,7 +49,9 @@ def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
 
-# this is a work in progress
+# this is a good place to backup
+# it encorages growth in the beginning
+# it check distance 4 danger
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -89,7 +92,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     
     def find_containing_boxes(body: typing.List) -> typing.List:
         boxes = []
-        width, height = area_dim()
+        width, height = box_dim()
         for x1 in range(game_state["board"]["width"]):
             for y1 in range(game_state["board"]["height"]):
                 #bottom-left corner (x1,y1)
@@ -109,7 +112,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         body = body[:3]
 
         boxes = []
-        width, height = area_dim()
+        width, height = box_dim()
         for x1 in range(game_state["board"]["width"]):
             for y1 in range(game_state["board"]["height"]):
                 #bottom-left corner (x1,y1)
@@ -133,23 +136,23 @@ def move(game_state: typing.Dict) -> typing.Dict:
         path = base + [p for line in vert_lines for p in line]
         return path
 
-    def area_dim() -> typing.Tuple:
+    def box_dim() -> typing.Tuple:
         nsnakes = len(game_state["board"]["snakes"])
         length = game_state["you"]["length"]
         if nsnakes >= 4:
-            return (4,3)
-        if nsnakes == 3:
+            #return (4,3)
             return (4,4)
+        if nsnakes == 3:
+            #return (4,4)
+            return (4,5)
         if nsnakes <= 2:
-            if length <= 15:
-                return (4,5)
-            if length <= 20:
-                return (4,7)
+            #if length <= 15: return (4,5)
+            #if length <= 20: return (4,7)
             return (4,9)
         raise(ValueError("area_dim"))
 
     def attractor_boxes() -> typing.List:
-        adim = area_dim()
+        adim = box_dim()
         if adim == (4,3):
             return [
                 ((1,2), (4,4)),
@@ -179,7 +182,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if adim == (4,9):
             return [
                 ((1,1), (4,9)),
-                ((6,1), (9,1)),
+                ((6,1), (9,9)),
             ]
 
         raise(ValueError("BOX DIMENSION"))
@@ -257,7 +260,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         area = get_bounding_box()
         game_state["boxing_area"] = area
 
-        order_list = space_filling_path(*area_dim())
+        order_list = space_filling_path(*box_dim())
 
         bottom_left_corner = area[0]
         x0,y0 = bottom_left_corner
@@ -304,44 +307,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
         npos = [p for p in npos if pos_on_board(p)]
         return npos
 
-    def permissible_first_step(head: typing.Tuple) -> typing.List:
-        #head is the head coordinate
-        npos = adj_cells(head)
-        allowed = []
-
-        def run_into(p, s):
-            body = [(c["x"],c["y"]) for c in s["body"]]
-            if s["health"] == 100:
-                #just eat food, tail will not move
-                check_body = body
-            else:
-                #tail will move, no need to check
-                check_body = body[:-1]
-            return p in check_body
-
-        for p in npos:
-            if not any([run_into(p, s) for s in game_state["board"]["snakes"]]):
-                allowed.append(p)
-        return allowed
-
-    def permissible_second_step(head: typing.Tuple) -> typing.List:
-        #head is the head coordinate
-        npos = adj_cells(head)
-        allowed = []
-
-        def run_into(p, s):
-            body = [(c["x"],c["y"]) for c in s["body"]]
-            if s["health"] == 100:
-                check_body = body[:-1]
-            else:
-                check_body = body[:-2]
-            return p in check_body
-
-        for p in npos:
-            if not any([run_into(p, s) for s in game_state["board"]["snakes"]]):
-                allowed.append(p)
-        return allowed
-
     def occupied_cells(step):
         #not including head
         #assuming no die
@@ -354,26 +319,27 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if s["health"] == 100:
                 #eat food, tail will not move in the next step
                 body += [body[-1]]
-            sbody.append(body)
-        cells = [c for s in snakes for c in s]
+            sbody.append(body[:-step])
+        cells = [c for s in sbody for c in s]
         return cells
 
-    def permissible_nstep(n):
-        paths = [[get_my_head()]]
-        for step in range(n):
+    def permissible_nstep(head, n):
+        paths = [[head]]
+        for step in range(1, n+1):
             occupied = occupied_cells(step)
-            paths = [npath for path in paths 
-                     for npath in [path+[p] for p in adj_cells(path[-1])
-                     if p not in occupied and p not in path] ]
+            paths = [ npath 
+                     for path in paths 
+                     for npath in [path+[p] for p in adj_cells(path[-1]) 
+                              if p not in occupied and p not in path] ]
         result = list(set([path[1] for path in paths]))
         return result
 
     def allowed_move():
-        #head = get_my_head()
-        #allowed = permissible_first_step(head)
-        #allowed = [p for p in allowed if len(permissible_second_step(p)) != 0]
-        allowed = permissible_nstep(5)
+        head = get_my_head()
+        allowed = permissible_nstep(head, 5)
+        allowed_1 = permissible_nstep(head, 1)
         game_state["allowed_move"] = allowed
+        game_state["allowed_move_1"] = allowed_1
 
     def get_body_coord(body) -> typing.List:
         return [(c["x"], c["y"]) for c in body]
@@ -387,9 +353,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return list(common)
 
     def is_cell_occupied(p: typing.Tuple) -> bool:
+        #check not including tail
         for snake in game_state["board"]["snakes"]:
             #including myself
-            if p in get_body_coord(snake["body"]):
+            if p in get_body_coord(snake["body"])[:-1]:
                 return True
         return False
 
@@ -512,16 +479,70 @@ def move(game_state: typing.Dict) -> typing.Dict:
             assert(len(colliding_points) == 2)
             colliding_pattern_2(my_body, snake_body, colliding_points)
 
-    def avoid_danger():
+    def avoid_danger_2():
         game_state["avoid_danger"] = []
 
+        #check distance == 2
         my_body = get_body_coord(game_state["you"]["body"])
-        for snake in opponent_snakes():
-            snake_body = get_body_coord(snake["body"])
-            snake_head = snake_body[0]
-            my_head = get_my_head()
-            if distance_pq(my_head, snake_head) == 2:
-                head_to_head_danger(my_body, snake_body)
+        my_head = my_body[0]
+        snake_heads = [get_body_coord(snake["body"])[0] for snake in opponent_snakes()]
+        snake_dist = [distance_pq(my_head, head) for head in snake_heads]
+
+        #process distance == 2 danger
+        if min(snake_dist, default=0) == 2:
+            for snake in opponent_snakes():
+                snake_body = get_body_coord(snake["body"])
+                snake_head = snake_body[0]
+                if distance_pq(my_head, snake_head) == 2:
+                    head_to_head_danger(my_body, snake_body)
+ 
+    def danger_rank(move: typing.Tuple, snake_moves: typing.List) -> int:
+        #maximum number of distance == 2
+        def config_rank(config: typing.List) -> int:
+            dist = [distance_pq(move, snake_move) for snake_move in config]
+            return len([d for d in dist if d == 2])
+        rank = max([config_rank(config) for config in itertools.product(*snake_moves)], default=0)
+        return rank
+
+    def avoid_danger_4():
+        game_state["avoid_danger_4"] = []
+
+        #check distance == 4
+        snakes = [snake for snake in opponent_snakes() if len(snake["body"]) >= game_state["you"]["length"]]
+        if len(snakes) == 0:
+            return
+
+        my_body = get_body_coord(game_state["you"]["body"])
+        my_head = my_body[0]
+        snake_heads = [get_body_coord(snake["body"])[0] for snake in snakes]
+        snake_dist = [distance_pq(my_head, head) for head in snake_heads]
+
+        #process distance == 4 danger
+        if len([d for d in snake_dist if d == 2]) > 0:
+            return
+
+        if len([d for d in snake_dist if d == 4]) <= 1:
+            return
+
+        #avoid the situation that in the next step it becomes multiple distance == 2
+        snake_moves = [permissible_nstep(head, 1) for head in snake_heads if distance_pq(my_head, head) == 4]
+        snake_moves = [moves for moves in snake_moves if len(moves) != 0]
+        if len(snake_moves) <= 1:
+            return
+
+        my_moves = permissible_nstep(my_head, 1)
+        my_moves = [(danger_rank(move, snake_moves), move) for move in my_moves]
+        my_moves = [(rank, move) for rank, move in my_moves if rank < 2]
+        my_moves = sorted(my_moves, key=lambda x: x[0])
+        choices = [move for _, move in my_moves]
+        #choices can be empty
+        #appending an empty list means there is a distance == 4 danger 
+        # but no choices to avoid multiple distance == 2 in the next step
+        game_state["avoid_danger_4"].append(choices) 
+
+    def avoid_danger():
+        avoid_danger_2()
+        avoid_danger_4()
 
     def opponent_snakes() -> typing.List:
         my_head = game_state["you"]["body"][0]
@@ -601,18 +622,32 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return False
         return True
 
+    def find_food_condition() -> bool:
+        snakes = opponent_snakes()
+        if len(snakes) >= 2 and game_state["you"]["length"] < 10:
+            return True
+        if len(snakes) >= 3 and game_state["you"]["health"] < 60:
+            return True
+        if len(snakes) >= 2 and game_state["you"]["health"] < 40:
+            return True
+        if len(snakes) >= 0 and game_state["you"]["health"] < 20:
+            return True
+        return False
+
     def find_food():
 
         game_state["find_food"] = []
 
         #if opponent snake == 1 and health < 20 find food
         snakes = opponent_snakes()
-        if len(snakes) == 1 and game_state["you"]["health"] < 20:
-            snake = snakes[0]
-            snake_head = snake["body"][0]
-            snake_head = (snake_head["x"], snake_head["y"])
+        if find_food_condition():
+            snakes = [get_body_coord(s["body"]) for s in snakes]
+            snake_heads = [s[0] for s in snakes]
             food_target = [(food["x"], food["y"]) for food in game_state["board"]["food"]]
-            food_target = [p for p in food_target if distance_pq(p, get_my_head()) < distance_pq(p, snake_head)]
+            food_target = [p 
+                           for p in food_target 
+                           if all([distance_pq(p, get_my_head()) < distance_pq(p, snake_head) 
+                                   for snake_head in snake_heads ])]
             food_target = [(food, [path for path in food_path(food) if good_path(path)]) for food in food_target]
             food_target = [(food, paths) for food, paths in food_target if len(paths) != 0]
             food_target = sorted(food_target, key=lambda f: distance_pq(get_my_head(), f[0]))
@@ -641,6 +676,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return False
         return True
 
+    def unwrap_suggest(suggest: typing.List, pattern: str) -> typing.List:
+        if pattern == "pattern1":
+            return [s for g in suggest for s in g]
+        if pattern == "pattern2":
+            return suggest
+        raise(ValueError("unwrap_suggest"))
+
     def best_choice():
 
         #lower priority first, higher priority will override lower priority
@@ -649,7 +691,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
         game_state["next_head_coord"] = game_state["routine_move"]
 
         if len(game_state["allowed_move"]) == 0:
-            #no allowed move, will die
+            #most strict allowed move empty
+            #immediate allowed move may still have some
+            if len(game_state["allowed_move_1"]) != 0:
+                #use the first of the allowed move
+                game_state["next_head_coord"] = game_state["allowed_move_1"][0]
             return
 
         #set to the first of the allowed moves, then let other considerations override it
@@ -658,10 +704,21 @@ def move(game_state: typing.Dict) -> typing.Dict:
             game_state["next_head_coord"] = game_state["allowed_move"][0]
 
         if len(game_state["find_food"]) != 0:
-            game_state["next_head_coord"] = game_state["find_food"][0]
+            if game_state["find_food"][0] in game_state["allowed_move"]:
+                game_state["next_head_coord"] = game_state["find_food"][0]
 
         #do not check off-border anymore
         #instead let attractor boxes move the snake off-border
+
+        if len(game_state["avoid_danger_4"]) != 0:
+            #there are distance == 4 danger
+            choices = game_state["avoid_danger_4"][0]
+            choice = [p for p in choices if p in game_state["allowed_move"]]
+            if len(choice) != 0:
+                if game_state["next_head_coord"] not in choice:
+                    #if the current choice is not in the distance == 4 danger
+                    #then use the first of the distance == 4 danger
+                    game_state["next_head_coord"] = choice[0]
 
         def sort_collision_choice(p: typing.Tuple) -> typing.Tuple:
             #two considerations:
@@ -696,7 +753,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     b = b[0]
                     if a in game_state["allowed_move"]:
                         game_state["next_head_coord"] = a
-                    if b in game_state["allowed_move"]:
+                    elif b in game_state["allowed_move"]:
                         game_state["next_head_coord"] = b
             elif pattern == "pattern2":
                 suggest = [s for s in suggest if s in game_state["allowed_move"]]
@@ -706,13 +763,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if len(game_state["avoid_danger"]) > 1:
                 #multiple collisions
                 #at most one common suggestion, take it
-                _,__, suggest = game_state["avoid_danger"][0]
-                sset = set([p for g in suggest for p in g])
-                for _,__, suggest in game_state["avoid_danger"][1:]:
-                    sset = sset.intersection(set([p for g in suggest for p in g]))
-                suggest = [p for p in sset if p in game_state["allowed_move"]]
-                if len(suggest) != 0:
-                    game_state["next_head_coord"] = suggest[0]
+                suggestions = [set(unwrap_suggest(suggest, pattern)) for _, pattern, suggest in game_state["avoid_danger"]]
+                common = list(set.intersection(*suggestions))
+                common = [p for p in common if p in game_state["allowed_move"]]
+                if len(common) != 0:
+                    game_state["next_head_coord"] = common[0]
 
 
 
@@ -753,6 +808,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_game_id = game_state["game"]["id"]
     log_routine_move = game_state["routine_move"]
     log_avoid_danger = game_state["avoid_danger"]
+    log_avoid_danger_4 = game_state["avoid_danger_4"]
+    log_allowed_move = game_state["allowed_move"]
 
     log_text = ", ".join([
         f"game_id: {log_game_id}",
@@ -764,6 +821,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"boxing_area: {log_boxing_area}",
         f"routine_move: {log_routine_move}",
         f"avoid_danger: {log_avoid_danger}",
+        f"avoid_danger_4: {log_avoid_danger_4}",
+        f"allowed_move: {log_allowed_move}",
     ])
     print(log_text)
 
