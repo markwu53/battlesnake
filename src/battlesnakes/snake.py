@@ -49,9 +49,6 @@ def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
 
-# this is a good place to backup
-# it encorages growth in the beginning
-# it check distance 4 danger
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -540,9 +537,61 @@ def move(game_state: typing.Dict) -> typing.Dict:
         # but no choices to avoid multiple distance == 2 in the next step
         game_state["avoid_danger_4"].append(choices) 
 
+    def danger_in_single_danger_4(p: typing.Tuple, snake_head: typing.Tuple) -> bool:
+        step_2_moves = set(adj_cells(p))-set(occupied_cells(2))-set([get_my_head()])
+        danger = any([p1 for p1 in permissible_nstep(snake_head, 1)
+            if all([is_adjacent(p1, p2) for p2 in step_2_moves]) ])
+        return danger
+
+    def avoid_single_danger_4():
+        game_state["avoid_single_danger_4"] = []
+
+        #check distance == 4
+        snakes = [snake for snake in opponent_snakes() if len(snake["body"]) >= game_state["you"]["length"]]
+        if len(snakes) == 0:
+            return
+
+        my_body = get_body_coord(game_state["you"]["body"])
+        my_head = my_body[0]
+        snake_heads = [get_body_coord(snake["body"])[0] for snake in snakes]
+        snake_dist = [distance_pq(my_head, head) for head in snake_heads]
+
+        #process distance == 4 danger
+        if len([d for d in snake_dist if d == 2]) > 0:
+            return
+
+        if len([d for d in snake_dist if d == 4]) != 1:
+            return
+
+        snake = [snake for snake in snakes if distance_pq(my_head, get_body_coord(snake["body"])[0]) == 4][0]
+        snake_body = get_body_coord(snake["body"])
+        if len(snake_body) <= len(my_body):
+            return
+        
+        snake_head = snake_body[0]
+        my_moves = permissible_nstep(my_head, 1)
+        suggests = [p for p in my_moves if not danger_in_single_danger_4(p, snake_head)]
+        if len(suggests) < len(my_moves):
+            game_state["avoid_single_danger_4"].append(suggests)
+
     def avoid_danger():
+        #I'll structure this in a better way
+        #for now I'll just deal with separate cases
+
+        #avoid_danger_2() deals with distance == 2
+        #this is immediate danger
         avoid_danger_2()
+
+        #avoid_danger_4() deals with when there are multiple distance == 4 snakes
+        #but no distance == 2 snakes
+        #the goal is to avoid multiple distance == 2 in the next step
         avoid_danger_4()
+
+        #avoid_single_danger_4() deals with when there is only one distance == 4 snake
+        #but no distance == 2 snakes
+        #sometimes when near the border, certain moves can put myself in a distance == 2 danger and no escape direction
+        #the goal is to avoid such moves
+        avoid_single_danger_4()
 
     def opponent_snakes() -> typing.List:
         my_head = game_state["you"]["body"][0]
@@ -719,6 +768,14 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     #if the current choice is not in the distance == 4 danger
                     #then use the first of the distance == 4 danger
                     game_state["next_head_coord"] = choice[0]
+
+        if len(game_state["avoid_single_danger_4"]) != 0:
+            #there are single distance == 4 danger
+            choices = game_state["avoid_single_danger_4"][0]
+            choices = [p for p in choices if p in game_state["allowed_move"]]
+            if len(choices) != 0:
+                if game_state["next_head_coord"] not in choices:
+                    game_state["next_head_coord"] = choices[0]
 
         def sort_collision_choice(p: typing.Tuple) -> typing.Tuple:
             #two considerations:
