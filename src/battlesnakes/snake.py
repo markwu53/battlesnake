@@ -876,6 +876,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"health: {log_health}",
         f"head: {log_head}",
         f"scount: {log_snake_count}",
+        f"snake names: {log_snake_names}",
         f"boxing_area: {log_boxing_area}",
         f"routine_move: {log_routine_move}",
         f"avoid_danger: {log_avoid_danger}",
