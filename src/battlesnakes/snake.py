@@ -866,6 +866,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_routine_move = game_state["routine_move"]
     log_avoid_danger = game_state["avoid_danger"]
     log_avoid_danger_4 = game_state["avoid_danger_4"]
+    log_avoid_single_danger_4 = game_state["avoid_single_danger_4"]
     log_allowed_move = game_state["allowed_move"]
 
     log_text = ", ".join([
@@ -879,6 +880,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"routine_move: {log_routine_move}",
         f"avoid_danger: {log_avoid_danger}",
         f"avoid_danger_4: {log_avoid_danger_4}",
+        f"avoid_single_danger_4: {log_avoid_single_danger_4}",
         f"allowed_move: {log_allowed_move}",
     ])
     print(log_text)
