@@ -396,7 +396,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #still need to consider this
         #if is_cell_occupied(colliding_point): return
         if too_far(my_body[0], snake_body[0]):
+            game_state["colliding_pattern_1"].append((snake_body[0], "too far"))
             return
+        else:
+            game_state["colliding_pattern_1"].append((snake_body[0], "not too far"))
 
         my_head = my_body[0]
         my_neck = my_body[1]
@@ -490,6 +493,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def avoid_danger_2():
         game_state["avoid_danger"] = []
+        game_state["colliding_pattern_1"] = []
 
         #check distance == 2
         my_body = get_body_coord(game_state["you"]["body"])
@@ -880,6 +884,12 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_avoid_danger_4 = game_state["avoid_danger_4"]
     log_avoid_single_danger_4 = game_state["avoid_single_danger_4"]
     log_allowed_move = game_state["allowed_move"]
+    if len(game_state["colliding_pattern_1"]) != 0:
+        log_pattern1 = [f"{s[0]}: {s[1]}" for s in game_state["colliding_pattern_1"]]
+        log_pattern1 = f"{log_pattern1}"
+        log_pattern1 = "pattern_1_activated: " + log_pattern1
+    else:
+        log_pattern1 = ""
 
     log_text = ", ".join([
         f"game_id: {log_game_id}",
@@ -895,6 +905,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"avoid_danger_4: {log_avoid_danger_4}",
         f"avoid_single_danger_4: {log_avoid_single_danger_4}",
         f"allowed_move: {log_allowed_move}",
+        log_pattern1,
     ])
     print(log_text)
 
