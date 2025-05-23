@@ -165,11 +165,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 ((6,6), (9,9)),
             ]
         if adim == (4,5):
+            #return [ ((1,0), (4,4)), ((1,6), (4,10)), ((6,0), (9,4)), ((6,6), (9,10)), ]
+            #change to two boxes, both off-border
             return [
-                ((1,0), (4,4)),
-                ((1,6), (4,10)),
-                ((6,0), (9,4)),
-                ((6,6), (9,10)),
+                ((1,1), (4,5)),
+                ((6,5), (9,9))
             ]
         if adim == (4,7):
             return [
