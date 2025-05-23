@@ -384,8 +384,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def too_far(p1: typing.Tuple, p2: typing.Tuple) -> bool:
         paths = [[p1]]
-        for step in range(1,7):
-            occupied = occupied_cells(step)
+        for step in range(6):
+            occupied = occupied_cells(1)
             paths = [ npath 
                      for path in paths 
                      for npath in [path+[p] for p in adj_cells(path[-1]) 
