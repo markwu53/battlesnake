@@ -165,11 +165,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 ((6,6), (9,9)),
             ]
         if adim == (4,5):
+            #return [ ((1,0), (4,4)), ((1,6), (4,10)), ((6,0), (9,4)), ((6,6), (9,10)), ]
+            #change to two boxes, both off-border
             return [
-                ((1,0), (4,4)),
-                ((1,6), (4,10)),
-                ((6,0), (9,4)),
-                ((6,6), (9,10)),
+                ((1,1), (4,5)),
+                ((6,5), (9,9))
             ]
         if adim == (4,7):
             return [
@@ -382,8 +382,20 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return (x, y-1)
         raise(ValueError("dir_to_coord"))
 
+    def too_far(p1: typing.Tuple, p2: typing.Tuple) -> bool:
+        paths = [[p1]]
+        for step in range(6):
+            occupied = occupied_cells(step)
+            paths = [ npath 
+                     for path in paths 
+                     for npath in [path+[p] for p in adj_cells(path[-1]) 
+                              if p not in occupied and p not in path] ]
+        return not any([p2 in path for path in paths])
+
     def colliding_pattern_1(my_body: typing.List, snake_body: typing.List, colliding_point: typing.Tuple):
-        if is_cell_occupied(colliding_point):
+        #still need to consider this
+        #if is_cell_occupied(colliding_point): return
+        if too_far(my_body[0], snake_body[0]):
             return
 
         my_head = my_body[0]
