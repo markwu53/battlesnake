@@ -393,8 +393,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return not any([p2 in path for path in paths])
 
     def colliding_pattern_1(my_body: typing.List, snake_body: typing.List, colliding_point: typing.Tuple):
-        #still need to consider this
-        #if is_cell_occupied(colliding_point): return
+        #restore this - do not process when colliding point is occupied - for now
+        if is_cell_occupied(colliding_point): 
+            return
 
         my_head = my_body[0]
         my_neck = my_body[1]
