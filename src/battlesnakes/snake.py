@@ -395,11 +395,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
     def colliding_pattern_1(my_body: typing.List, snake_body: typing.List, colliding_point: typing.Tuple):
         #still need to consider this
         #if is_cell_occupied(colliding_point): return
-        if too_far(my_body[0], snake_body[0]):
-            game_state["colliding_pattern_1"].append((snake_body[0], "too far"))
-            return
-        else:
-            game_state["colliding_pattern_1"].append((snake_body[0], "not too far"))
 
         my_head = my_body[0]
         my_neck = my_body[1]
@@ -905,7 +900,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"avoid_danger_4: {log_avoid_danger_4}",
         f"avoid_single_danger_4: {log_avoid_single_danger_4}",
         f"allowed_move: {log_allowed_move}",
-        log_pattern1,
     ])
     print(log_text)
 
