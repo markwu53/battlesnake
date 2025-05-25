@@ -49,9 +49,6 @@ def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
 
-# this is a good place to backup
-# it encorages growth in the beginning
-# it check distance 4 danger
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -168,11 +165,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 ((6,6), (9,9)),
             ]
         if adim == (4,5):
+            #return [ ((1,0), (4,4)), ((1,6), (4,10)), ((6,0), (9,4)), ((6,6), (9,10)), ]
+            #change to two boxes, both off-border
             return [
-                ((1,0), (4,4)),
-                ((1,6), (4,10)),
-                ((6,0), (9,4)),
-                ((6,6), (9,10)),
+                ((1,1), (4,5)),
+                ((6,5), (9,9))
             ]
         if adim == (4,7):
             return [
@@ -307,6 +304,31 @@ def move(game_state: typing.Dict) -> typing.Dict:
         npos = [p for p in npos if pos_on_board(p)]
         return npos
 
+    def evolve_occupied_cells(board: typing.Dict) -> typing.List:
+        #not including head
+        #assuming no die
+        #assuming no eating food
+        #if eating food it will be more
+        snakes = board["snakes"]
+        sbody = []
+        for s in snakes:
+            body = get_body_coord(s["body"])
+            if s["health"] == 100:
+                #eat food, tail will not move in the next step
+                body += [body[-1]]
+            sbody.append(body[:-1])
+        cells = [c for s in sbody for c in s]
+        return cells
+
+    def evolve_allowed_moves(board: typing.Dict) -> typing.List:
+        for snake in board["snakes"]:
+            body = get_body_coord(snake["body"])
+            head = body[0]
+            neck = body[1]
+            next_moves = adj_cells(head)
+            next_moves = [p for p in next_moves if not p]
+
+
     def occupied_cells(step):
         #not including head
         #assuming no die
@@ -385,8 +407,19 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return (x, y-1)
         raise(ValueError("dir_to_coord"))
 
+    def too_far(p1: typing.Tuple, p2: typing.Tuple) -> bool:
+        paths = [[p1]]
+        for step in range(6):
+            occupied = occupied_cells(1)
+            paths = [ npath 
+                     for path in paths 
+                     for npath in [path+[p] for p in adj_cells(path[-1]) 
+                              if p not in occupied and p not in path] ]
+        return not any([p2 in path for path in paths])
+
     def colliding_pattern_1(my_body: typing.List, snake_body: typing.List, colliding_point: typing.Tuple):
-        if is_cell_occupied(colliding_point):
+        #restore this - do not process when colliding point is occupied - for now
+        if is_cell_occupied(colliding_point): 
             return
 
         my_head = my_body[0]
@@ -481,6 +514,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def avoid_danger_2():
         game_state["avoid_danger"] = []
+        game_state["colliding_pattern_1"] = []
 
         #check distance == 2
         my_body = get_body_coord(game_state["you"]["body"])
@@ -540,12 +574,62 @@ def move(game_state: typing.Dict) -> typing.Dict:
         # but no choices to avoid multiple distance == 2 in the next step
         game_state["avoid_danger_4"].append(choices) 
 
-    def avoid_danger():
-        avoid_danger_2()
-        avoid_danger_4()
+    def danger_in_single_danger_4(p: typing.Tuple, snake_head: typing.Tuple) -> bool:
+        step_2_moves = set(adj_cells(p))-set(occupied_cells(2))-set([get_my_head()])
+        danger = any([p1 for p1 in permissible_nstep(snake_head, 1)
+            if all([is_adjacent(p1, p2) for p2 in step_2_moves]) ])
+        return danger
+
+    def avoid_single_danger_4():
+        game_state["avoid_single_danger_4"] = []
+
+        #check distance == 4
+        snakes = [snake for snake in opponent_snakes() if len(snake["body"]) >= game_state["you"]["length"]]
+        if len(snakes) == 0:
+            return
+
+        my_body = get_body_coord(game_state["you"]["body"])
+        my_head = my_body[0]
+        snake_heads = [get_body_coord(snake["body"])[0] for snake in snakes]
+        snake_dist = [distance_pq(my_head, head) for head in snake_heads]
+
+        #process distance == 4 danger
+        if len([d for d in snake_dist if d == 2]) > 0:
+            return
+
+        if len([d for d in snake_dist if d == 4]) != 1:
+            return
+
+        snake = [snake for snake in snakes if distance_pq(my_head, get_body_coord(snake["body"])[0]) == 4][0]
+        snake_body = get_body_coord(snake["body"])
+        if len(snake_body) <= len(my_body):
+            return
+        
+        snake_head = snake_body[0]
+        my_moves = permissible_nstep(my_head, 1)
+        suggests = [p for p in my_moves if not danger_in_single_danger_4(p, snake_head)]
+        if len(suggests) < len(my_moves):
+            game_state["avoid_single_danger_4"].append(suggests)
 
     def avoid_danger():
-        pass
+        #I'll structure this in a better way
+        #for now I'll just deal with separate cases
+
+        #avoid_danger_2() deals with distance == 2
+        #this is immediate danger
+        avoid_danger_2()
+
+        #avoid_danger_4() deals with when there are multiple distance == 4 snakes
+        #but no distance == 2 snakes
+        #the goal is to avoid multiple distance == 2 in the next step
+        avoid_danger_4()
+
+        #avoid_single_danger_4() deals with when there is only one distance == 4 snake
+        #but no distance == 2 snakes
+        #sometimes when near the border, certain moves can put myself in a distance == 2 danger and no escape direction
+        #the goal is to avoid such moves
+        avoid_single_danger_4()
+
 
     def opponent_snakes() -> typing.List:
         my_head = game_state["you"]["body"][0]
@@ -723,6 +807,14 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     #then use the first of the distance == 4 danger
                     game_state["next_head_coord"] = choice[0]
 
+        if len(game_state["avoid_single_danger_4"]) != 0:
+            #there are single distance == 4 danger
+            choices = game_state["avoid_single_danger_4"][0]
+            choices = [p for p in choices if p in game_state["allowed_move"]]
+            if len(choices) != 0:
+                if game_state["next_head_coord"] not in choices:
+                    game_state["next_head_coord"] = choices[0]
+
         def sort_collision_choice(p: typing.Tuple) -> typing.Tuple:
             #two considerations:
             #off-border
@@ -812,7 +904,14 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_routine_move = game_state["routine_move"]
     log_avoid_danger = game_state["avoid_danger"]
     log_avoid_danger_4 = game_state["avoid_danger_4"]
+    log_avoid_single_danger_4 = game_state["avoid_single_danger_4"]
     log_allowed_move = game_state["allowed_move"]
+    if len(game_state["colliding_pattern_1"]) != 0:
+        log_pattern1 = [f"{s[0]}: {s[1]}" for s in game_state["colliding_pattern_1"]]
+        log_pattern1 = f"{log_pattern1}"
+        log_pattern1 = "pattern_1_activated: " + log_pattern1
+    else:
+        log_pattern1 = ""
 
     log_text = ", ".join([
         f"game_id: {log_game_id}",
@@ -821,10 +920,12 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"health: {log_health}",
         f"head: {log_head}",
         f"scount: {log_snake_count}",
+        f"snake names: {log_snake_names}",
         f"boxing_area: {log_boxing_area}",
         f"routine_move: {log_routine_move}",
         f"avoid_danger: {log_avoid_danger}",
         f"avoid_danger_4: {log_avoid_danger_4}",
+        f"avoid_single_danger_4: {log_avoid_single_danger_4}",
         f"allowed_move: {log_allowed_move}",
     ])
     print(log_text)
