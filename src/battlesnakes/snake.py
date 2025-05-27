@@ -621,6 +621,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #new avoid danger
         #add comment
+        #add another comment
         if len(game_state["avoid_danger"]) != 0:
             #avoid danger is activated
             suggests = game_state["avoid_danger"][0]
