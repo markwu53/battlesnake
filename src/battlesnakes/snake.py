@@ -1,6 +1,7 @@
 import typing
 import math
 import itertools
+import copy
 
 
 # info is called when you create your Battlesnake on play.battlesnake.com
@@ -619,6 +620,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #instead let attractor boxes move the snake off-border
 
         #new avoid danger
+        #add comment
         if len(game_state["avoid_danger"]) != 0:
             #avoid danger is activated
             suggests = game_state["avoid_danger"][0]
@@ -708,4 +710,5 @@ def move(game_state: typing.Dict) -> typing.Dict:
     print(log_text)
 
     return {"move": next_move}
+
 
