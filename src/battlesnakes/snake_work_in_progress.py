@@ -2,6 +2,7 @@ import typing
 import math
 import itertools
 import copy
+import time
 
 
 # info is called when you create your Battlesnake on play.battlesnake.com
@@ -638,6 +639,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     #main
 
+    start_time = time.time()
     #ideas
     #next routine path
     #calculated space filling path
@@ -652,6 +654,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
     find_food()
 
     best_choice()
+
+    end_time = time.time()
 
     next_move = get_next_move(get_my_head(), game_state["next_head_coord"])
 
@@ -674,6 +678,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_routine_move = game_state["routine_move"]
     log_allowed_move = game_state["allowed_move"]
     log_avoid_danger = game_state["avoid_danger"]
+    log_time_diff = end_time - start_time
+    log_time_diff = f"time: {log_time_diff:.3f}s"
 
     def get_coord(list_xy):
         return [(c["x"], c["y"]) for c in list_xy]
@@ -704,6 +710,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #f"avoid_single_danger_4: {log_avoid_single_danger_4}",
         f"allowed_move: {log_allowed_move}",
         f"avoid_danger: {log_avoid_danger}",
+        log_time_diff,
         log_food,
         log_snakes,
     ])
