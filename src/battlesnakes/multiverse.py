@@ -5,99 +5,12 @@ import copy
 board_width = 11
 board_height = 11
 
-def order_to_position(ord):
-    return ord % board_width, ord // board_width
-
-def is_cell_occupied(board, pos):
-    return any([pos in snake["body"] for snake in board["snakes"]])
-
-def is_pos_on_board(pos):
+def pos_on_board(pos):
     x,y = pos
     return (0 <= x < board_width
             and 0 <= y < board_height)
 
-def order_to_dir(ord):
-    if ord == 0: return "right"
-    if ord == 1: return "up"
-    if ord == 2: return "left"
-    if ord == 3: return "down"
-    raise(ValueError("order_to_dir"))
-
-def dir_position(p, dir):
-    x,y = p
-    if dir == "right": return (x+1,y)
-    if dir == "up": return (x,y+1)
-    if dir == "left": return (x-1,y)
-    if dir == "down": return (x,y-1)
-    raise(ValueError("dir_position"))
-
-def distance_pq(p, q):
-    x1,y1 = p
-    x2,y2 = q
-    return abs(x1-x2)+abs(y1-y2)
-
-def create_food(board):
-
-    food = []
-    while len(food) < 10:
-        pos = order_to_position(random.randint(0, board_width*board_height-1))
-        while is_cell_occupied(board, pos) or pos in food:
-            pos = order_to_position(random.randint(0, board_width*board_height-1))
-        food.append(pos)
-    return food
-
-def create_snake(board):
-
-    snake = {}
-
-    length = random.randint(3,10)
-    health = random.randint(90,100)
-    snake["health"] = health
-    snake["body"] = []
-
-    head = order_to_position(random.randint(0,board_width*board_height-1))
-    while True:
-        if is_cell_occupied(board, head):
-            head = order_to_position(random.randint(0,board_width*board_height-1))
-            continue
-        if len(board["snakes"]) != 0:
-            head0 = board["snakes"][0]["body"][0]
-            if distance_pq(head0, head) % 2 != 0:
-                head = order_to_position(random.randint(0,board_width*board_height-1))
-                continue
-        break
-    snake["body"].append(head)
-
-    tail = head
-    attempts = 0
-    while len(snake["body"]) < length:
-        new_tail = dir_position(tail, order_to_dir(random.randint(0,3)))
-        while (1==0 
-               or (not is_pos_on_board(new_tail))
-               or is_cell_occupied(board, new_tail) 
-               or new_tail in snake["body"]):
-            attempts += 1
-            if attempts > 10000:
-                raise(ValueError("create_snake: cannot create snake"))
-            new_tail = dir_position(tail, order_to_dir(random.randint(0,3)))
-
-        tail = new_tail
-        snake["body"].append(tail)
-
-    return snake
-
-
-def init_board():
-    board = {}
-    board["snakes"] = []
-    for i in range(4):
-        snake = create_snake(board)
-        snake["id"] = i
-        board["snakes"].append(snake)
-    board["food"] = create_food(board)
-    return board
-
-def adjacent_cells(p):
+def adj_cells(p):
     x,y = p
     cells = [
         (x+1,y),
@@ -105,16 +18,16 @@ def adjacent_cells(p):
         (x-1,y),
         (x,y-1),
     ]
-    return [c for c in cells if is_pos_on_board(c)]
+    return [c for c in cells if pos_on_board(c)]
 
-def allowed_moves(board, head):
+def evolve_allowed_moves(board, head):
     next_occupied_cells = []
     for snake in board["snakes"]:
         if snake["health"] == 100:
             next_occupied_cells += snake["body"]
         else:
             next_occupied_cells += snake["body"][:-1]
-    return [c for c in adjacent_cells(head) if not c in next_occupied_cells]
+    return [c for c in adj_cells(head) if not c in next_occupied_cells]
 
 def next_board(board, combined_move):
     nboard = copy.deepcopy(board)
@@ -146,7 +59,7 @@ def evolve_board(board):
     xboard = copy.deepcopy(board)
     for snake in xboard["snakes"]:
         snake_head = snake["body"][0]
-        snake["allowed_moves"] = allowed_moves(xboard, snake_head)
+        snake["allowed_moves"] = evolve_allowed_moves(xboard, snake_head)
 
     #remove snakes that run out of moves
     #throw_out = [snake["id"] for snake in xboard["snakes"] if len(snake["allowed_moves"]) == 0]
@@ -191,6 +104,7 @@ def run():
 
     #board0 = init_board()
     board0 = log
+    
     n_evolve = 3
     path_result = [[result] for result in evolve_board(board0)]
     for it in range(n_evolve-1):
