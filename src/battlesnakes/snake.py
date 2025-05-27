@@ -1,6 +1,7 @@
 import typing
 import math
 import itertools
+import copy
 
 
 # info is called when you create your Battlesnake on play.battlesnake.com
