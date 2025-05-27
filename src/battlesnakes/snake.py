@@ -710,3 +710,4 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     return {"move": next_move}
 
+
