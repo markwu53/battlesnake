@@ -628,11 +628,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             #no danger in 3 steps
             suggests = [move for move, rank in suggests if rank == 99]
+            suggests = [move for move in suggests if move in game_state["allowed_move"]]
             if len(suggests) != 0:
                 if game_state["next_head_coord"] not in suggests:
-                    choice = suggests[0]
-                    if choice in game_state["allowed_move"]:
-                        game_state["next_head_coord"] = choice
+                    game_state["next_head_coord"] = suggests[0]
 
 
 
