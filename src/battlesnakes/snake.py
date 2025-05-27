@@ -674,6 +674,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_game_id = game_state["game"]["id"]
     log_routine_move = game_state["routine_move"]
     log_allowed_move = game_state["allowed_move"]
+    log_avoid_danger = game_state["avoid_danger"]
 
     def get_coord(list_xy):
         return [(c["x"], c["y"]) for c in list_xy]
@@ -700,10 +701,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #f"snake names: {log_snake_names}",
         f"boxing_area: {log_boxing_area}",
         f"routine_move: {log_routine_move}",
-        #f"avoid_danger: {log_avoid_danger}",
         #f"avoid_danger_4: {log_avoid_danger_4}",
         #f"avoid_single_danger_4: {log_avoid_single_danger_4}",
         f"allowed_move: {log_allowed_move}",
+        f"avoid_danger: {log_avoid_danger}",
         log_food,
         log_snakes,
     ])
