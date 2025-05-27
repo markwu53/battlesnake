@@ -342,25 +342,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
     def get_body_coord(body) -> typing.List:
         return [(c["x"], c["y"]) for c in body]
 
-    def survived_level(path_summary, move):
-        step = len(move)
-        look = path_summary[step-1]
-
-        if not all([survived for mm, survived in look if mm == move]):
-            #die or probability die in this step
-            return step
-
-        if step == len(path_summary):
-            #the last level
-            return 99
-
-        look = path_summary[step] #0-based, this is next step
-        next_step_moves = list(set([mm for mm,_ in look if mm[:-1] == move]))
-        if len(next_step_moves) == 0:
-            return step+1
-
-        return max([survived_level(move) for move in next_step_moves])
-
     def avoid_danger():
         game_state["avoid_danger"] = []
 
@@ -417,7 +398,26 @@ def move(game_state: typing.Dict) -> typing.Dict:
             print(f"step{i+1} new calc")
             for x in path_summary[i]: print(x)
         """
-        
+
+        def survived_level(move):
+            step = len(move)
+            look = path_summary[step-1]
+
+            if not all([survived for mm, survived in look if mm == move]):
+                #die or probability die in this step
+                return step
+
+            if step == len(path_summary):
+                #the last level
+                return 99
+
+            look = path_summary[step] #0-based, this is next step
+            next_step_moves = list(set([mm for mm,_ in look if mm[:-1] == move]))
+            if len(next_step_moves) == 0:
+                return step+1
+
+            return max([survived_level(move) for move in next_step_moves])
+            
         move1 = set([move for move, survived in path_summary[0]])
         result = [(move[0], survived_level(move))for move in move1]
         game_state["avoid_danger"].append(
