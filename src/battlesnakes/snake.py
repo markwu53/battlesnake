@@ -620,6 +620,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #instead let attractor boxes move the snake off-border
 
         #new avoid danger
+        #add comment
         if len(game_state["avoid_danger"]) != 0:
             #avoid danger is activated
             suggests = game_state["avoid_danger"][0]
