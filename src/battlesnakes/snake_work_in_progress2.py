@@ -1,8 +1,7 @@
 import typing
 import math
-import itertools
-import copy
 import time
+
 
 # info is called when you create your Battlesnake on play.battlesnake.com
 # and controls your Battlesnake's appearance
