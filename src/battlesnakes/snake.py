@@ -892,34 +892,26 @@ def move(game_state: typing.Dict) -> typing.Dict:
     def get_coord(list_xy):
         return [(c["x"], c["y"]) for c in list_xy]
 
-    log_food = get_coord(game_state["board"]["food"])
-    log_food = f"food: {log_food}"
-    log_snakes = [snake for snake in game_state["board"]["snakes"] ]
-    log_snakes = [{
-        "name": snake["name"],
-        "id": snake["id"],
-        "health": snake["health"],
-        "body": get_coord(snake["body"]),
-        }
-        for snake in log_snakes]
-    log_snakes = f"snakes: {log_snakes}"
+    log_board = {
+        "id": game_state["board"]["id"],
+        "turn": game_state["turn"],
+        "food": get_coord(game_state["board"]["food"]),
+        "snakes": [{
+            "name": snake["name"],
+            "health": snake["health"],
+            "body": get_coord(snake["body"]),
+        } for snake in game_state["board"]["snakes"]],
+    }
 
     log_text = ", ".join([
-        f"game_id: {log_game_id}",
+        f"board: {log_board}",
         f"move: {log_move}",
-        f"turn: {log_turn}",
-        f"health: {log_health}",
-        f"head: {log_head}",
-        f"scount: {log_snake_count}",
-        f"snake names: {log_snake_names}",
         f"boxing_area: {log_boxing_area}",
         f"routine_move: {log_routine_move}",
         f"avoid_danger: {log_avoid_danger}",
         f"avoid_danger_4: {log_avoid_danger_4}",
         f"avoid_single_danger_4: {log_avoid_single_danger_4}",
         f"allowed_move: {log_allowed_move}",
-        log_food,
-        log_snakes,
     ])
 
     print(log_text)
