@@ -411,20 +411,27 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 #no danger
                 return 99
             return max([danger_rank(apath+[nhead])
-            for nhead in set([
-                path[length]
-                for path in my_snake["paths"]
-                if tuple(path[:length]) == tuple(apath)
-            ])])
+                for nhead in set([
+                    path[length]
+                    for path in my_snake["paths"]
+                    if tuple(path[:length]) == tuple(apath)
+                ])])
         
         result = [(apath[1], danger_rank(list(apath)))
                   for apath in set([tuple(path[:2]) for path in my_snake["paths"]])]
+        game_state["log_avoid_danger"] = f"safer: {safer}, result: {result}"
         result = [move for move, rank in result if rank == 99]
         if len(result) == 0:
             safer = False
-            result = [(apath[1], danger_rank(list(apath)))
+            result2 = [(apath[1], danger_rank(list(apath)))
                     for apath in set([tuple(path[:2]) for path in my_snake["paths"]])]
-            result = [move for move, rank in result if rank == 99]
+            game_state["log_avoid_danger"] += f", safer: {safer}, result2: {result2}"
+            result = [move for move, rank in result2 if rank == 99]
+            if len(result) == 0:
+                #it has to return something
+                result = sorted(result, key=lambda r: r[1], reverse=True)
+                result = [move for move, rank in result]
+        
         game_state["avoid_danger"].append(result) 
 
     def opponent_snakes() -> typing.List:
@@ -614,7 +621,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_boxing_area = game_state["boxing_area"]
     log_routine_move = game_state["routine_move"]
     log_allowed_move = game_state["allowed_move"]
-    log_avoid_danger = game_state["avoid_danger"]
+    log_avoid_danger = game_state["log_avoid_danger"] if "log_avoid_danger" in game_state else "[]"
     log_time_diff = end_time - start_time
     log_time_diff = f"time: {log_time_diff:.3f}s"
 
