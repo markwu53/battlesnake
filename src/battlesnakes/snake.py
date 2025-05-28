@@ -375,6 +375,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
         ]
 
         max_step = 3
+        if len(board["snakes"]) <=3:
+            max_step = 4
+
         def grow_path(head, steps=max_step):
             paths = [[head]]
             for step in range(steps):
