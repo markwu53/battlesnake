@@ -893,7 +893,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return [(c["x"], c["y"]) for c in list_xy]
 
     log_board = {
-        "id": game_state["board"]["id"],
+        "id": game_state["game"]["id"],
         "turn": game_state["turn"],
         "food": get_coord(game_state["board"]["food"]),
         "snakes": [{
