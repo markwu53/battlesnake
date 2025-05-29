@@ -427,7 +427,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return
             #prefer off-border moves
             #result.sort change in-place
-            result.sort(key=lambda move_rank: 1 if on_border(move_rank[0]) else 0)
+            #seems have error
+            #change to sorted
+            #result.sort(key=lambda move_rank: 1 if on_border(move_rank[0]) else 0)
+            result = sorted(result, key=lambda move_rank: 1 if on_border(move_rank[0]) else 0)
+
 
         result = [(apath[1], danger_rank(list(apath)))
                   for apath in set([tuple(path[:2]) for path in my_snake["paths"]])]
