@@ -424,14 +424,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #rank 99 means no danger
             #special rules to rank them
             if len(result) == 1:
-                return result
+                return
             #prefer off-border moves
             #result.sort change in-place
-            #seems have error
-            #change to sorted
-            #result.sort(key=lambda move_rank: 1 if on_border(move_rank[0]) else 0)
-            result = sorted(result, key=lambda move_rank: 1 if on_border(move_rank[0]) else 0)
-            return result
+            result.sort(key=lambda move: 1 if on_border(move) else 0)
 
 
         result = [(apath[1], danger_rank(list(apath)))
@@ -449,9 +445,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 result = sorted(result2, key=lambda r: r[1], reverse=True)
                 result = [move for move, rank in result]
             else:
-                result = rank99(result)
+                rank99(result)
         else:
-            result = rank99(result)
+            rank99(result)
 
         game_state["avoid_danger"].append(result) 
 
