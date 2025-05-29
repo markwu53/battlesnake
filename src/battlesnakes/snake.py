@@ -432,7 +432,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             result = [move for move, rank in result2 if rank == 99]
             if len(result) == 0:
                 #it has to return something
-                result = sorted(result, key=lambda r: r[1], reverse=True)
+                result = sorted(result2, key=lambda r: r[1], reverse=True)
                 result = [move for move, rank in result]
         
         game_state["avoid_danger"].append(result) 
