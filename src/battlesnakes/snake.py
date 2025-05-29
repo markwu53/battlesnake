@@ -420,6 +420,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     if tuple(path[:length]) == tuple(apath)
                 ])])
         
+        def rank99(result):
+            #rank 99 means no danger
+            #special rules to rank them
+            if len(result) == 1:
+                return
+            #prefer off-border moves
+            #result.sort change in-place
+            result.sort(key=lambda move_rank: 1 if on_border(move_rank[0]) else 0)
+
         result = [(apath[1], danger_rank(list(apath)))
                   for apath in set([tuple(path[:2]) for path in my_snake["paths"]])]
         game_state["log_avoid_danger"] = f"safer: {safer}, result: {result}"
@@ -434,8 +443,20 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 #it has to return something
                 result = sorted(result2, key=lambda r: r[1], reverse=True)
                 result = [move for move, rank in result]
-        
+            else:
+                rank99(result)
+        else:
+            rank99(result)
+
         game_state["avoid_danger"].append(result) 
+
+    def on_border(coord: typing.Tuple) -> bool:
+        x,y = coord
+        if x == 0 or x == game_state["board"]["width"]-1:
+            return True
+        if y == 0 or y == game_state["board"]["height"]-1:
+            return True
+        return False
 
     def opponent_snakes() -> typing.List:
         my_head = game_state["you"]["body"][0]
