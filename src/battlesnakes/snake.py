@@ -433,23 +433,34 @@ def move(game_state: typing.Dict) -> typing.Dict:
         result = [(apath[1], danger_rank(list(apath)))
                   for apath in set([tuple(path[:2]) for path in my_snake["paths"]])]
         game_state["log_avoid_danger"] = f"safer: {safer}, result: {result}"
-        result = [move for move, rank in result if rank == 99]
-        if len(result) == 0:
+        result2 = [move for move, rank in result if rank == 99]
+        if len(result2) == 0:
             safer = False
-            result2 = [(apath[1], danger_rank(list(apath)))
+            result = [(apath[1], danger_rank(list(apath)))
                     for apath in set([tuple(path[:2]) for path in my_snake["paths"]])]
-            game_state["log_avoid_danger"] += f", safer: {safer}, result2: {result2}"
-            result = [move for move, rank in result2 if rank == 99]
-            if len(result) == 0:
-                #it has to return something
-                result = sorted(result2, key=lambda r: r[1], reverse=True)
-                result = [move for move, rank in result]
-            else:
-                rank99(result)
-        else:
-            rank99(result)
+            game_state["log_avoid_danger"] += f", safer: {safer}, result: {result}"
+            result2 = [move for move, rank in result if rank == 99]
+        
+        if len(result2) == 0:
+            #it has to return something
+            result2 = first_group(result, reverse=True)
+
+        result2 = [(move, 1 if on_border(move) else 0) for move in result2]
+        result = first_group(result2, reverse=False)
 
         game_state["avoid_danger"].append(result) 
+
+    def first_group(alist, reverse=False):
+        #result is a list of tuple of (item, rank)
+        result_dict = {}
+        for item, rank in alist:
+            if rank not in result_dict:
+                result_dict[rank] = []
+            result_dict[rank].append(item)
+        result = list(result_dict.items())
+        result.sort(reverse=reverse)
+        result = result[0][1]
+        return result
 
     def on_border(coord: typing.Tuple) -> bool:
         x,y = coord
