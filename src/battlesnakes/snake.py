@@ -662,6 +662,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_avoid_danger = game_state["log_avoid_danger"] if "log_avoid_danger" in game_state else "[]"
     log_time_diff = end_time - start_time
     log_time_diff = f"time: {log_time_diff:.3f}s"
+    log_find_food = game_state["find_food"]
 
     def get_coord(list_xy):
         return [(c["x"], c["y"]) for c in list_xy]
@@ -684,6 +685,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"routine_move: {log_routine_move}",
         f"avoid_danger: {log_avoid_danger}",
         f"allowed_move: {log_allowed_move}",
+        f"find_food: {log_find_food}",
         log_time_diff,
     ])
 
