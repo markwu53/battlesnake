@@ -452,6 +452,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def first_group(alist, reverse=False):
         #result is a list of tuple of (item, rank)
+        if len(alist) == 0:
+            return []
         result_dict = {}
         for item, rank in alist:
             if rank not in result_dict:
