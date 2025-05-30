@@ -352,14 +352,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if len(danger_snakes) == 0:
             return
 
-        board = {}
-        board["snakes"] = []
-        for snake in game_state["board"]["snakes"]:
-            board["snakes"].append({
-                "name": snake["name"],
-                "health": snake["health"],
-                "body": get_body_coord(snake["body"]),
-            })
+        board = lean_board()
 
         def occupied_cells(step=1):
             return [cell 
@@ -593,16 +586,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return [(c["x"], c["y"]) for c in items]
 
     def lean_board() -> typing.Dict:
-        board = {}
-        board["snakes"] = []
-        for snake in game_state["board"]["snakes"]:
-            board["snakes"].append({
+        return {
+            "id": game_state["game"]["id"],
+            "turn": game_state["turn"],
+            "food": get_coord(game_state["board"]["food"]),
+            "snakes": [{
                 "name": snake["name"],
                 "health": snake["health"],
                 "body": get_coord(snake["body"]),
-            })
-        board["food"] = get_coord(game_state["board"]["food"])
-        return board
+            } for snake in game_state["board"]["snakes"]],
+        }
 
     def try_kill():
         game_state["try_kill"] = []
@@ -753,16 +746,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_find_food = game_state["find_food"]
     log_try_kill = game_state["try_kill"]
 
-    log_board = {
-        "id": game_state["game"]["id"],
-        "turn": game_state["turn"],
-        "food": get_coord(game_state["board"]["food"]),
-        "snakes": [{
-            "name": snake["name"],
-            "health": snake["health"],
-            "body": get_coord(snake["body"]),
-        } for snake in game_state["board"]["snakes"]],
-    }
+    log_board = lean_board()
 
     log_text = ", ".join([
         f"board: {log_board}",
