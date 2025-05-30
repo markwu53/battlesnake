@@ -680,10 +680,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #experiment without routine move
         #########################
 
+        #it didn't work well
+        """
         else:
             #allowed move is not empty
             #use the first of the allowed move
             game_state["next_head_coord"] = game_state["allowed_move"][0]
+        """
 
         #set to the first of the allowed moves, then let other considerations override it
 
