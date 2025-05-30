@@ -686,16 +686,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #do not check off-border anymore
         #instead let attractor boxes move the snake off-border
 
-        if len(game_state["try_kill"]) != 0:
-            #try kill is activated
-            suggests = game_state["try_kill"][0]
-
-            #no danger in 3 steps
-            suggests = [move for move in suggests if move in game_state["allowed_move"]]
-            if len(suggests) != 0:
-                if game_state["next_head_coord"] not in suggests:
-                    game_state["next_head_coord"] = suggests[0]
-
         #new avoid danger
         #add comment
         #add another comment
@@ -709,6 +699,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if game_state["next_head_coord"] not in suggests:
                     game_state["next_head_coord"] = suggests[0]
 
+        #try kill
+        if len(game_state["try_kill"]) != 0:
+            #try kill is activated
+            suggests = game_state["try_kill"][0]
+
+            #no danger in 3 steps
+            suggests = [move for move in suggests if move in game_state["allowed_move"]]
+            if len(suggests) != 0:
+                if game_state["next_head_coord"] not in suggests:
+                    game_state["next_head_coord"] = suggests[0]
 
 
 
