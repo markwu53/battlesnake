@@ -589,6 +589,83 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 #save in the global var
                 game_state["find_food"].append(next_head_coord)
 
+    def get_coord(items: typing.List) -> typing.List:
+        return [(c["x"], c["y"]) for c in items]
+
+    def lean_board() -> typing.Dict:
+        board = {}
+        board["snakes"] = []
+        for snake in game_state["board"]["snakes"]:
+            board["snakes"].append({
+                "name": snake["name"],
+                "health": snake["health"],
+                "body": get_coord(snake["body"]),
+            })
+        board["food"] = get_coord(game_state["board"]["food"])
+        return board
+
+    def try_kill():
+        game_state["try_kill"] = []
+
+        if len(game_state["board"]["snakes"]) != 2:
+            return
+
+        if game_state["you"]["length"] < 4:
+            return
+
+        board = lean_board()
+        my_name = "mark_snake"
+        my_snake = [snake for snake in board["snakes"] if snake["name"] == my_name][0]
+        the_other = [snake for snake in board["snakes"] if snake["name"] != my_name][0]
+
+        def entering_kill():
+            #the other snake head is on border
+            #one of my body cell is adjacent to the other snake head at off-border position
+            #they moving in the same dir
+            my_body = my_snake["body"]
+            head = the_other["body"][0]
+            neck = the_other["body"][1]
+            if not on_border(head):
+                return False
+            length = len(my_snake["body"])
+            found = False
+            for i, cell in enumerate(my_snake["body"]):
+                if i in range(3, length-1) and not on_border(cell):
+                    if is_adjacent(cell, head):
+                        found = True
+                        break
+            if not found:
+                return False
+            if get_adjacent_dir(my_body[i], my_body[i-1]) != get_adjacent_dir(neck, head):
+                return False
+
+            return True
+
+        def kill_action_performed():
+            return any([on_border(cell) for cell in my_snake["body"]])
+
+        def my_head_at_kill_position():
+            if on_border(get_my_head()):
+                return False
+            if not any([on_border(p) for p in adj_cells(get_my_head())]):
+                return False
+            return True
+
+        def kill_condition():
+            if not entering_kill():
+                return False
+            if not my_head_at_kill_position():
+                return False
+            if kill_action_performed():
+                return False
+            return True        
+        
+        if not kill_condition():
+            return
+
+        suggest = [p for p in adj_cells(get_my_head()) if on_border(p)]
+        game_state["try_kill"].append(suggest)
+
     def best_choice():
 
         #lower priority first, higher priority will override lower priority
@@ -615,6 +692,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #do not check off-border anymore
         #instead let attractor boxes move the snake off-border
+
+        if len(game_state["try_kill"]) != 0:
+            #try kill is activated
+            suggests = game_state["try_kill"][0]
+
+            #no danger in 3 steps
+            suggests = [move for move in suggests if move in game_state["allowed_move"]]
+            if len(suggests) != 0:
+                if game_state["next_head_coord"] not in suggests:
+                    game_state["next_head_coord"] = suggests[0]
 
         #new avoid danger
         #add comment
@@ -647,6 +734,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     routine_move()
     avoid_danger()
     find_food()
+    try_kill()
 
     best_choice()
 
@@ -663,9 +751,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_time_diff = end_time - start_time
     log_time_diff = f"time: {log_time_diff:.3f}s"
     log_find_food = game_state["find_food"]
-
-    def get_coord(list_xy):
-        return [(c["x"], c["y"]) for c in list_xy]
+    log_try_kill = game_state["try_kill"]
 
     log_board = {
         "id": game_state["game"]["id"],
@@ -686,6 +772,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"avoid_danger: {log_avoid_danger}",
         f"allowed_move: {log_allowed_move}",
         f"find_food: {log_find_food}",
+        f"try_kill: {log_try_kill}",
         log_time_diff,
     ])
 
