@@ -666,6 +666,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #routine move always exists and set as default
         game_state["next_head_coord"] = game_state["routine_move"]
 
+
+
         if len(game_state["allowed_move"]) == 0:
             #most strict allowed move empty
             #immediate allowed move may still have some
@@ -673,6 +675,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 #use the first of the allowed move
                 game_state["next_head_coord"] = game_state["allowed_move_1"][0]
             return
+
+        #########################
+        #experiment without routine move
+        #########################
+
+        else:
+            #allowed move is not empty
+            #use the first of the allowed move
+            game_state["next_head_coord"] = game_state["allowed_move"][0]
 
         #set to the first of the allowed moves, then let other considerations override it
 
