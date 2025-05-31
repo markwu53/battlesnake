@@ -27,7 +27,7 @@ def start(game_state: typing.Dict):
 def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
-#this gives me #22 score 8457 on 5/29/2025
+#this gives me #21 score 8635 on 5/31/2025
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -330,14 +330,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if len(danger_snakes) == 0:
             return
 
-        board = {}
-        board["snakes"] = []
-        for snake in game_state["board"]["snakes"]:
-            board["snakes"].append({
-                "name": snake["name"],
-                "health": snake["health"],
-                "body": get_body_coord(snake["body"]),
-            })
+        board = lean_board()
 
         def occupied_cells(step=1):
             return [cell 
@@ -567,12 +560,91 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 #save in the global var
                 game_state["find_food"].append(next_head_coord)
 
+    def get_coord(items: typing.List) -> typing.List:
+        return [(c["x"], c["y"]) for c in items]
+
+    def lean_board() -> typing.Dict:
+        return {
+            "id": game_state["game"]["id"],
+            "turn": game_state["turn"],
+            "food": get_coord(game_state["board"]["food"]),
+            "snakes": [{
+                "name": snake["name"],
+                "health": snake["health"],
+                "body": get_coord(snake["body"]),
+            } for snake in game_state["board"]["snakes"]],
+        }
+
+    def try_kill():
+        game_state["try_kill"] = []
+
+        if len(game_state["board"]["snakes"]) != 2:
+            return
+
+        if game_state["you"]["length"] < 4:
+            return
+
+        board = lean_board()
+        my_name = "mark_snake"
+        my_snake = [snake for snake in board["snakes"] if snake["name"] == my_name][0]
+        the_other = [snake for snake in board["snakes"] if snake["name"] != my_name][0]
+
+        def entering_kill():
+            #the other snake head is on border
+            #one of my body cell is adjacent to the other snake head at off-border position
+            #they moving in the same dir
+            my_body = my_snake["body"]
+            head = the_other["body"][0]
+            neck = the_other["body"][1]
+            if not on_border(head):
+                return False
+            length = len(my_snake["body"])
+            found = False
+            for i, cell in enumerate(my_snake["body"]):
+                if i in range(3, length-1) and not on_border(cell):
+                    if is_adjacent(cell, head):
+                        found = True
+                        break
+            if not found:
+                return False
+            if get_adjacent_dir(my_body[i], my_body[i-1]) != get_adjacent_dir(neck, head):
+                return False
+
+            return True
+
+        def kill_action_performed():
+            return any([on_border(cell) for cell in my_snake["body"]])
+
+        def my_head_at_kill_position():
+            if on_border(get_my_head()):
+                return False
+            if not any([on_border(p) for p in adj_cells(get_my_head())]):
+                return False
+            return True
+
+        def kill_condition():
+            if not entering_kill():
+                return False
+            if not my_head_at_kill_position():
+                return False
+            if kill_action_performed():
+                return False
+            return True        
+        
+        if not kill_condition():
+            return
+
+        suggest = [p for p in adj_cells(get_my_head()) if on_border(p)]
+        game_state["try_kill"].append(suggest)
+
     def best_choice():
 
         #lower priority first, higher priority will override lower priority
 
         #routine move always exists and set as default
         game_state["next_head_coord"] = game_state["routine_move"]
+
+
 
         if len(game_state["allowed_move"]) == 0:
             #most strict allowed move empty
@@ -581,6 +653,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 #use the first of the allowed move
                 game_state["next_head_coord"] = game_state["allowed_move_1"][0]
             return
+
+        #########################
+        #experiment without routine move
+        #########################
+
+        #it didn't work well
+        """
+        else:
+            #allowed move is not empty
+            #use the first of the allowed move
+            game_state["next_head_coord"] = game_state["allowed_move"][0]
+        """
 
         #set to the first of the allowed moves, then let other considerations override it
 
@@ -607,6 +691,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if game_state["next_head_coord"] not in suggests:
                     game_state["next_head_coord"] = suggests[0]
 
+        #try kill
+        if len(game_state["try_kill"]) != 0:
+            #try kill is activated
+            suggests = game_state["try_kill"][0]
+
+            #no danger in 3 steps
+            suggests = [move for move in suggests if move in game_state["allowed_move"]]
+            if len(suggests) != 0:
+                if game_state["next_head_coord"] not in suggests:
+                    game_state["next_head_coord"] = suggests[0]
 
 
 
@@ -625,6 +719,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     routine_move()
     avoid_danger()
     find_food()
+    try_kill()
 
     best_choice()
 
@@ -641,20 +736,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_time_diff = end_time - start_time
     log_time_diff = f"time: {log_time_diff:.3f}s"
     log_find_food = game_state["find_food"]
+    log_try_kill = game_state["try_kill"]
 
-    def get_coord(list_xy):
-        return [(c["x"], c["y"]) for c in list_xy]
-
-    log_board = {
-        "id": game_state["game"]["id"],
-        "turn": game_state["turn"],
-        "food": get_coord(game_state["board"]["food"]),
-        "snakes": [{
-            "name": snake["name"],
-            "health": snake["health"],
-            "body": get_coord(snake["body"]),
-        } for snake in game_state["board"]["snakes"]],
-    }
+    log_board = lean_board()
 
     log_text = ", ".join([
         f"board: {log_board}",
@@ -664,12 +748,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"avoid_danger: {log_avoid_danger}",
         f"allowed_move: {log_allowed_move}",
         f"find_food: {log_find_food}",
+        f"try_kill: {log_try_kill}",
         log_time_diff,
     ])
 
     print(log_text)
 
     return {"move": next_move}
+
+
 
 
 
