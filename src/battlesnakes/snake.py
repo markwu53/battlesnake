@@ -740,9 +740,19 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if len(result) == 0:
                     result = first_group(avoid_danger_2, reverse=True)
 
-                #prefer off-border
-                result = [(move, 1 if on_border(move) else 0) for move in result]
-                result = first_group(result, reverse=False)
+                #prefer off-border when killer near
+                def killer_near():
+                    my_head = get_my_head()
+                    return len([snake_head
+                        for snake in opponent_snakes()
+                        for snake_head in [get_coord(snake["body"])[0]]
+                        if snake["length"] >= game_state["you"]["length"]
+                        and distance_pq(my_head, snake_head) <= 4
+                        ]) != 0
+
+                if killer_near():
+                    result = [(move, 1 if on_border(move) else 0) for move in result]
+                    result = first_group(result, reverse=False)
                 result = [move for move in result if move in game_state["allowed_move"]]
                 if len(result) != 0:
                     if game_state["next_head_coord"] not in result:
