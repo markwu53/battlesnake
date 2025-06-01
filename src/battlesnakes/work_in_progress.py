@@ -50,7 +50,6 @@ def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
 
-
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -803,4 +802,5 @@ def move(game_state: typing.Dict) -> typing.Dict:
     print(log_text)
 
     return {"move": next_move}
+
 
