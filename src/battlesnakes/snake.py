@@ -700,11 +700,21 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #then perfer the move that keeps this chasing position
             #until to 1-off of the border
             #this is eventually separate the danger by separating the space
-            if (
-                1 == 1
-                and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
-                and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
-            ):
+
+            def case_1_condition():
+                if (
+                    1 == 1
+                    and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
+                    and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
+                ):
+                    my_head = get_my_head()
+                    a,b = [move for move, rank in avoid_danger_2 if rank == 99]
+                    if (get_adjacent_dir(my_head, a) == get_adjacent_dir(my_head, b)
+                        or get_adjacent_dir(a, my_head) == get_adjacent_dir(my_head, b)):
+                        return False
+                    return True
+                return False
+            if case_1_condition():
                 my_head = get_my_head()
                 move_danger_rank_1 = [move for move, rank in avoid_danger_2 if rank == 1][0]
                 move_keep = [move for move, rank in avoid_danger_2 if rank == 99
