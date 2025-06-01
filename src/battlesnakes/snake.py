@@ -424,12 +424,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
     def avoid_danger():
         game_state["avoid_danger"] = []
 
+
+        #try avoid danger in every step
+        """
         snakes = opponent_snakes()
         danger_snakes = [snake for snake in snakes 
                          if len(snake["body"]) >= game_state["you"]["length"]
                          and distance_pq(get_my_head(), get_coord(snake["body"])[0]) <= 4]
-        if len(danger_snakes) == 0:
-            return
+        if len(danger_snakes) == 0: return
+        """
 
         board = lean_board()
 
