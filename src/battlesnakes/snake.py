@@ -421,14 +421,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #save in global var
         game_state["routine_move"] = (x2,y2)
 
-    def gather_info():
-        game_state["gather_info"] = []
-        board = lean_board()
-        my_name = "mark_snake"
-        my_snake = [snake for snake in board["snakes"] if snake["name"] == my_name][0]
-        others = [snake for snake in board["snakes"] if snake["name"] != my_name]
-        [(len(snake["body"]), distance_pq(my_snake["body"][0], snake["body"][0])) for snake in others]
-
     def avoid_danger():
         game_state["avoid_danger"] = []
 
@@ -560,7 +552,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         def find_food_condition() -> bool:
             snakes = opponent_snakes()
-            if len(snakes) >= 2 and game_state["you"]["length"] < 12:
+            if len(snakes) >= 2 and game_state["you"]["length"] < 10:
                 return True
             if len(snakes) >= 3 and game_state["you"]["health"] < 60:
                 return True
