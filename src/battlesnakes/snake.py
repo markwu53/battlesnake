@@ -795,7 +795,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_boxing_area = game_state["boxing_area"]
     log_routine_move = game_state["routine_move"]
     log_allowed_move = game_state["allowed_move"]
-    log_avoid_danger = game_state["log_avoid_danger"] if "log_avoid_danger" in game_state else "[]"
+    log_avoid_danger = game_state["avoid_danger"]
     log_time_diff = end_time - start_time
     log_time_diff = f"time: {log_time_diff:.3f}s"
     log_find_food = game_state["find_food"]
