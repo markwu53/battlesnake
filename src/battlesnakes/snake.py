@@ -719,7 +719,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     return False
                 if len([move for move, rank in avoid_danger_2 if rank == 99]) == 2:
                     a,b = [move for move, rank in avoid_danger_2 if rank == 99]
-                    for snake in opponent_snakes:
+                    for snake in opponent_snakes():
                         body = get_coord(snake["body"])
                         for i, cell in enumerate(body[1:-1]):
                             if is_adjacent(a, cell) and not on_border(cell):
@@ -756,7 +756,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if suggest in game_state["allowed_move"]:
                     game_state["next_head_coord"] = suggest
 
-            #elif case_2_condition(): pass
+            elif case_2_condition():
+                #already processed above
+                pass
 
             #more special cases here:
 
