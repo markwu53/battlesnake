@@ -756,9 +756,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if suggest in game_state["allowed_move"]:
                     game_state["next_head_coord"] = suggest
 
-            elif case_2_condition():
-                #already processed above
-                pass
+            #elif case_2_condition(): pass
 
             #more special cases here:
 
