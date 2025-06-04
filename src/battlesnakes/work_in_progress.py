@@ -50,6 +50,7 @@ def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
 
+
 def move(game_state: typing.Dict) -> typing.Dict:
     """
     move in a square area
@@ -238,21 +239,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     return False
             return True
         
-        def find_containing_boxes(body: typing.List) -> typing.List:
-            boxes = []
-            width, height = box_dim()
-            for x1 in range(game_state["board"]["width"]):
-                for y1 in range(game_state["board"]["height"]):
-                    #bottom-left corner (x1,y1)
-                    x2 = x1+width-1
-                    y2 = y1+height-1
-                    box = ((x1,y1), (x2,y2))
-                    if not valid_area(box):
-                        continue
-                    if body_in_box(box, body):
-                        boxes.append(box)
-            return boxes
-
         def all_moving_boxes() -> typing.List:
             body = game_state["you"]["body"]
 
@@ -420,23 +406,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #save in global var
         game_state["routine_move"] = (x2,y2)
 
-    def gather_info():
-        game_state["gather_info"] = []
-        board = lean_board()
-        my_name = "mark_snake"
-        my_snake = [snake for snake in board["snakes"] if snake["name"] == my_name][0]
-        others = [snake for snake in board["snakes"] if snake["name"] != my_name]
-        [(len(snake["body"]), distance_pq(my_snake["body"][0], snake["body"][0])) for snake in others]
-
     def avoid_danger():
         game_state["avoid_danger"] = []
 
+
+        #try avoid danger in every step
+        """
         snakes = opponent_snakes()
         danger_snakes = [snake for snake in snakes 
                          if len(snake["body"]) >= game_state["you"]["length"]
                          and distance_pq(get_my_head(), get_coord(snake["body"])[0]) <= 4]
-        if len(danger_snakes) == 0:
-            return
+        if len(danger_snakes) == 0: return
+        """
 
         board = lean_board()
 
@@ -559,7 +540,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         def find_food_condition() -> bool:
             snakes = opponent_snakes()
-            if len(snakes) >= 2 and game_state["you"]["length"] < 8:
+            if len(snakes) >= 2 and game_state["you"]["length"] < 10:
                 return True
             if len(snakes) >= 3 and game_state["you"]["health"] < 60:
                 return True
@@ -699,11 +680,56 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #then perfer the move that keeps this chasing position
             #until to 1-off of the border
             #this is eventually separate the danger by separating the space
-            if (
-                1 == 1
-                and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
-                and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
-            ):
+
+            def case_1_condition():
+                #go straight when being chased
+                if (
+                    1 == 1
+                    and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
+                    and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
+                ):
+                    my_head = get_my_head()
+                    a,b = [move for move, rank in avoid_danger_2 if rank == 99]
+                    if (get_adjacent_dir(my_head, a) == get_adjacent_dir(my_head, b)
+                        or get_adjacent_dir(a, my_head) == get_adjacent_dir(my_head, b)):
+                        return False
+                    return True
+
+                return False
+
+            def case_2_condition():
+                #don't enter a trap
+                my_head = get_my_head()
+                if not on_border(my_head):
+                    return False
+                if len([move for move, rank in avoid_danger_2 if rank == 99]) == 2:
+                    a,b = [move for move, rank in avoid_danger_2 if rank == 99]
+                    for snake in opponent_snakes():
+                        body = get_coord(snake["body"])
+                        for i, cell in enumerate(body):
+                            if i == 0 or i == len(body)-1:
+                                continue
+                            if is_adjacent(a, cell) and not on_border(cell):
+                                if get_adjacent_dir(my_head, a) == get_adjacent_dir(cell, body[i-1]):
+                                    #a is a trap, take b
+                                    if b in game_state["allowed_move"]:
+                                        game_state["next_head_coord"] = b
+                                        return True
+                            if is_adjacent(b, cell) and not on_border(cell):
+                                if get_adjacent_dir(my_head, b) == get_adjacent_dir(cell, body[i-1]):
+                                    #a is a trap, take b
+                                    if a in game_state["allowed_move"]:
+                                        game_state["next_head_coord"] = a
+                                        return True
+                return False
+                    
+
+            def case_3_condition():
+                #don't crawl on border
+                my_head = get_my_head()
+
+
+            if case_1_condition():
                 my_head = get_my_head()
                 move_danger_rank_1 = [move for move, rank in avoid_danger_2 if rank == 1][0]
                 move_keep = [move for move, rank in avoid_danger_2 if rank == 99
@@ -717,6 +743,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if suggest in game_state["allowed_move"]:
                     game_state["next_head_coord"] = suggest
 
+            elif case_2_condition(): pass
+
             #more special cases here:
 
 
@@ -729,9 +757,19 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if len(result) == 0:
                     result = first_group(avoid_danger_2, reverse=True)
 
-                #prefer off-border
-                result = [(move, 1 if on_border(move) else 0) for move in result]
-                result = first_group(result, reverse=False)
+                #prefer off-border when killer near
+                def killer_near():
+                    my_head = get_my_head()
+                    return len([snake_head
+                        for snake in opponent_snakes()
+                        for snake_head in [get_coord(snake["body"])[0]]
+                        if snake["length"] >= game_state["you"]["length"]
+                        and distance_pq(my_head, snake_head) <= 4
+                        ]) != 0
+
+                if killer_near():
+                    result = [(move, 1 if on_border(move) else 0) for move in result]
+                    result = first_group(result, reverse=False)
                 result = [move for move in result if move in game_state["allowed_move"]]
                 if len(result) != 0:
                     if game_state["next_head_coord"] not in result:
@@ -779,7 +817,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_boxing_area = game_state["boxing_area"]
     log_routine_move = game_state["routine_move"]
     log_allowed_move = game_state["allowed_move"]
-    log_avoid_danger = game_state["log_avoid_danger"] if "log_avoid_danger" in game_state else "[]"
+    log_avoid_danger = game_state["avoid_danger"]
     log_time_diff = end_time - start_time
     log_time_diff = f"time: {log_time_diff:.3f}s"
     log_find_food = game_state["find_food"]
@@ -802,5 +840,4 @@ def move(game_state: typing.Dict) -> typing.Dict:
     print(log_text)
 
     return {"move": next_move}
-
 
