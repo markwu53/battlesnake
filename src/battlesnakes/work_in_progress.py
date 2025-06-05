@@ -51,23 +51,6 @@ def end(game_state: typing.Dict):
 
 
 def move(game_state: typing.Dict) -> typing.Dict:
-    """
-    move in a square area
-    following an area filling path
-    the area has a dimension of n x m
-    where n is an even number
-    so that the path can close
-    start with 4x3
-    then 4x4, 4x5, 4x6
-    then 6x5, 6x6, 6x7, 6x8
-    then 8x7, ...
-    """
-
-    """
-    Then avoid immediate danger
-    check opponents and self
-    """
-
     #ideas:
     #1. In avoid_danger:
     # if in 3 allowed moves, one has rank 1, the others are rank 99, 
@@ -80,17 +63,27 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
 
     def routine_move():
-        def four_in_a_row():
+        def turn_condition():
             body = get_coord(game_state["you"]["body"])
             if len(body) < 4:
                 return False
+            if len(game_state["board"]["snakes"]) >=3:
+                return (
+                    1==1
+                    and get_adjacent_dir(body[0], body[1]) == get_adjacent_dir(body[1], body[2])
+                    and get_adjacent_dir(body[1], body[2]) == get_adjacent_dir(body[2], body[3])
+                )
             return (
                 1==1
                 and get_adjacent_dir(body[0], body[1]) == get_adjacent_dir(body[1], body[2])
-                and get_adjacent_dir(body[1], body[2]) == get_adjacent_dir(body[2], body[3])
+                and get_adjacent_dir(body[0], body[1]) == get_adjacent_dir(body[2], body[3])
+                and get_adjacent_dir(body[0], body[1]) == get_adjacent_dir(body[3], body[4])
+                and get_adjacent_dir(body[0], body[1]) == get_adjacent_dir(body[4], body[5])
+                and get_adjacent_dir(body[0], body[1]) == get_adjacent_dir(body[5], body[6])
+                and get_adjacent_dir(body[0], body[1]) == get_adjacent_dir(body[6], body[7])
             )
 
-        if four_in_a_row():
+        if turn_condition():
             move = turn_left()
             if pos_on_board(move):
                 game_state["routine_move"] = move
