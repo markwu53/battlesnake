@@ -73,6 +73,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     and get_adjacent_dir(body[0], body[1]) == get_adjacent_dir(body[1], body[2])
                     and get_adjacent_dir(body[1], body[2]) == get_adjacent_dir(body[2], body[3])
                 )
+            if len(body) < 8:
+                return False
             return (
                 1==1
                 and get_adjacent_dir(body[0], body[1]) == get_adjacent_dir(body[1], body[2])
