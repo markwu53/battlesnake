@@ -701,7 +701,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     #logging
     log_move = next_move
-    log_boxing_area = game_state["boxing_area"]
     log_routine_move = game_state["routine_move"]
     log_allowed_move = game_state["allowed_move"]
     log_avoid_danger = game_state["avoid_danger"]
@@ -715,7 +714,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_text = ", ".join([
         f"board: {log_board}",
         f"move: {log_move}",
-        f"boxing_area: {log_boxing_area}",
         f"routine_move: {log_routine_move}",
         f"avoid_danger: {log_avoid_danger}",
         f"allowed_move: {log_allowed_move}",
