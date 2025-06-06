@@ -606,8 +606,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #any part of the other snake is on border
             #one of my body cell is adjacent to the other snake that part at off-border position
             #they moving in the same dir
-            for i, ic in snake["body"]:
-                for j, jc in my_snake["body"]:
+            for i, ic in enumerate(snake["body"]):
+                for j, jc in enumerate(my_snake["body"]):
                     if 1 <= j < len(my_snake["body"])-1 and i < len(snake["body"])-1:
                         if on_border(ic) and is_adjacent(ic, jc) and not on_border(jc):
                             if get_adjacent_dir(jc, my_snake["body"][j-1]) == get_adjacent_dir(snake["body"][i+1], ic):
