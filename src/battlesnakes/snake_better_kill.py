@@ -603,51 +603,58 @@ def move(game_state: typing.Dict) -> typing.Dict:
         others = [snake for snake in board["snakes"] if snake["name"] != my_name]
 
         def entering_trap(snake):
-            #the other snake head is on border
-            #one of my body cell is adjacent to the other snake head at off-border position
+            #any part of the other snake is on border
+            #one of my body cell is adjacent to the other snake that part at off-border position
             #they moving in the same dir
-            my_body = my_snake["body"]
-            snake_head = snake["body"][0]
-            snake_neck = snake["body"][1]
-            if not on_border(snake_head):
-                return False
-            length = len(my_snake["body"])
-            found = False
-            for i, cell in enumerate(my_snake["body"]):
-                if i in range(3, length-1) and not on_border(cell):
-                    if is_adjacent(cell, snake_head):
-                        found = True
-                        break
-            if not found:
-                return False
-            if get_adjacent_dir(my_body[i], my_body[i-1]) != get_adjacent_dir(snake_neck, snake_head):
-                return False
-
-            return True
+            for i, ic in snake["body"]:
+                for j, jc in my_snake["body"]:
+                    if 1 <= j < len(my_snake["body"])-1 and i < len(snake["body"])-1:
+                        if on_border(ic) and is_adjacent(ic, jc) and not on_border(jc):
+                            if get_adjacent_dir(jc, my_snake["body"][j-1]) == get_adjacent_dir(snake["body"][i+1], ic):
+                                return True
+            return False
 
         def kill_action_performed():
             return any([on_border(cell) for cell in my_snake["body"]])
 
-        def my_head_at_kill_position():
-            if on_border(get_my_head()):
-                return False
-            if not any([on_border(p) for p in adj_cells(get_my_head())]):
-                return False
-            return True
-
-        def kill_condition():
-            if not any([entering_trap(snake) for snake in others]):
-                return False
-            if not my_head_at_kill_position():
-                return False
-            if kill_action_performed():
-                return False
-            return True        
-        
-        if not kill_condition():
+        if not any([entering_trap(snake) for snake in others]):
             return
 
-        suggest = [p for p in adj_cells(get_my_head()) if on_border(p)]
+        if kill_action_performed():
+            return
+
+        for snake in others:
+            if entering_trap(snake):
+                break
+        
+        #assume only one
+        #go to the closest kill position
+        #1. It's on border
+        #2. It's closer to me than the snake I'm trying to kill
+        #3. It has shortest path to the snake head so that fastest kill
+        width = game_state["board"]["width"]
+        height = game_state["board"]["height"]
+        my_head = my_snake["body"][0]
+        snake_head = snake["body"][0]
+        kill_position = [(x,y) for x in range(width) for y in range(height)]
+        kill_position = [p for p in kill_position if on_border(p)]
+        kill_position = [p for p in kill_position if distance_pq(p, my_head) < distance_pq(p, snake_head)]
+        min_distance = min([distance_pq(p, snake_head) for p in kill_position])
+        kill_position = [p for p in kill_position if distance_pq(p, snake_head) == min_distance]
+        #may have more than 1, anyone is good
+        target_kill_position = kill_position[0]
+        #route to get there
+        if is_adjacent(my_head, target_kill_position):
+            game_state["try_kill"].append([target_kill_position])
+            return
+        #must go to target_kill_position in a perpendicular way
+        next_to_target = [p for p in adj_cells(target_kill_position) if not on_border(p)][0]
+        if is_adjacent(my_head, next_to_target):
+            game_state["try_kill"].append([next_to_target])
+            return
+        suggest = [p for p in adj_cells(my_head) if distance_pq(p, next_to_target) == distance_pq(my_head, next_to_target)-1]
+
+        #suggest = [p for p in adj_cells(get_my_head()) if on_border(p)]
         game_state["try_kill"].append(suggest)
 
     def best_choice():
