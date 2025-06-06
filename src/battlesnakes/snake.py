@@ -617,6 +617,24 @@ def move(game_state: typing.Dict) -> typing.Dict:
         def kill_action_performed():
             return any([on_border(cell) for cell in my_snake["body"]])
 
+        def crawl_path_len(head, neck, q):
+            if not on_border(head):
+                return 999
+            if not on_border(neck):
+                return 999
+            if not on_border(q):
+                return 999
+            path = []
+            while True:
+                nhead = [p for p in adj_cells(head) if p != neck and on_border(p)][0]
+                path.append(nhead)
+                if nhead == q:
+                    break
+                neck = head
+                head = nhead
+            return len(path)
+
+
         if not any([entering_trap(snake) for snake in others]):
             return
 
@@ -637,10 +655,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
         height = game_state["board"]["height"]
         my_head = my_snake["body"][0]
         snake_head = snake["body"][0]
+        snake_neck = snake["body"][1]
         kill_position = [(x,y) for x in range(width) for y in range(height)]
         kill_position = [p for p in kill_position if on_border(p)]
         kill_position = [p for p in kill_position if distance_pq(p, my_head) < distance_pq(p, snake_head)]
-        kill_position = [p for p in kill_position if p not in snake["body"]]
+        kill_position = [p for p in kill_position if crawl_path_len(snake_head, snake_neck, p) <= (width+height)//2]
         if len(kill_position) == 0:
             return
 
