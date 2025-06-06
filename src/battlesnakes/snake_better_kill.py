@@ -606,8 +606,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #any part of the other snake is on border
             #one of my body cell is adjacent to the other snake that part at off-border position
             #they moving in the same dir
-            for i, ic in snake["body"]:
-                for j, jc in my_snake["body"]:
+            for i, ic in enumerate(snake["body"]):
+                for j, jc in enumerate(my_snake["body"]):
                     if 1 <= j < len(my_snake["body"])-1 and i < len(snake["body"])-1:
                         if on_border(ic) and is_adjacent(ic, jc) and not on_border(jc):
                             if get_adjacent_dir(jc, my_snake["body"][j-1]) == get_adjacent_dir(snake["body"][i+1], ic):
@@ -616,6 +616,24 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         def kill_action_performed():
             return any([on_border(cell) for cell in my_snake["body"]])
+
+        def crawl_path_len(head, neck, q):
+            if not on_border(head):
+                return 999
+            if not on_border(neck):
+                return 999
+            if not on_border(q):
+                return 999
+            path = []
+            while True:
+                nhead = [p for p in adj_cells(head) if p != neck and on_border(p)][0]
+                path.append(nhead)
+                if nhead == q:
+                    break
+                neck = head
+                head = nhead
+            return len(path)
+
 
         if not any([entering_trap(snake) for snake in others]):
             return
@@ -627,6 +645,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if entering_trap(snake):
                 break
         
+        game_state["entered_trap"] = snake["name"]
         #assume only one
         #go to the closest kill position
         #1. It's on border
@@ -636,13 +655,29 @@ def move(game_state: typing.Dict) -> typing.Dict:
         height = game_state["board"]["height"]
         my_head = my_snake["body"][0]
         snake_head = snake["body"][0]
+        snake_neck = snake["body"][1]
         kill_position = [(x,y) for x in range(width) for y in range(height)]
         kill_position = [p for p in kill_position if on_border(p)]
         kill_position = [p for p in kill_position if distance_pq(p, my_head) < distance_pq(p, snake_head)]
-        min_distance = min([distance_pq(p, snake_head) for p in kill_position])
-        kill_position = [p for p in kill_position if distance_pq(p, snake_head) == min_distance]
+        kill_position = [p for p in kill_position if crawl_path_len(snake_head, snake_neck, p) <= (width+height)//2]
+        if len(kill_position) == 0:
+            return
+
+        #nearest to the other so fastest kill
+        #min_distance = min([distance_pq(p, snake_head) for p in kill_position])
+        #kill_position = [p for p in kill_position if distance_pq(p, snake_head) == min_distance]
+
+        #nearest to me so fastest action
+        min_distance = min([distance_pq(p, my_head) for p in kill_position])
+        if min_distance >= len(my_snake["body"]) //2:
+            #kill position too far - abort
+            return
+
+        kill_position = [p for p in kill_position if distance_pq(p, my_head) == min_distance]
+
         #may have more than 1, anyone is good
         target_kill_position = kill_position[0]
+        game_state["target_kill_position"] = kill_position
         #route to get there
         if is_adjacent(my_head, target_kill_position):
             game_state["try_kill"].append([target_kill_position])
@@ -701,23 +736,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #until to 1-off of the border
             #this is eventually separate the danger by separating the space
 
-            def case_1_condition():
-                #go straight when being chased
-                if (
-                    1 == 1
-                    and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
-                    and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
-                ):
-                    my_head = get_my_head()
-                    a,b = [move for move, rank in avoid_danger_2 if rank == 99]
-                    if (get_adjacent_dir(my_head, a) == get_adjacent_dir(my_head, b)
-                        or get_adjacent_dir(a, my_head) == get_adjacent_dir(my_head, b)):
-                        return False
-                    return True
-
-                return False
-
-            def case_2_condition():
+            def avoid_trap():
                 #don't enter a trap
                 my_head = get_my_head()
                 if not on_border(my_head):
@@ -742,14 +761,28 @@ def move(game_state: typing.Dict) -> typing.Dict:
                                         game_state["next_head_coord"] = a
                                         return True
                 return False
-                    
+
 
             def case_3_condition():
                 #don't crawl on border
                 my_head = get_my_head()
 
 
-            if case_1_condition():
+
+            def go_straight_when_chased():
+                #go straight when being chased
+                if not (
+                    1 == 1
+                    and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
+                    and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
+                ):
+                    return False
+
+                my_head = get_my_head()
+                a,b = [move for move, rank in avoid_danger_2 if rank == 99]
+                if (get_adjacent_dir(my_head, a) == get_adjacent_dir(my_head, b)
+                    or get_adjacent_dir(a, my_head) == get_adjacent_dir(my_head, b)):
+                    return False
                 my_head = get_my_head()
                 move_danger_rank_1 = [move for move, rank in avoid_danger_2 if rank == 1][0]
                 move_keep = [move for move, rank in avoid_danger_2 if rank == 99
@@ -762,8 +795,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     suggest = move_keep
                 if suggest in game_state["allowed_move"]:
                     game_state["next_head_coord"] = suggest
+                    return True
 
-            elif case_2_condition(): pass
+                return False
+
+
+            if go_straight_when_chased(): pass
+            elif avoid_trap(): pass
 
             #more special cases here:
 
@@ -842,6 +880,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_time_diff = f"time: {log_time_diff:.3f}s"
     log_find_food = game_state["find_food"]
     log_try_kill = game_state["try_kill"]
+    log_target_kill_pos = game_state.get("target_kill_position", [])
+    log_entered_trap = game_state.get("entered_trap", "")
 
     log_board = lean_board()
 
@@ -853,7 +893,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"avoid_danger: {log_avoid_danger}",
         f"allowed_move: {log_allowed_move}",
         f"find_food: {log_find_food}",
-        f"try_kill: {log_try_kill}",
+        f"try_kill: {log_try_kill}, target: {log_target_kill_pos}, entered_trap: {log_entered_trap}",
         log_time_diff,
     ])
 
