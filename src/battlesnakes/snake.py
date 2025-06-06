@@ -639,10 +639,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
         kill_position = [(x,y) for x in range(width) for y in range(height)]
         kill_position = [p for p in kill_position if on_border(p)]
         kill_position = [p for p in kill_position if distance_pq(p, my_head) < distance_pq(p, snake_head)]
-        min_distance = min([distance_pq(p, snake_head) for p in kill_position])
-        kill_position = [p for p in kill_position if distance_pq(p, snake_head) == min_distance]
+
+        #nearest to the other so fastest kill
+        #min_distance = min([distance_pq(p, snake_head) for p in kill_position])
+        #kill_position = [p for p in kill_position if distance_pq(p, snake_head) == min_distance]
+
+        #nearest to me so fastest action
+        min_distance = min([distance_pq(p, my_head) for p in kill_position])
+        kill_position = [p for p in kill_position if distance_pq(p, my_head) == min_distance]
+
         #may have more than 1, anyone is good
         target_kill_position = kill_position[0]
+        game_state["target_kill_position"] = kill_position
         #route to get there
         if is_adjacent(my_head, target_kill_position):
             game_state["try_kill"].append([target_kill_position])
@@ -842,6 +850,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_time_diff = f"time: {log_time_diff:.3f}s"
     log_find_food = game_state["find_food"]
     log_try_kill = game_state["try_kill"]
+    log_target_kill_pos = game_state["target_kill_position"] if len(game_state["try_kill"]) != 0 else []
 
     log_board = lean_board()
 
@@ -853,7 +862,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"avoid_danger: {log_avoid_danger}",
         f"allowed_move: {log_allowed_move}",
         f"find_food: {log_find_food}",
-        f"try_kill: {log_try_kill}",
+        f"try_kill: {log_try_kill}, target: {log_target_kill_pos}",
         log_time_diff,
     ])
 
