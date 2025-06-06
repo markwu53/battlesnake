@@ -627,6 +627,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if entering_trap(snake):
                 break
         
+        game_state["entered_trap"] = snake["name"]
         #assume only one
         #go to the closest kill position
         #1. It's on border
@@ -857,7 +858,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_time_diff = f"time: {log_time_diff:.3f}s"
     log_find_food = game_state["find_food"]
     log_try_kill = game_state["try_kill"]
-    log_target_kill_pos = game_state["target_kill_position"] if len(game_state["try_kill"]) != 0 else []
+    log_target_kill_pos = game_state.get("target_kill_position", [])
+    log_entered_trap = game_state.get("entered_trap", "")
 
     log_board = lean_board()
 
@@ -869,7 +871,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"avoid_danger: {log_avoid_danger}",
         f"allowed_move: {log_allowed_move}",
         f"find_food: {log_find_food}",
-        f"try_kill: {log_try_kill}, target: {log_target_kill_pos}",
+        f"try_kill: {log_try_kill}, target: {log_target_kill_pos}, entered_trap: {log_entered_trap}",
         log_time_diff,
     ])
 
