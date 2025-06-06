@@ -1,6 +1,7 @@
-import random
 import typing
 import math
+import time
+import itertools
 
 
 # info is called when you create your Battlesnake on play.battlesnake.com
