@@ -736,23 +736,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #until to 1-off of the border
             #this is eventually separate the danger by separating the space
 
-            def case_1_condition():
-                #go straight when being chased
-                if (
-                    1 == 1
-                    and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
-                    and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
-                ):
-                    my_head = get_my_head()
-                    a,b = [move for move, rank in avoid_danger_2 if rank == 99]
-                    if (get_adjacent_dir(my_head, a) == get_adjacent_dir(my_head, b)
-                        or get_adjacent_dir(a, my_head) == get_adjacent_dir(my_head, b)):
-                        return False
-                    return True
-
-                return False
-
-            def case_2_condition():
+            def avoid_trap():
                 #don't enter a trap
                 my_head = get_my_head()
                 if not on_border(my_head):
@@ -777,14 +761,28 @@ def move(game_state: typing.Dict) -> typing.Dict:
                                         game_state["next_head_coord"] = a
                                         return True
                 return False
-                    
+
 
             def case_3_condition():
                 #don't crawl on border
                 my_head = get_my_head()
 
 
-            if case_1_condition():
+
+            def go_straight_when_chased():
+                #go straight when being chased
+                if not (
+                    1 == 1
+                    and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
+                    and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
+                ):
+                    return False
+
+                my_head = get_my_head()
+                a,b = [move for move, rank in avoid_danger_2 if rank == 99]
+                if (get_adjacent_dir(my_head, a) == get_adjacent_dir(my_head, b)
+                    or get_adjacent_dir(a, my_head) == get_adjacent_dir(my_head, b)):
+                    return False
                 my_head = get_my_head()
                 move_danger_rank_1 = [move for move, rank in avoid_danger_2 if rank == 1][0]
                 move_keep = [move for move, rank in avoid_danger_2 if rank == 99
@@ -797,8 +795,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     suggest = move_keep
                 if suggest in game_state["allowed_move"]:
                     game_state["next_head_coord"] = suggest
+                    return True
 
-            elif case_2_condition(): pass
+                return False
+
+
+            if go_straight_when_chased(): pass
+            elif avoid_trap(): pass
 
             #more special cases here:
 
