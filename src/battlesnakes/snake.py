@@ -639,6 +639,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
         kill_position = [(x,y) for x in range(width) for y in range(height)]
         kill_position = [p for p in kill_position if on_border(p)]
         kill_position = [p for p in kill_position if distance_pq(p, my_head) < distance_pq(p, snake_head)]
+        kill_position = [p for p in kill_position if p not in snake["body"]]
+        if len(kill_position) == 0:
+            return
 
         #nearest to the other so fastest kill
         #min_distance = min([distance_pq(p, snake_head) for p in kill_position])
@@ -646,6 +649,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #nearest to me so fastest action
         min_distance = min([distance_pq(p, my_head) for p in kill_position])
+        if min_distance >= len(my_snake["body"]) //2:
+            #kill position too far - abort
+            return
+
         kill_position = [p for p in kill_position if distance_pq(p, my_head) == min_distance]
 
         #may have more than 1, anyone is good
