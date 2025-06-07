@@ -941,7 +941,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         "health": snake["health"],
         } for snake in board["snakes"]
     ]
-    log_traps = game_state["log_traps"]
+    log_traps = game_state.get("log_traps", [])
 
     log_text = ", ".join([
         f"board: {log_board}",
