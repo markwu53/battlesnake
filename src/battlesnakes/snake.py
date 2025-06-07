@@ -625,7 +625,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #until to 1-off of the border
             #this is eventually separate the danger by separating the space
 
-            def avoid_trap():
+            def avoid_trap2():
                 #don't enter a trap
                 my_head = get_my_head()
                 if not on_border(my_head):
@@ -651,6 +651,17 @@ def move(game_state: typing.Dict) -> typing.Dict:
                                         return True
                 return False
 
+            def avoid_trap():
+                my_head = get_my_head()
+                traps = [a for a in game_state["allowed_move_1"] if not is_a_trap(my_head, a)]
+                for i in range(len(avoid_danger_1)):
+                    move, rank = avoid_danger_1
+                    if move in traps:
+                        avoid_danger_1[i] = (move, 2)
+                for i in range(len(avoid_danger_2)):
+                    move, rank = avoid_danger_1
+                    if move in traps:
+                        avoid_danger_1[i] = (move, 2)
 
             def case_3_condition():
                 #don't crawl on border
@@ -715,15 +726,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         game_state["next_head_coord"] = result[0]
 
 
-            if go_straight_when_chased(): pass
-            elif avoid_trap(): pass
+            if go_straight_when_chased(): return
 
             #more special cases here:
 
 
-            else:
-                #avoid danger default process
-                avoid_danger_default_process()
+            #avoid_trap function modifies avoid_danger suggest
+            avoid_trap()
+            #avoid danger default process
+            avoid_danger_default_process()
 
 
     def best_choice():
