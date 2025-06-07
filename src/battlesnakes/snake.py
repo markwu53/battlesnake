@@ -50,138 +50,6 @@ def end(game_state: typing.Dict):
 
 #this gives me #20 score 8603 on 6/3/2025
 def move(game_state: typing.Dict) -> typing.Dict:
-    """
-    move in a square area
-    following an area filling path
-    the area has a dimension of n x m
-    where n is an even number
-    so that the path can close
-    start with 4x3
-    then 4x4, 4x5, 4x6
-    then 6x5, 6x6, 6x7, 6x8
-    then 8x7, ...
-    """
-
-    """
-    Then avoid immediate danger
-    check opponents and self
-    """
-
-#############################################
-# utility functions
-#############################################
-
-    def get_adjacent_dir(p: typing.Tuple, q: typing.Tuple) -> str:
-        assert(is_adjacent(p, q))
-        x,y = p
-        nx,ny = q
-        if nx > x:
-            return "right"
-        if nx < x:
-            return "left"
-        if ny > y:
-            return "up"
-        return "down"
-
-    def get_next_move(head_coord: typing.Tuple, next_head_coord: typing.Tuple) -> str:
-        return get_adjacent_dir(head_coord, next_head_coord)
-
-    def pos_on_board(pos: typing.Tuple) -> bool:
-        x,y = pos
-        if x < 0:
-            return False
-        if y < 0:
-            return False
-        if x >= game_state["board"]["width"]:
-            return False
-        if y >= game_state["board"]["height"]:
-            return False
-        return True
-
-    def adj_cells(pos: typing.Tuple) -> typing.List:
-        x,y = pos
-        moves = [(1,0), (-1,0), (0,1), (0,-1)]
-        npos = [(a+x,b+y) for a,b in moves]
-        npos = [p for p in npos if pos_on_board(p)]
-        return npos
-
-    def first_group(alist, reverse=False):
-        #result is a list of tuple of (item, rank)
-        if len(alist) == 0:
-            return []
-        result_dict = {}
-        for item, rank in alist:
-            if rank not in result_dict:
-                result_dict[rank] = []
-            result_dict[rank].append(item)
-        result = list(result_dict.items())
-        result.sort(reverse=reverse)
-        result = result[0][1]
-        return result
-
-    def on_border(coord: typing.Tuple) -> bool:
-        x,y = coord
-        if x == 0 or x == game_state["board"]["width"]-1:
-            return True
-        if y == 0 or y == game_state["board"]["height"]-1:
-            return True
-        return False
-
-    def opponent_snakes() -> typing.List:
-        my_head = game_state["you"]["body"][0]
-        head = (my_head["x"], my_head["y"])
-        snakes = [s for s in game_state["board"]["snakes"]]
-        snakes = [s for s in snakes if (s["body"][0]["x"], s["body"][0]["y"]) != head]
-        return snakes
-
-    def distance_pq(p: typing.Tuple, q: typing.Tuple) -> int:
-        x1,y1 = p
-        x2,y2 = q
-        distance = abs(x1-x2) + abs(y1-y2)
-        return distance
-
-    def is_adjacent(p1: typing.Tuple, p2: typing.Tuple) -> bool:
-        return distance_pq(p1, p2) == 1
-
-    def get_my_head() -> typing.Tuple:
-        my_head = game_state["you"]["body"][0]
-        head_coord = (my_head["x"], my_head["y"])
-        return head_coord
-
-    def get_coord(items: typing.List) -> typing.List:
-        return [(c["x"], c["y"]) for c in items]
-
-    def lean_board() -> typing.Dict:
-        return {
-            "id": game_state["game"]["id"],
-            "turn": game_state["turn"],
-            "food": get_coord(game_state["board"]["food"]),
-            "snakes": [{
-                "name": snake["name"],
-                "health": snake["health"],
-                "body": get_coord(snake["body"]),
-            } for snake in game_state["board"]["snakes"]],
-        }
-
-    def occupied_cells(step):
-        #not including head
-        #assuming no die
-        #assuming no eating food
-        #if eating food it will be more
-        snakes = game_state["board"]["snakes"]
-        sbody = []
-        for s in snakes:
-            body = get_coord(s["body"])
-            if s["health"] == 100:
-                #eat food, tail will not move in the next step
-                body += [body[-1]]
-            sbody.append(body[:-step])
-        cells = [c for s in sbody for c in s]
-        return cells
-
-#############################################
-# end of utility functions
-#############################################
 
     #ideas:
     #1. In avoid_danger:
@@ -570,14 +438,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         def find_food_condition() -> bool:
             snakes = opponent_snakes()
-            if len(snakes) >= 2 and game_state["you"]["length"] < 10:
-                return True
-            if len(snakes) >= 3 and game_state["you"]["health"] < 60:
-                return True
-            if len(snakes) >= 2 and game_state["you"]["health"] < 40:
-                return True
-            if len(snakes) >= 0 and game_state["you"]["health"] < 20:
-                return True
+            if len(snakes) >= 2 and game_state["you"]["length"] < 12: return True
+            if len(snakes) >= 3 and game_state["you"]["health"] < 60: return True
+            if len(snakes) >= 2 and game_state["you"]["health"] < 40: return True
+            #if len(snakes) >= 0 and game_state["you"]["health"] < 20: return True
+            if len(snakes) >= 0: return True
             return False
 
         game_state["find_food"] = []
@@ -862,6 +727,122 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if game_state["next_head_coord"] not in result:
                     game_state["next_head_coord"] = result[0]
 
+
+#############################################
+# utility functions
+#############################################
+
+    def get_adjacent_dir(p: typing.Tuple, q: typing.Tuple) -> str:
+        assert(is_adjacent(p, q))
+        x,y = p
+        nx,ny = q
+        if nx > x:
+            return "right"
+        if nx < x:
+            return "left"
+        if ny > y:
+            return "up"
+        return "down"
+
+    def get_next_move(head_coord: typing.Tuple, next_head_coord: typing.Tuple) -> str:
+        return get_adjacent_dir(head_coord, next_head_coord)
+
+    def pos_on_board(pos: typing.Tuple) -> bool:
+        x,y = pos
+        if x < 0:
+            return False
+        if y < 0:
+            return False
+        if x >= game_state["board"]["width"]:
+            return False
+        if y >= game_state["board"]["height"]:
+            return False
+        return True
+
+    def adj_cells(pos: typing.Tuple) -> typing.List:
+        x,y = pos
+        moves = [(1,0), (-1,0), (0,1), (0,-1)]
+        npos = [(a+x,b+y) for a,b in moves]
+        npos = [p for p in npos if pos_on_board(p)]
+        return npos
+
+    def first_group(alist, reverse=False):
+        #result is a list of tuple of (item, rank)
+        if len(alist) == 0:
+            return []
+        result_dict = {}
+        for item, rank in alist:
+            if rank not in result_dict:
+                result_dict[rank] = []
+            result_dict[rank].append(item)
+        result = list(result_dict.items())
+        result.sort(reverse=reverse)
+        result = result[0][1]
+        return result
+
+    def on_border(coord: typing.Tuple) -> bool:
+        x,y = coord
+        if x == 0 or x == game_state["board"]["width"]-1:
+            return True
+        if y == 0 or y == game_state["board"]["height"]-1:
+            return True
+        return False
+
+    def opponent_snakes() -> typing.List:
+        my_head = game_state["you"]["body"][0]
+        head = (my_head["x"], my_head["y"])
+        snakes = [s for s in game_state["board"]["snakes"]]
+        snakes = [s for s in snakes if (s["body"][0]["x"], s["body"][0]["y"]) != head]
+        return snakes
+
+    def distance_pq(p: typing.Tuple, q: typing.Tuple) -> int:
+        x1,y1 = p
+        x2,y2 = q
+        distance = abs(x1-x2) + abs(y1-y2)
+        return distance
+
+    def is_adjacent(p1: typing.Tuple, p2: typing.Tuple) -> bool:
+        return distance_pq(p1, p2) == 1
+
+    def get_my_head() -> typing.Tuple:
+        my_head = game_state["you"]["body"][0]
+        head_coord = (my_head["x"], my_head["y"])
+        return head_coord
+
+    def get_coord(items: typing.List) -> typing.List:
+        return [(c["x"], c["y"]) for c in items]
+
+    def lean_board() -> typing.Dict:
+        return {
+            "id": game_state["game"]["id"],
+            "turn": game_state["turn"],
+            "food": get_coord(game_state["board"]["food"]),
+            "snakes": [{
+                "name": snake["name"],
+                "health": snake["health"],
+                "body": get_coord(snake["body"]),
+            } for snake in game_state["board"]["snakes"]],
+        }
+
+    def occupied_cells(step):
+        #not including head
+        #assuming no die
+        #assuming no eating food
+        #if eating food it will be more
+        snakes = game_state["board"]["snakes"]
+        sbody = []
+        for s in snakes:
+            body = get_coord(s["body"])
+            if s["health"] == 100:
+                #eat food, tail will not move in the next step
+                body += [body[-1]]
+            sbody.append(body[:-step])
+        cells = [c for s in sbody for c in s]
+        return cells
+
+#############################################
+# end of utility functions
+#############################################
 
 
     #main
