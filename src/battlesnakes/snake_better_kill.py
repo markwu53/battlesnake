@@ -237,21 +237,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     return False
             return True
         
-        def find_containing_boxes(body: typing.List) -> typing.List:
-            boxes = []
-            width, height = box_dim()
-            for x1 in range(game_state["board"]["width"]):
-                for y1 in range(game_state["board"]["height"]):
-                    #bottom-left corner (x1,y1)
-                    x2 = x1+width-1
-                    y2 = y1+height-1
-                    box = ((x1,y1), (x2,y2))
-                    if not valid_area(box):
-                        continue
-                    if body_in_box(box, body):
-                        boxes.append(box)
-            return boxes
-
         def all_moving_boxes() -> typing.List:
             body = game_state["you"]["body"]
 
@@ -289,7 +274,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return (4,9)
             raise(ValueError("area_dim"))
 
-        def attractor_boxes() -> typing.List:
+        def attractor_boxes2() -> typing.List:
             adim = box_dim()
             if adim == (4,3):
                 return [
@@ -325,6 +310,38 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             raise(ValueError("BOX DIMENSION"))
 
+
+        def attractor_boxes() -> typing.List:
+            adim = box_dim()
+            if adim == (4,3):
+                return [
+                    ((1,2), (4,4)),
+                    ((1,6), (4,8)),
+                    ((6,2), (9,4)),
+                    ((6,6), (9,8)),
+                ]
+            if adim == (4,4):
+                return [
+                    ((3,3), (6,6)),
+                ]
+            if adim == (4,5):
+                #return [ ((1,0), (4,4)), ((1,6), (4,10)), ((6,0), (9,4)), ((6,6), (9,10)), ]
+                #change to two boxes, both off-border
+                return [
+                    ((3,3), (6,7)),
+                ]
+            if adim == (4,7):
+                return [
+                    ((1,2), (4,8)),
+                    ((6,2), (9,8)),
+                ]
+            if adim == (4,9):
+                return [
+                    ((1,1), (4,9)),
+                    ((6,1), (9,9)),
+                ]
+
+            raise(ValueError("BOX DIMENSION"))
 
         def target_bounding_box() -> typing.Tuple:
             #also only check first 4
