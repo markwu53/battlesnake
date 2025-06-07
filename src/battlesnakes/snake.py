@@ -653,7 +653,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             def avoid_trap():
                 my_head = get_my_head()
-                traps = [a for a in game_state["allowed_move_1"] if not is_a_trap(my_head, a)]
+                traps = [a for a in game_state["allowed_move_1"] if is_a_trap(my_head, a)]
                 game_state["log_traps"] = traps
                 for i in range(len(avoid_danger_1)):
                     move, rank = avoid_danger_1[i]
