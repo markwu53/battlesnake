@@ -441,8 +441,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if len(snakes) >= 2 and game_state["you"]["length"] < 12: return True
             if len(snakes) >= 3 and game_state["you"]["health"] < 60: return True
             if len(snakes) >= 2 and game_state["you"]["health"] < 40: return True
-            #if len(snakes) >= 0 and game_state["you"]["health"] < 20: return True
-            if len(snakes) >= 0: return True
+            if len(snakes) >= 0 and game_state["you"]["health"] < 20: return True
+            #if len(snakes) >= 0: return True
             return False
 
         game_state["find_food"] = []
@@ -574,34 +574,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #suggest = [p for p in adj_cells(get_my_head()) if on_border(p)]
         game_state["try_kill"].append(suggest)
 
-    def best_choice():
-
-        #lower priority first, higher priority will override lower priority
-
-        #routine move always exists and set as default
-        game_state["next_head_coord"] = game_state["routine_move"]
-
-        if len(game_state["allowed_move"]) == 0:
-            #most strict allowed move empty
-            #immediate allowed move may still have some
-            if len(game_state["allowed_move_1"]) != 0:
-                #use the first of the allowed move
-                game_state["next_head_coord"] = game_state["allowed_move_1"][0]
-            return
-
-        #set to the first of the allowed moves, then let other considerations override it
-
-        if game_state["next_head_coord"] not in game_state["allowed_move"]:
-            game_state["next_head_coord"] = game_state["allowed_move"][0]
-
-        if len(game_state["find_food"]) != 0:
-            if game_state["find_food"][0] in game_state["allowed_move"]:
-                game_state["next_head_coord"] = game_state["find_food"][0]
-
-        #do not check off-border anymore
-        #instead let attractor boxes move the snake off-border
-
-        #new avoid danger
+    def best_choice_avoid_danger():
 
         if len(game_state["avoid_danger"]) != 0:
             #avoid danger is activated
@@ -715,6 +688,36 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     if game_state["next_head_coord"] not in result:
                         game_state["next_head_coord"] = result[0]
 
+
+    def best_choice():
+
+        #lower priority first, higher priority will override lower priority
+
+        #routine move always exists and set as default
+        game_state["next_head_coord"] = game_state["routine_move"]
+
+        if len(game_state["allowed_move"]) == 0:
+            #most strict allowed move empty
+            #immediate allowed move may still have some
+            if len(game_state["allowed_move_1"]) != 0:
+                #use the first of the allowed move
+                game_state["next_head_coord"] = game_state["allowed_move_1"][0]
+            return
+
+        #set to the first of the allowed moves, then let other considerations override it
+
+        if game_state["next_head_coord"] not in game_state["allowed_move"]:
+            game_state["next_head_coord"] = game_state["allowed_move"][0]
+
+        if len(game_state["find_food"]) != 0:
+            if game_state["find_food"][0] in game_state["allowed_move"]:
+                game_state["next_head_coord"] = game_state["find_food"][0]
+
+        #do not check off-border anymore
+        #instead let attractor boxes move the snake off-border
+
+        #new avoid danger
+        best_choice_avoid_danger()
 
         #try kill
         if len(game_state["try_kill"]) != 0:
