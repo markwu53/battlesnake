@@ -664,6 +664,21 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     if move in traps:
                         avoid_danger_2[i] = (move, 2)
 
+            def avoid_dead_end():
+                my_head = get_my_head()
+                my_tail = get_my_tail()
+                connected = path_connected(my_tail)
+                dead_ends = [a for a in game_state["allowed_move_1"] if a not in connected]
+                game_state["log_dead_end"] = dead_ends
+                for i in range(len(avoid_danger_1)):
+                    move, rank = avoid_danger_1[i]
+                    if move in dead_ends:
+                        avoid_danger_1[i] = (move, 2)
+                for i in range(len(avoid_danger_2)):
+                    move, rank = avoid_danger_2[i]
+                    if move in dead_ends:
+                        avoid_danger_2[i] = (move, 2)
+
             def case_3_condition():
                 #don't crawl on border
                 my_head = get_my_head()
@@ -734,9 +749,19 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             #avoid_trap function modifies avoid_danger suggest
             avoid_trap()
+            avoid_dead_end()
+
             #avoid danger default process
             avoid_danger_default_process()
 
+    def path_connected(p):
+        occuppied = occupied_cells(1)
+        connected = [set([p])]
+        layer = set([q for q in adj_cells(p) if q not in occuppied])
+        while len(layer) != 0:
+            connected.append(layer)
+            layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in connected[-2]])
+        return set([q for layer in connected for q in layer])
 
     def best_choice():
 
@@ -861,6 +886,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
         head_coord = (my_head["x"], my_head["y"])
         return head_coord
 
+    def get_my_tail() -> typing.Tuple:
+        p = game_state["you"]["body"][-1]
+        coord = (p["x"], p["y"])
+        return coord
+
     def get_coord(items: typing.List) -> typing.List:
         return [(c["x"], c["y"]) for c in items]
 
@@ -934,13 +964,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_entered_trap = game_state.get("entered_trap", "")
 
     board = lean_board()
-    log_board = [ {
-        "name": snake["name"],
-        "length": len(snake["body"]),
-        "head": snake["body"][0],
-        "health": snake["health"],
-        } for snake in board["snakes"]
-    ]
+    log_board = {
+        "id": board["id"],
+        "turn": board["turn"],
+        "snakes": [{
+            "name": snake["name"],
+            "length": len(snake["body"]),
+            "head": snake["body"][0],
+            "health": snake["health"],
+        } for snake in board["snakes"]]
+    } 
     log_traps = game_state.get("log_traps", [])
 
     log_text = ", ".join([
