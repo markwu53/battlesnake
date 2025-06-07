@@ -574,6 +574,40 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #suggest = [p for p in adj_cells(get_my_head()) if on_border(p)]
         game_state["try_kill"].append(suggest)
 
+    def is_a_trap(head, p):
+        #p has only one allowed move
+        #besides head, p is blocked in two directions
+        #each direction is either a border
+        #or a cell of snake body that moves in the same direction
+        if not is_adjacent(head, p):
+            return False
+        
+        board = lean_board()
+        snakes = board["snakes"]
+
+        if on_border(p):
+            if not on_border(head):
+                return False
+            for snake in snakes:
+                for i,ic in enumerate(snake["body"]):
+                    if 1<= i < len(snake["body"])-1:
+                        if is_adjacent(ic, p) and not on_border(ic):
+                            if get_adjacent_dir(head, p) == get_adjacent_dir(ic, snake["body"][i-1]):
+                                return True
+            return False
+        else:
+            ab = [q for q in adj_cells(p) if q != head]
+            if not all([pos in occupied_cells(2) for pos in [ab]]):
+                return False
+            for a in ab:
+                for snake in snakes:
+                    for i,ic in enumerate(snake["body"]):
+                        if 1 <= i < len(snake["body"])-2:
+                            if ic == a:
+                                if get_adjacent_dir(a, snake["body"][i-1]) == get_adjacent_dir(head, p):
+                                    return True
+            return False
+            
     def best_choice_avoid_danger():
 
         if len(game_state["avoid_danger"]) != 0:
@@ -654,15 +688,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
                 return False
 
-
-            if go_straight_when_chased(): pass
-            elif avoid_trap(): pass
-
-            #more special cases here:
-
-
-            else:
-                #avoid danger default process
+            def avoid_danger_default_process():
 
                 result = [move for move, rank in avoid_danger_1 if rank == 99]
                 if len(result) == 0:
@@ -687,6 +713,17 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if len(result) != 0:
                     if game_state["next_head_coord"] not in result:
                         game_state["next_head_coord"] = result[0]
+
+
+            if go_straight_when_chased(): pass
+            elif avoid_trap(): pass
+
+            #more special cases here:
+
+
+            else:
+                #avoid danger default process
+                avoid_danger_default_process()
 
 
     def best_choice():
