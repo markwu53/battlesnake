@@ -654,14 +654,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
             def avoid_trap():
                 my_head = get_my_head()
                 traps = [a for a in game_state["allowed_move_1"] if not is_a_trap(my_head, a)]
+                game_state["log_traps"] = traps
                 for i in range(len(avoid_danger_1)):
-                    move, rank = avoid_danger_1
+                    move, rank = avoid_danger_1[i]
                     if move in traps:
                         avoid_danger_1[i] = (move, 2)
                 for i in range(len(avoid_danger_2)):
-                    move, rank = avoid_danger_1
+                    move, rank = avoid_danger_2[i]
                     if move in traps:
-                        avoid_danger_1[i] = (move, 2)
+                        avoid_danger_2[i] = (move, 2)
 
             def case_3_condition():
                 #don't crawl on border
@@ -932,7 +933,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
     log_target_kill_pos = game_state.get("target_kill_position", [])
     log_entered_trap = game_state.get("entered_trap", "")
 
-    log_board = lean_board()
+    board = lean_board()
+    log_board = [ {
+        "name": snake["name"],
+        "length": len(snake["body"]),
+        "head": snake["body"][0],
+        "health": snake["health"],
+        } for snake in board["snakes"]
+    ]
+    log_traps = game_state["log_traps"]
 
     log_text = ", ".join([
         f"board: {log_board}",
@@ -943,6 +952,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"allowed_move: {log_allowed_move}",
         f"find_food: {log_find_food}",
         f"try_kill: {log_try_kill}, target: {log_target_kill_pos}, entered_trap: {log_entered_trap}",
+        f"trap: {log_traps}",
         log_time_diff,
     ])
 
