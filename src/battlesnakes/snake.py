@@ -665,9 +665,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         avoid_danger_2[i] = (move, 2)
 
             def avoid_dead_end():
-                my_head = get_my_head()
-                my_tail = get_my_tail()
-                connected = path_connected(my_tail)
+                board = lean_board()
+                connected = set([p for snake in board["snakes"] for p in path_connected(snake["body"][-1])])
                 dead_ends = [a for a in game_state["allowed_move_1"] if a not in connected]
                 game_state["log_dead_end"] = dead_ends
                 for i in range(len(avoid_danger_1)):
