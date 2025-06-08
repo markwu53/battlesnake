@@ -657,6 +657,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             def case_3_condition():
                 #don't crawl on border
+                #whenever there is a chance, go back to off-border
+                #this is taken care of already by avoid danger default process
                 my_head = get_my_head()
 
 
@@ -709,7 +711,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         and distance_pq(my_head, snake_head) <= 4
                         ]) != 0
 
-                if killer_near():
+                if (killer_near()
+                        or len(game_state["find_food"]) == 0):
                     result = [(move, 1 if on_border(move) else 0) for move in result]
                     result = first_group(result, reverse=False)
                 result = [move for move in result if move in game_state["allowed_move"]]
