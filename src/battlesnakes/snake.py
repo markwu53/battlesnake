@@ -814,16 +814,21 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def chasing_tail():
         #this is only used in 1v1 case
-        snakes = opponent_snakes()
-        snake_body = get_coord(snakes[0]["body"])
-        snake_tail = snake_body[-1]
         my_body = get_coord(game_state["you"]["body"])
         my_head = my_body[0]
         my_neck = my_body[1]
         my_tail = my_body[-1]
         result = shortest_path_move(my_head, my_tail)
+
+        snakes = opponent_snakes()
+        snake_body = get_coord(snakes[0]["body"])
+        snake_tail = snake_body[-1]
+        target = snake_tail
+        tail_next = [p for p in adj_cells(snake_tail) if p not in my_body and p not in snake_body]
+        if len(tail_next) != 0:
+            target = tail_next[0]
         if len(result) == 0:
-            result = shortest_path_move(my_head, snake_tail)
+            result = shortest_path_move(my_head, target)
         #prefer keep direction
         result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
         result = sorted(result)
