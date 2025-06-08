@@ -835,7 +835,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             game_state["next_head_coord"] = go_straight()
         elif len(game_state["board"]["snakes"]) ==2:
             #1v1 mode
-            game_state["next_head_coord"] = game_state["routine_move"]
+            #game_state["next_head_coord"] = game_state["routine_move"]
+            game_state["next_head_coord"] = go_straight()
             snakes = opponent_snakes()
             snake_body = get_coord(snakes[0]["body"])
             result = chasing_tail(snake_body[-1])
