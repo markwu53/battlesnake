@@ -483,7 +483,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return
             food_target = sorted([(path_distance_pq(get_my_head(), p), p) for p in food_target])
             _, target = food_target[0]
-            result = shortest_path_move(get_my_head(), target)
+            my_body = get_coord(game_state["you"]["body"])
+            result = shortest_path_move(my_body[0], target)
+            result = [(0 if get_adjacent_dir(my_body[0], move) == get_adjacent_dir(my_body[1], my_body[0]) else 1, move) for move in result]
+            result = sorted(result)
+            result = [move for rank, move in result]
             game_state["find_food"].append(result)
 
         if find_food_condition():
