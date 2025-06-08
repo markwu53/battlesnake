@@ -708,7 +708,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         for snake in opponent_snakes()
                         for snake_head in [get_coord(snake["body"])[0]]
                         if snake["length"] >= game_state["you"]["length"]
-                        and distance_pq(my_head, snake_head) <= 4
+                        and path_distance_pq(my_head, snake_head) <= 4
                         ]) != 0
 
                 if (killer_near()
@@ -732,6 +732,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             #avoid danger default process
             avoid_danger_default_process()
+
+    def path_distance_pq(p, q):
+        occuppied = occupied_cells(1)
+        connected = [set([p])]
+        layer = set([q for q in adj_cells(p) if q not in occuppied])
+        while len(layer) != 0:
+            connected.append(layer)
+            layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in connected[-2]])
+        for i,layer in enumerate(connected):
+            if q in layer:
+                return i
+        return 999
 
     def path_connected(p):
         occuppied = occupied_cells(1)
