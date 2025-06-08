@@ -802,6 +802,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 return result
         return []
 
+    def chasing_my_tail():
+        my_body = get_coord(game_state["you"]["body"])
+        result = shortest_path_move(my_body[0], my_body[-1])
+        return result
+
     def chasing_tail(snake_tail):
         my_body = get_coord(game_state["you"]["body"])
         result = shortest_path_move(my_body[0], my_body[-1])
@@ -816,12 +821,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #routine move always exists and set as default
         if len(game_state["board"]["snakes"]) >=3:
             game_state["next_head_coord"] = go_straight()
-        elif len(game_state["board"]["snakes"]) <=2:
+        elif len(game_state["board"]["snakes"]) ==2:
             #1v1 mode
             game_state["next_head_coord"] = game_state["routine_move"]
             snakes = opponent_snakes()
             snake_body = get_coord(snakes[0]["body"])
             result = chasing_tail(snake_body[-1])
+            if len(result) != 0:
+                game_state["next_head_coord"] = result[0]
+        else:
+            #self
+            game_state["next_head_coord"] = game_state["routine_move"]
+            result = chasing_my_tail()
             if len(result) != 0:
                 game_state["next_head_coord"] = result[0]
 
