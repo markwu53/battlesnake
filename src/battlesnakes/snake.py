@@ -810,9 +810,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def chasing_tail(snake_tail):
         my_body = get_coord(game_state["you"]["body"])
-        result = shortest_path_move(my_body[0], my_body[-1])
+        my_head = my_body[0]
+        my_neck = my_body[1]
+        my_tail = my_body[-1]
+        result = shortest_path_move(my_head, my_tail)
         if len(result) == 0:
-            result = shortest_path_move(my_body[0], snake_tail)
+            result = shortest_path_move(my_head, snake_tail)
+        #prefer keep direction
+        result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
+        result = sorted(result)
+        result = [move for rank, move in result]
         return result
 
     def best_choice():
