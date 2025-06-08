@@ -438,7 +438,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         def find_food_condition() -> bool:
             snakes = opponent_snakes()
-            if len(snakes) >= 2 and game_state["you"]["length"] < 12: return True
+            if len(snakes) >= 2 and game_state["you"]["length"] < 20: return True
             if len(snakes) >= 3 and game_state["you"]["health"] < 60: return True
             if len(snakes) >= 2 and game_state["you"]["health"] < 40: return True
             if len(snakes) == 1 and game_state["you"]["length"] < 40: return True
