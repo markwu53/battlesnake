@@ -807,8 +807,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #lower priority first, higher priority will override lower priority
 
         #routine move always exists and set as default
-        game_state["next_head_coord"] = game_state["routine_move"]
-        #game_state["next_head_coord"] = go_straight()
+        if len(game_state["board"]["snakes"]) >=3:
+            game_state["next_head_coord"] = go_straight()
+        else:
+            game_state["next_head_coord"] = game_state["routine_move"]
 
         if len(game_state["allowed_move"]) == 0:
             #most strict allowed move empty
