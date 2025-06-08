@@ -448,8 +448,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         game_state["find_food"] = []
 
         #if opponent snake == 1 and health < 20 find food
-        snakes = opponent_snakes()
         def food_move2():
+            snakes = opponent_snakes()
             snakes = [get_coord(s["body"]) for s in snakes]
             snake_heads = [s[0] for s in snakes]
             food_target = [(food["x"], food["y"]) for food in game_state["board"]["food"]]
@@ -471,6 +471,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 game_state["find_food"].append(next_head_coord)
 
         def food_move():
+            snakes = opponent_snakes()
             snakes = [get_coord(s["body"]) for s in snakes]
             snake_heads = [s[0] for s in snakes]
             food_target = get_coord(game_state["board"]["food"])
