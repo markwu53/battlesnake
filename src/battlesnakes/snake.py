@@ -596,15 +596,22 @@ def move(game_state: typing.Dict) -> typing.Dict:
                                 return True
             return False
         else:
-            ab = [q for q in adj_cells(p) if q != head]
-            if not all([pos in occupied_cells(2) for pos in [ab]]):
+            #p has 4 adjacent cells
+            #one of it is current head
+            #two others are occupied
+            #the last one is the only direction to move
+            #this is a trap signal
+            abc = [q for q in adj_cells(p) if q != head]
+            c = [q for q in abc if c not in occupied_cells(2)]
+            if len(c) != 1:
                 return False
-            for a in ab:
+            c = c[0]
+            for a in [q for q in abc if q != c]:
                 for snake in snakes:
                     for i,ic in enumerate(snake["body"]):
                         if 1 <= i < len(snake["body"])-2:
                             if ic == a:
-                                if get_adjacent_dir(a, snake["body"][i-1]) == get_adjacent_dir(head, p):
+                                if get_adjacent_dir(a, snake["body"][i-1]) == get_adjacent_dir(p, c):
                                     return True
             return False
             
@@ -616,40 +623,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #avoid_danger_1 consider dangers coming from all opponents snakes that have length greater or equal to 
             #avoid_danger_2 only consider length greater than mine
 
-            #special case 1
-            #if opponent is longer
-            #and distance = 2
-            #and in a diagonal position
-            #and there are 2 rank 99 moves - which means the opponent head is in a chasing position
-            #then perfer the move that keeps this chasing position
-            #until to 1-off of the border
-            #this is eventually separate the danger by separating the space
-
-            def avoid_trap2():
-                #don't enter a trap
-                my_head = get_my_head()
-                if not on_border(my_head):
-                    return False
-                if len([move for move, rank in avoid_danger_2 if rank == 99]) == 2:
-                    a,b = [move for move, rank in avoid_danger_2 if rank == 99]
-                    for snake in opponent_snakes():
-                        body = get_coord(snake["body"])
-                        for i, cell in enumerate(body):
-                            if i == 0 or i == len(body)-1:
-                                continue
-                            if is_adjacent(a, cell) and not on_border(cell):
-                                if get_adjacent_dir(my_head, a) == get_adjacent_dir(cell, body[i-1]):
-                                    #a is a trap, take b
-                                    if b in game_state["allowed_move"]:
-                                        game_state["next_head_coord"] = b
-                                        return True
-                            if is_adjacent(b, cell) and not on_border(cell):
-                                if get_adjacent_dir(my_head, b) == get_adjacent_dir(cell, body[i-1]):
-                                    #a is a trap, take b
-                                    if a in game_state["allowed_move"]:
-                                        game_state["next_head_coord"] = a
-                                        return True
-                return False
 
             def avoid_trap():
                 my_head = get_my_head()
