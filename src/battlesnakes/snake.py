@@ -441,7 +441,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if len(snakes) >= 2 and game_state["you"]["length"] < 12: return True
             if len(snakes) >= 3 and game_state["you"]["health"] < 60: return True
             if len(snakes) >= 2 and game_state["you"]["health"] < 40: return True
-            if len(snakes) == 1 and game_state["you"]["length"] < 30: return True
+            if len(snakes) == 1 and game_state["you"]["length"] < 40: return True
             if len(snakes) >= 0 and game_state["you"]["health"] < 20: return True
             return False
 
@@ -816,7 +816,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #routine move always exists and set as default
         if len(game_state["board"]["snakes"]) >=3:
             game_state["next_head_coord"] = go_straight()
-        elif len(game_state["board"]["snakes"]) ==2:
+        elif len(game_state["board"]["snakes"]) <=2:
             #1v1 mode
             game_state["next_head_coord"] = game_state["routine_move"]
             snakes = opponent_snakes()
@@ -824,8 +824,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
             result = chasing_tail(snake_body[-1])
             if len(result) != 0:
                 game_state["next_head_coord"] = result[0]
-        else:
-            game_state["next_head_coord"] = game_state["routine_move"]
 
 
         if len(game_state["allowed_move"]) == 0:
