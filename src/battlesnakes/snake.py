@@ -658,11 +658,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 for i in range(len(avoid_danger_1)):
                     move, rank = avoid_danger_1[i]
                     if move in traps:
-                        avoid_danger_1[i] = (move, 2)
+                        if rank > 5:
+                            avoid_danger_1[i] = (move, 5)
                 for i in range(len(avoid_danger_2)):
                     move, rank = avoid_danger_2[i]
                     if move in traps:
-                        avoid_danger_2[i] = (move, 2)
+                        if rank > 5:
+                            avoid_danger_2[i] = (move, 5)
 
             def avoid_dead_end():
                 board = lean_board()
@@ -672,11 +674,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 for i in range(len(avoid_danger_1)):
                     move, rank = avoid_danger_1[i]
                     if move in dead_ends:
-                        avoid_danger_1[i] = (move, 2)
+                        if rank > 6:
+                            avoid_danger_1[i] = (move, 6)
                 for i in range(len(avoid_danger_2)):
                     move, rank = avoid_danger_2[i]
                     if move in dead_ends:
-                        avoid_danger_2[i] = (move, 2)
+                        if rank > 6:
+                            avoid_danger_2[i] = (move, 6)
 
             def case_3_condition():
                 #don't crawl on border
