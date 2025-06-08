@@ -765,6 +765,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def path_connected(p):
         occuppied = occupied_cells(1)
+        #remove p from occupied
+        occuppied = [q for q in occuppied if q != p]
         layers = [set([p])]
         layer = set([q for q in adj_cells(p) if q not in occuppied])
         while len(layer) != 0:
@@ -774,6 +776,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def path_connected_layers(p):
         occuppied = occupied_cells(1)
+        #remove p from occupied
+        occuppied = [q for q in occuppied if q != p]
         layers = [set([p])]
         layer = set([q for q in adj_cells(p) if q not in occuppied])
         while len(layer) != 0:
