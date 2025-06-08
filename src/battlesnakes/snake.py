@@ -754,12 +754,21 @@ def move(game_state: typing.Dict) -> typing.Dict:
             layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in connected[-2]])
         return set([q for layer in connected for q in layer])
 
+    def go_straight():
+        body = get_coord(game_state["you"]["body"])
+        x0,y0 = body[0]
+        x1,y1 = body[1]
+        x,y = x1-x0, y1-y0
+        x,y = -x, -y
+        return (x0+x, y0+y)
+
     def best_choice():
 
         #lower priority first, higher priority will override lower priority
 
         #routine move always exists and set as default
-        game_state["next_head_coord"] = game_state["routine_move"]
+        #game_state["next_head_coord"] = game_state["routine_move"]
+        game_state["next_head_coord"] = go_straight()
 
         if len(game_state["allowed_move"]) == 0:
             #most strict allowed move empty
