@@ -853,9 +853,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         if len(game_state["find_food"]) != 0:
             suggest = game_state["find_food"][0]
-            food = suggest[0]
-            if food in game_state["allowed_move"]:
-                game_state["next_head_coord"] = food
+            if len(suggest) != 0:
+                food = suggest[0]
+                if food in game_state["allowed_move"]:
+                    game_state["next_head_coord"] = food
 
         #do not check off-border anymore
         #instead let attractor boxes move the snake off-border
