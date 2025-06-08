@@ -468,23 +468,23 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 path = paths[0]
                 next_head_coord = path[1]
                 #save in the global var
-                game_state["find_food"].append(next_head_coord)
+                game_state["find_food"].append([next_head_coord])
 
         def food_move():
             snakes = opponent_snakes()
             snakes = [get_coord(s["body"]) for s in snakes]
             snake_heads = [s[0] for s in snakes]
             food_target = get_coord(game_state["board"]["food"])
-            food_target = [p 
-                           for p in food_target 
-                           if all([path_distance_pq(p, get_my_head()) < path_distance_pq(p, snake_head) 
+            food_target = [p for p in food_target 
+                           if all([path_distance_pq(get_my_head(), p) < path_distance_pq(snake_head, p) 
                                    for snake_head in snake_heads ])]
-            food_target = sorted([(path_distance_pq(p, get_my_head()), p) for p in food_target])
             if len(food_target) == 0:
                 return
+            food_target = sorted([(path_distance_pq(get_my_head(), p), p) for p in food_target])
             _, target = food_target[0]
             result = shortest_path_move(get_my_head(), target)
             game_state["find_food"].append(result)
+
         if find_food_condition():
             food_move()
 
