@@ -449,7 +449,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #if opponent snake == 1 and health < 20 find food
         snakes = opponent_snakes()
-        if find_food_condition():
+        def food_move2():
             snakes = [get_coord(s["body"]) for s in snakes]
             snake_heads = [s[0] for s in snakes]
             food_target = [(food["x"], food["y"]) for food in game_state["board"]["food"]]
@@ -469,6 +469,23 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 next_head_coord = path[1]
                 #save in the global var
                 game_state["find_food"].append(next_head_coord)
+
+        def food_move():
+            snakes = [get_coord(s["body"]) for s in snakes]
+            snake_heads = [s[0] for s in snakes]
+            food_target = get_coord(game_state["board"]["food"])
+            food_target = [p 
+                           for p in food_target 
+                           if all([path_distance_pq(p, get_my_head()) < path_distance_pq(p, snake_head) 
+                                   for snake_head in snake_heads ])]
+            food_target = sorted([(path_distance_pq(p, get_my_head()), p) for p in food_target])
+            if len(food_target) == 0:
+                return
+            _, target = food_target[0]
+            result = shortest_path_move(get_my_head(), target)
+            game_state["find_food"].append(result)
+        if find_food_condition():
+            food_move()
 
     def try_kill():
         game_state["try_kill"] = []
@@ -747,12 +764,21 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def path_connected(p):
         occuppied = occupied_cells(1)
-        connected = [set([p])]
+        layers = [set([p])]
         layer = set([q for q in adj_cells(p) if q not in occuppied])
         while len(layer) != 0:
-            connected.append(layer)
-            layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in connected[-2]])
-        return set([q for layer in connected for q in layer])
+            layers.append(layer)
+            layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in layers[-2]])
+        return set([q for layer in layers for q in layer])
+
+    def path_connected_layers(p):
+        occuppied = occupied_cells(1)
+        layers = [set([p])]
+        layer = set([q for q in adj_cells(p) if q not in occuppied])
+        while len(layer) != 0:
+            layers.append(layer)
+            layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in layers[-2]])
+        return layers
 
     def go_straight():
         body = get_coord(game_state["you"]["body"])
@@ -761,6 +787,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
         x,y = x1-x0, y1-y0
         x,y = -x, -y
         return (x0+x, y0+y)
+
+    def shortest_path_move(p, q):
+        if q in path_connected(p):
+            dist = path_distance_pq(p, q)
+            layers = path_connected_layers(p)
+            if len(layers) > 1:
+                result = [x for x in layers[1] if path_distance_pq(x, q) == dist-1]
+                return result
+        return []
 
     def best_choice():
 
@@ -784,8 +819,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
             game_state["next_head_coord"] = game_state["allowed_move"][0]
 
         if len(game_state["find_food"]) != 0:
-            if game_state["find_food"][0] in game_state["allowed_move"]:
-                game_state["next_head_coord"] = game_state["find_food"][0]
+            suggest = game_state["find_food"][0]
+            food = suggest[0]
+            if food in game_state["allowed_move"]:
+                game_state["next_head_coord"] = food
 
         #do not check off-border anymore
         #instead let attractor boxes move the snake off-border
