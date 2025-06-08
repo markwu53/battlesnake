@@ -602,7 +602,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             #the last one is the only direction to move
             #this is a trap signal
             abc = [q for q in adj_cells(p) if q != head]
-            c = [q for q in abc if c not in occupied_cells(2)]
+            c = [q for q in abc if q not in occupied_cells(2)]
             if len(c) != 1:
                 return False
             c = c[0]
