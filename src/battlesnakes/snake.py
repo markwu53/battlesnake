@@ -853,12 +853,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     game_state["next_head_coord"] = result[0]
         elif len(game_state["board"]["snakes"]) ==2:
             #1v1 mode
-            game_state["next_head_coord"] = game_state["routine_move"]
-            #game_state["next_head_coord"] = go_straight()
-            if len(game_state["you"]["body"]) >= 30:
-                result = chasing_tail()
-                if len(result) != 0:
-                    game_state["next_head_coord"] = result[0]
+            #game_state["next_head_coord"] = game_state["routine_move"]
+            game_state["next_head_coord"] = go_straight()
+            result = chasing_tail()
+            if len(result) != 0:
+                game_state["next_head_coord"] = result[0]
         else:
             #self
             game_state["next_head_coord"] = game_state["routine_move"]
@@ -1075,6 +1074,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         } for snake in board["snakes"]]
     } 
     log_traps = game_state.get("log_traps", [])
+    log_dead_end = game_state.get("log_dead_end", [])
 
     log_text = ", ".join([
         f"board: {log_board}",
@@ -1086,6 +1086,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         f"find_food: {log_find_food}",
         f"try_kill: {log_try_kill}, target: {log_target_kill_pos}, entered_trap: {log_entered_trap}",
         f"trap: {log_traps}",
+        f"dead_end: {log_dead_end}",
         log_time_diff,
     ])
 
