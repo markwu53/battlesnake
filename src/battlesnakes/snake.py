@@ -553,8 +553,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         and path_distance_pq(my_head, snake_head) <= 4
                     ]) != 0
 
-            if (killer_near()
-                    or len(game_state["find_food"]) == 0):
+            if (len(game_state["others"]) != 1
+                    and (killer_near() or len(game_state["find_food"]) == 0)):
                 result = [(move, 1 if on_border(move) else 0) for move in result]
                 result = first_group(result, reverse=False)
             result = [move for move in result if move in game_state["allowed_move"]]
