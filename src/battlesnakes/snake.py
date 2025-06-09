@@ -355,7 +355,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         elif len(game_state["board"]["snakes"]) ==2:
             #1v1 mode
             #game_state["next_head_coord"] = game_state["routine_move"]
-            if len(game_state["me"]["body"]) <= 20:
+            if len(game_state["me"]["body"]) <= 10:
                 game_state["next_head_coord"] = go_straight()
             else:
                 result = chasing_tail()
@@ -578,10 +578,14 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         and path_distance_pq(my_head, snake_head) <= 4
                     ]) != 0
 
-            if (len(game_state["others"]) != 1
-                    and (killer_near() or len(game_state["find_food"]) == 0)):
-                result = [(move, 1 if on_border(move) else 0) for move in result]
-                result = first_group(result, reverse=False)
+            if len(game_state["others"]) != 1:
+                if (killer_near() or len(game_state["find_food"]) == 0):
+                    result = [(move, 1 if on_border(move) else 0) for move in result]
+                    result = first_group(result, reverse=False)
+            else:
+                if len(game_state["me"]["body"]) <= 15:
+                    result = [(move, 1 if on_border(move) else 0) for move in result]
+                    result = first_group(result, reverse=False)
             result = [move for move in result if move in game_state["allowed_move"]]
             if len(result) != 0:
                 if game_state["next_head_coord"] not in result:
