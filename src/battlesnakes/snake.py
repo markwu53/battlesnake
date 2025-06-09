@@ -115,7 +115,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         game_state["occupied_cells"] = [
             occupied_cells(step)
-            for step in [1,2,3,4]
+            for step in [1,2,3,4,5]
         ]
 
     def allowed_move():
@@ -123,7 +123,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         def permissible_nstep(head, n):
             paths = [[head]]
             for step in range(1, n+1):
-                occupied = occupied_cells(step)
+                occupied = game_state["occupied_cells"][step-1]
                 paths = [ npath 
                         for path in paths 
                         for npath in [path+[p] for p in adj_cells(path[-1]) 
