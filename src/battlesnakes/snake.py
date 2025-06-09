@@ -339,163 +339,166 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #suggest = [p for p in adj_cells(get_my_head()) if on_border(p)]
         game_state["try_kill"].append(suggest)
-
-    def is_a_trap(head, p):
-        #p has only one allowed move
-        #besides head, p is blocked in two directions
-        #each direction is either a border
-        #or a cell of snake body that moves in the same direction
-        if not is_adjacent(head, p):
-            return False
-        
-        snakes = game_state["snakes"]
-
-        if on_border(p):
-            if not on_border(head):
-                return False
-            for snake in snakes:
-                for i,ic in enumerate(snake["body"]):
-                    if 1<= i < len(snake["body"])-1:
-                        if is_adjacent(ic, p) and not on_border(ic):
-                            if get_adjacent_dir(head, p) == get_adjacent_dir(ic, snake["body"][i-1]):
-                                return True
-            return False
-        else:
-            #p has 4 adjacent cells
-            #one of it is current head
-            #two others are occupied
-            #the last one is the only direction to move
-            #this is a trap signal
-            abc = [q for q in adj_cells(p) if q != head]
-            c = [q for q in abc if q not in game_state["occupied_cells"][1]]
-            if len(c) != 1:
-                return False
-            c = c[0]
-            for a in [q for q in abc if q != c]:
-                for snake in snakes:
-                    for i,ic in enumerate(snake["body"]):
-                        if 1 <= i < len(snake["body"])-2:
-                            if ic == a:
-                                if get_adjacent_dir(a, snake["body"][i-1]) == get_adjacent_dir(p, c):
-                                    return True
-            return False
-            
+       
     def best_choice_avoid_danger():
 
-        if len(game_state["avoid_danger"]) != 0:
-            #avoid danger is activated
-            avoid_danger_1, avoid_danger_2 = game_state["avoid_danger"][0]
-            #avoid_danger_1 consider dangers coming from all opponents snakes that have length greater or equal to 
-            #avoid_danger_2 only consider length greater than mine
+        if len(game_state["avoid_danger"]) == 0:
+            return
+
+        avoid_danger_1, avoid_danger_2 = game_state["avoid_danger"][0]
+        #avoid_danger_1 consider dangers coming from all opponents snakes that have length greater or equal to 
+        #avoid_danger_2 only consider length greater than mine
 
 
-            def avoid_trap():
-                my_head = get_my_head()
-                traps = [a for a in game_state["allowed_move_1"] if is_a_trap(my_head, a)]
-                game_state["log_traps"] = traps
-                for i in range(len(avoid_danger_1)):
-                    move, rank = avoid_danger_1[i]
-                    if move in traps:
-                        if rank > 5:
-                            avoid_danger_1[i] = (move, 5)
-                for i in range(len(avoid_danger_2)):
-                    move, rank = avoid_danger_2[i]
-                    if move in traps:
-                        if rank > 5:
-                            avoid_danger_2[i] = (move, 5)
+        def is_a_trap(head, p):
+            #p has only one allowed move
+            #besides head, p is blocked in two directions
+            #each direction is either a border
+            #or a cell of snake body that moves in the same direction
+            if not is_adjacent(head, p):
+                return False
+            
+            snakes = game_state["snakes"]
 
-            def avoid_dead_end():
-                connected = set([p for snake in game_state["snakes"] for p in path_connected(snake["body"][-1])])
-                dead_ends = [a for a in game_state["allowed_move_1"] if a not in connected]
-                game_state["log_dead_end"] = dead_ends
-                for i in range(len(avoid_danger_1)):
-                    move, rank = avoid_danger_1[i]
-                    if move in dead_ends:
-                        if rank > 6:
-                            avoid_danger_1[i] = (move, 6)
-                for i in range(len(avoid_danger_2)):
-                    move, rank = avoid_danger_2[i]
-                    if move in dead_ends:
-                        if rank > 6:
-                            avoid_danger_2[i] = (move, 6)
-
-            def case_3_condition():
-                #don't crawl on border
-                #whenever there is a chance, go back to off-border
-                #this is taken care of already by avoid danger default process
-                my_head = get_my_head()
-
-
-
-            def go_straight_when_chased():
-                #go straight when being chased
-                if not (
-                    1 == 1
-                    and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
-                    and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
-                ):
+            if on_border(p):
+                if not on_border(head):
                     return False
-
-                my_head = get_my_head()
-                a,b = [move for move, rank in avoid_danger_2 if rank == 99]
-                if (get_adjacent_dir(my_head, a) == get_adjacent_dir(my_head, b)
-                    or get_adjacent_dir(a, my_head) == get_adjacent_dir(my_head, b)):
+                for snake in snakes:
+                    for i,ic in enumerate(snake["body"]):
+                        if 1<= i < len(snake["body"])-1:
+                            if is_adjacent(ic, p) and not on_border(ic):
+                                if get_adjacent_dir(head, p) == get_adjacent_dir(ic, snake["body"][i-1]):
+                                    return True
+                return False
+            else:
+                #p has 4 adjacent cells
+                #one of it is current head
+                #two others are occupied
+                #the last one is the only direction to move
+                #this is a trap signal
+                abc = [q for q in adj_cells(p) if q != head]
+                c = [q for q in abc if q not in game_state["occupied_cells"][1]]
+                if len(c) != 1:
                     return False
-                my_head = get_my_head()
-                move_danger_rank_1 = [move for move, rank in avoid_danger_2 if rank == 1][0]
-                move_keep = [move for move, rank in avoid_danger_2 if rank == 99
-                    and get_adjacent_dir(my_head, move_danger_rank_1) != get_adjacent_dir(move, my_head)][0]
-                move_opposite = [move for move, rank in avoid_danger_2 if rank == 99
-                    and get_adjacent_dir(my_head, move_danger_rank_1) == get_adjacent_dir(move, my_head)][0]
-                if on_border(move_keep) and not on_border(move_opposite):
-                    suggest = move_opposite
-                else:
-                    suggest = move_keep
-                if suggest in game_state["allowed_move"]:
-                    game_state["next_head_coord"] = suggest
-                    return True
-
+                c = c[0]
+                for a in [q for q in abc if q != c]:
+                    for snake in snakes:
+                        for i,ic in enumerate(snake["body"]):
+                            if 1 <= i < len(snake["body"])-2:
+                                if ic == a:
+                                    if get_adjacent_dir(a, snake["body"][i-1]) == get_adjacent_dir(p, c):
+                                        return True
                 return False
 
-            def avoid_danger_default_process():
 
-                result = [move for move, rank in avoid_danger_1 if rank == 99]
-                if len(result) == 0:
-                    result = [move for move, rank in avoid_danger_2 if rank == 99]
-                if len(result) == 0:
-                    result = first_group(avoid_danger_2, reverse=True)
+        def avoid_trap():
+            my_head = get_my_head()
+            traps = [a for a in game_state["allowed_move_1"] if is_a_trap(my_head, a)]
+            game_state["log_traps"] = traps
+            for i in range(len(avoid_danger_1)):
+                move, rank = avoid_danger_1[i]
+                if move in traps:
+                    if rank > 5:
+                        avoid_danger_1[i] = (move, 5)
+            for i in range(len(avoid_danger_2)):
+                move, rank = avoid_danger_2[i]
+                if move in traps:
+                    if rank > 5:
+                        avoid_danger_2[i] = (move, 5)
 
-                #prefer off-border when killer near
-                def killer_near():
-                    my_head = get_my_head()
-                    return len([snake_head
-                        for snake in game_state["others"]
-                        for snake_head in [snake["body"][0]]
-                        if len(snake["body"]) >= len(game_state["me"]["body"])
-                            and path_distance_pq(my_head, snake_head) <= 4
-                        ]) != 0
+        def avoid_dead_end():
+            connected = set([p for snake in game_state["snakes"] for p in path_connected(snake["body"][-1])])
+            dead_ends = [a for a in game_state["allowed_move_1"] if a not in connected]
+            game_state["log_dead_end"] = dead_ends
+            for i in range(len(avoid_danger_1)):
+                move, rank = avoid_danger_1[i]
+                if move in dead_ends:
+                    if rank > 6:
+                        avoid_danger_1[i] = (move, 6)
+            for i in range(len(avoid_danger_2)):
+                move, rank = avoid_danger_2[i]
+                if move in dead_ends:
+                    if rank > 6:
+                        avoid_danger_2[i] = (move, 6)
 
-                if (killer_near()
-                        or len(game_state["find_food"]) == 0):
-                    result = [(move, 1 if on_border(move) else 0) for move in result]
-                    result = first_group(result, reverse=False)
-                result = [move for move in result if move in game_state["allowed_move"]]
-                if len(result) != 0:
-                    if game_state["next_head_coord"] not in result:
-                        game_state["next_head_coord"] = result[0]
-
-
-            if go_straight_when_chased(): return
-
-            #more special cases here:
+        def case_3_condition():
+            #don't crawl on border
+            #whenever there is a chance, go back to off-border
+            #this is taken care of already by avoid danger default process
+            my_head = get_my_head()
 
 
-            #avoid_trap function modifies avoid_danger suggest
-            avoid_trap()
-            avoid_dead_end()
 
-            #avoid danger default process
-            avoid_danger_default_process()
+        def go_straight_when_chased():
+            #go straight when being chased
+            if not (
+                1 == 1
+                and len([move for move, rank in avoid_danger_2 if rank == 99]) == 2
+                and len([move for move, rank in avoid_danger_2 if rank == 1]) == 1
+            ):
+                return False
+
+            my_head = get_my_head()
+            a,b = [move for move, rank in avoid_danger_2 if rank == 99]
+            if (get_adjacent_dir(my_head, a) == get_adjacent_dir(my_head, b)
+                or get_adjacent_dir(a, my_head) == get_adjacent_dir(my_head, b)):
+                return False
+            my_head = get_my_head()
+            move_danger_rank_1 = [move for move, rank in avoid_danger_2 if rank == 1][0]
+            move_keep = [move for move, rank in avoid_danger_2 if rank == 99
+                and get_adjacent_dir(my_head, move_danger_rank_1) != get_adjacent_dir(move, my_head)][0]
+            move_opposite = [move for move, rank in avoid_danger_2 if rank == 99
+                and get_adjacent_dir(my_head, move_danger_rank_1) == get_adjacent_dir(move, my_head)][0]
+            if on_border(move_keep) and not on_border(move_opposite):
+                suggest = move_opposite
+            else:
+                suggest = move_keep
+            if suggest in game_state["allowed_move"]:
+                game_state["next_head_coord"] = suggest
+                return True
+
+            return False
+
+        def avoid_danger_default_process():
+
+            result = [move for move, rank in avoid_danger_1 if rank == 99]
+            if len(result) == 0:
+                result = [move for move, rank in avoid_danger_2 if rank == 99]
+            if len(result) == 0:
+                result = first_group(avoid_danger_2, reverse=True)
+
+            #prefer off-border when killer near
+            def killer_near():
+                my_head = get_my_head()
+                return len([snake_head
+                    for snake in game_state["others"]
+                    for snake_head in [snake["body"][0]]
+                    if len(snake["body"]) >= len(game_state["me"]["body"])
+                        and path_distance_pq(my_head, snake_head) <= 4
+                    ]) != 0
+
+            if (killer_near()
+                    or len(game_state["find_food"]) == 0):
+                result = [(move, 1 if on_border(move) else 0) for move in result]
+                result = first_group(result, reverse=False)
+            result = [move for move in result if move in game_state["allowed_move"]]
+            if len(result) != 0:
+                if game_state["next_head_coord"] not in result:
+                    game_state["next_head_coord"] = result[0]
+
+
+        if go_straight_when_chased(): return
+
+        #more special cases here:
+
+
+        #avoid_trap function modifies avoid_danger suggest
+        avoid_trap()
+        avoid_dead_end()
+
+        #avoid danger default process
+        avoid_danger_default_process()
+
 
     def path_distance_pq(p, q):
         occuppied = game_state["occupied_cells"][0]
@@ -552,31 +555,37 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def chasing_my_tail():
         my_body = game_state["me"]["body"]
+        my_head = my_body[0]
+        my_neck = my_body[1]
         result = shortest_path_move(my_body[0], my_body[-1])
+        result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
+        result = sorted(result)
+        result = [move for rank, move in result]
         return result
 
-    def chasing_tail():
-        #this is only used in 1v1 case
+    def chasing_other_tail(snake):
         my_body = game_state["me"]["body"]
         my_head = my_body[0]
         my_neck = my_body[1]
-        my_tail = my_body[-1]
-        result = shortest_path_move(my_head, my_tail)
-
-        snake = game_state["others"][0]
         snake_body = snake["body"]
         snake_tail = snake_body[-1]
         target = snake_tail
         tail_next = [p for p in adj_cells(snake_tail) if p not in my_body and p not in snake_body]
         if len(tail_next) != 0:
             target = tail_next[0]
-        if len(result) == 0:
-            result = shortest_path_move(my_head, target)
-        #prefer keep direction
+        result = shortest_path_move(my_head, target)
         result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
         result = sorted(result)
         result = [move for rank, move in result]
         return result
+
+    def chasing_tail():
+        #this is only used in 1v1 case
+        result_me = chasing_my_tail()
+        result_other = chasing_other_tail(game_state["others"][0])
+        if len(result_other) != 0:
+            return result_other
+        return result_me
 
     def best_choice():
 
