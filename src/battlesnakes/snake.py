@@ -348,8 +348,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if not is_adjacent(head, p):
             return False
         
-        board = game_state["lean_board"]
-        snakes = board["snakes"]
+        snakes = game_state["snakes"]
 
         if on_border(p):
             if not on_border(head):
@@ -406,8 +405,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                             avoid_danger_2[i] = (move, 5)
 
             def avoid_dead_end():
-                board = lean_board()
-                connected = set([p for snake in board["snakes"] for p in path_connected(snake["body"][-1])])
+                connected = set([p for snake in game_state["snakes"] for p in path_connected(snake["body"][-1])])
                 dead_ends = [a for a in game_state["allowed_move_1"] if a not in connected]
                 game_state["log_dead_end"] = dead_ends
                 for i in range(len(avoid_danger_1)):
