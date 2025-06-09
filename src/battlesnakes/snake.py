@@ -724,9 +724,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
             "me": result_me,
             "other": result_other,
         }
-        if len(result_other) != 0:
-            return result_other
-        return result_me
+        if len(result_me) != 0:
+            return result_me
+        return result_other
 
 
 #############################################
