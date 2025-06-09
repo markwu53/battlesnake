@@ -487,9 +487,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
             result = shortest_path_move(my_body[0], target)
             if len(result) == 0:
                 return
-            result = [(0 if get_adjacent_dir(my_body[0], move) == get_adjacent_dir(my_body[1], my_body[0]) else 1, move) for move in result]
-            result = sorted(result)
-            result = [move for rank, move in result]
+            if game_state["turn"] > 3:
+                result = [(0 if get_adjacent_dir(my_body[0], move) == get_adjacent_dir(my_body[1], my_body[0]) else 1, move) for move in result]
+                result = sorted(result)
+                result = [move for rank, move in result]
             game_state["find_food"].append(result)
 
         if find_food_condition():
