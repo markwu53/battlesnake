@@ -355,10 +355,12 @@ def move(game_state: typing.Dict) -> typing.Dict:
         elif len(game_state["board"]["snakes"]) ==2:
             #1v1 mode
             #game_state["next_head_coord"] = game_state["routine_move"]
-            game_state["next_head_coord"] = go_straight()
-            result = chasing_tail()
-            if len(result) != 0:
-                game_state["next_head_coord"] = result[0]
+            if len(game_state["me"]["body"]) <= 20:
+                game_state["next_head_coord"] = go_straight()
+            else:
+                result = chasing_tail()
+                if len(result) != 0:
+                    game_state["next_head_coord"] = result[0]
         else:
             #self
             game_state["next_head_coord"] = game_state["routine_move"]
