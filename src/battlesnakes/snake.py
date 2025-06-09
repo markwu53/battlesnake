@@ -232,7 +232,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_body[1], my_head) else 1, move) for move in result]
                 result = sorted(result)
                 result = [move for rank, move in result]
-            game_state["find_food"].append(result)
+            game_state["find_food"].append({"target": target, "move": result})
 
         game_state["find_food"] = []
 
@@ -382,10 +382,22 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         if len(game_state["find_food"]) != 0:
             suggest = game_state["find_food"][0]
-            if len(suggest) != 0:
-                food = suggest[0]
-                if food in game_state["allowed_move"]:
-                    game_state["next_head_coord"] = food
+            target = suggest["target"]
+            move = suggest["move"]
+            if (
+                len(game_state["others"]) != 1
+                or (1==1
+                    and len(game_state["me"]["body"]) >= len(game_state["others"][0]["body"])+5
+                    and len(game_state["me"]["body"]) >= 30
+                    and path_distance_pq(get_my_head(), target)+path_distance_pq(target, get_my_tail())
+                    <= path_distance_pq(get_my_head(), get_my_tail())+5
+                    )
+                ):
+                if len(move) != 0:
+                    move = move[0]
+                    food = suggest[0]
+                    if food in game_state["allowed_move"]:
+                        game_state["next_head_coord"] = food
 
         #do not check off-border anymore
         #instead let attractor boxes move the snake off-border
