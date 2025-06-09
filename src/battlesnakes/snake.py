@@ -390,9 +390,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     if move in game_state["allowed_move"]:
                         game_state["next_head_coord"] = move
             else:
-                if not (1==1
-                    and len(game_state["me"]["body"]) >= len(game_state["others"][0]["body"])+5
-                    and len(game_state["me"]["body"]) >= 30
+                if not (1==0
+                    or len(game_state["me"]["body"]) >= len(game_state["others"][0]["body"])+5
+                    or len(game_state["me"]["body"]) >= 30
                 ):
                     if len(move) != 0:
                         move = move[0]
