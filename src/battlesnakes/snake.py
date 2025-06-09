@@ -438,7 +438,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     #and any([on_border(p) for p in adj_cells(snake_body[0])])
                 ):
                     connected = path_connected(my_body[0])
-                    target = [p for p in adj_cells(snake_body[0]) and p in connected]
+                    target = [p for p in adj_cells(snake_body[0]) if p in connected]
                     moves = shortest_path_move(my_body[0], target)
                     game_state["log_1v1_try_kill"] = moves
                     moves = [move for move in moves if move in game_state["allowed_move"]]
