@@ -482,13 +482,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
             for i in range(len(avoid_danger_1)):
                 move, rank = avoid_danger_1[i]
                 if move in traps:
-                    if rank > 5:
-                        avoid_danger_1[i] = (move, 5)
+                    if rank > 10:
+                        avoid_danger_1[i] = (move, 10)
             for i in range(len(avoid_danger_2)):
                 move, rank = avoid_danger_2[i]
                 if move in traps:
-                    if rank > 5:
-                        avoid_danger_2[i] = (move, 5)
+                    if rank > 10:
+                        avoid_danger_2[i] = (move, 10)
 
         def avoid_dead_end():
             connected = set([p for snake in game_state["snakes"] for p in path_connected(snake["body"][-1])])
