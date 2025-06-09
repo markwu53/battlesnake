@@ -384,19 +384,27 @@ def move(game_state: typing.Dict) -> typing.Dict:
             suggest = game_state["find_food"][0]
             target = suggest["target"]
             move = suggest["move"]
-            if (
-                len(game_state["others"]) != 1
-                or (1==1
-                    and len(game_state["me"]["body"]) >= len(game_state["others"][0]["body"])+5
-                    and len(game_state["me"]["body"]) >= 30
-                    and path_distance_pq(get_my_head(), target)+path_distance_pq(target, get_my_tail())
-                    <= path_distance_pq(get_my_head(), get_my_tail())+5
-                    )
-                ):
+            if len(game_state["others"]) != 1:
                 if len(move) != 0:
                     move = move[0]
                     if move in game_state["allowed_move"]:
                         game_state["next_head_coord"] = move
+            else:
+                if not (1==1
+                    and len(game_state["me"]["body"]) >= len(game_state["others"][0]["body"])+5
+                    and len(game_state["me"]["body"]) >= 30
+                ):
+                    if len(move) != 0:
+                        move = move[0]
+                        if move in game_state["allowed_move"]:
+                            game_state["next_head_coord"] = move
+                else:
+                    if (path_distance_pq(get_my_head(), target)+path_distance_pq(target, get_my_tail())
+                            <= path_distance_pq(get_my_head(), get_my_tail())+5):
+                        if len(move) != 0:
+                            move = move[0]
+                            if move in game_state["allowed_move"]:
+                                game_state["next_head_coord"] = move
 
         #do not check off-border anymore
         #instead let attractor boxes move the snake off-border
