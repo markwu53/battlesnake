@@ -439,11 +439,12 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 ):
                     connected = path_connected(my_body[0])
                     target = [p for p in adj_cells(snake_body[0]) if p in connected]
-                    moves = shortest_path_move(my_body[0], target)
-                    game_state["log_1v1_try_kill"] = moves
-                    moves = [move for move in moves if move in game_state["allowed_move"]]
-                    if len(moves) > 0:
-                        game_state["next_head_coord"] = moves[0]
+                    if len(target) > 0:
+                        moves = shortest_path_move(my_body[0], target[0])
+                        game_state["log_1v1_try_kill"] = moves
+                        moves = [move for move in moves if move in game_state["allowed_move"]]
+                        if len(moves) > 0:
+                            game_state["next_head_coord"] = moves[0]
 
 
     def best_choice_avoid_danger():
