@@ -485,6 +485,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             _, target = food_target[0]
             my_body = get_coord(game_state["you"]["body"])
             result = shortest_path_move(my_body[0], target)
+            if len(result) == 0:
+                return
             result = [(0 if get_adjacent_dir(my_body[0], move) == get_adjacent_dir(my_body[1], my_body[0]) else 1, move) for move in result]
             result = sorted(result)
             result = [move for rank, move in result]
@@ -799,6 +801,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return (x0+x, y0+y)
 
     def shortest_path_move(p, q):
+        if is_adjacent(p, q):
+            return [q]
         if q in path_connected(p):
             dist = path_distance_pq(p, q)
             layers = path_connected_layers(p)
