@@ -423,6 +423,19 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if game_state["next_head_coord"] not in result:
                     game_state["next_head_coord"] = result[0]
 
+        if len(game_state["other"]) == 1:
+            #1v1
+            if game_state["me"]["health"] >= 50:
+                my_body = game_state["me"]["body"]
+                snake_body = game_state["other"][0]["body"]
+                if len(my_body) >= len(snake_body)+3:
+                    if path_distance_pq(my_body[0], snake_body[0]) <= 6:
+                        if any([on_border(p) for p in adj_cells(snake_body[0])]):
+                            moves = shortest_path_move(my_body[0], snake_body[0])
+                            moves = [move for move in moves if move in game_state["allowed_move"]]
+                            if len(moves) > 0:
+                                game_state["next_head_coord"] = moves[0]
+
 
     def best_choice_avoid_danger():
 
