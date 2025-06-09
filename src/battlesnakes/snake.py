@@ -714,10 +714,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         return distance_pq(p1, p2) == 1
 
     def get_my_head() -> typing.Tuple:
-        return game_state["lean_board"]["me"]["body"][0]
+        return game_state["me"]["body"][0]
 
     def get_my_tail() -> typing.Tuple:
-        return game_state["lean_board"]["me"]["body"][-1]
+        return game_state["me"]["body"][-1]
 
     def get_coord(items: typing.List) -> typing.List:
         return [(c["x"], c["y"]) for c in items]
