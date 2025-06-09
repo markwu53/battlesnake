@@ -436,6 +436,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     #and any([on_border(p) for p in adj_cells(snake_body[0])])
                 ):
                     moves = shortest_path_move(my_body[0], snake_body[0])
+                    game_state["log_1v1_try_kill"] = moves
                     moves = [move for move in moves if move in game_state["allowed_move"]]
                     if len(moves) > 0:
                         game_state["next_head_coord"] = moves[0]
@@ -620,6 +621,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         log_target_kill_pos = game_state.get("target_kill_position", [])
         log_entered_trap = game_state.get("entered_trap", "")
         log_chasing_tail = game_state.get("chasing_tail", {})
+        log_1v1_try_kill = game_state.get("log_1v1_try_kill", [])
 
         log_board = {
             "id": game_state["game"]["id"],
@@ -651,6 +653,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             f"trap: {log_traps}",
             f"dead_end: {log_dead_end}",
             f"chasing_tail: {log_chasing_tail}",
+            f"log_1v1_try_kill: {log_1v1_try_kill}",
             log_time_diff,
         ])
 
