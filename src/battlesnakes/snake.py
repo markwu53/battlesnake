@@ -355,8 +355,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
         elif len(game_state["board"]["snakes"]) ==2:
             #1v1 mode
             #game_state["next_head_coord"] = game_state["routine_move"]
+            game_state["next_head_coord"] = go_straight()
             if len(game_state["me"]["body"]) <= 10:
-                game_state["next_head_coord"] = go_straight()
+                pass
             else:
                 result = chasing_tail()
                 if len(result) != 0:
@@ -425,6 +426,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if game_state["next_head_coord"] not in result:
                     game_state["next_head_coord"] = result[0]
 
+        #go to kill
         if len(game_state["others"]) == 1:
             #1v1
             if game_state["me"]["health"] >= 50:
@@ -435,7 +437,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     #and path_distance_pq(my_body[0], snake_body[0]) <= 6
                     #and any([on_border(p) for p in adj_cells(snake_body[0])])
                 ):
-                    moves = shortest_path_move(my_body[0], snake_body[0])
+                    connected = path_connected(my_body[0])
+                    target = [p for p in adj_cells(snake_body[0]) and p in connected]
+                    moves = shortest_path_move(my_body[0], target)
                     game_state["log_1v1_try_kill"] = moves
                     moves = [move for move in moves if move in game_state["allowed_move"]]
                     if len(moves) > 0:
