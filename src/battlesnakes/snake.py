@@ -685,9 +685,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         my_head = my_body[0]
         my_neck = my_body[1]
         result = shortest_path_move(my_body[0], my_body[-1])
-        result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
-        result = sorted(result)
-        result = [move for rank, move in result]
+        if game_state["turn"] >= 3:
+            result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
+            result = sorted(result)
+            result = [move for rank, move in result]
         return result
 
     def chasing_other_tail(snake):
@@ -701,9 +702,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if len(tail_next) != 0:
             target = tail_next[0]
         result = shortest_path_move(my_head, target)
-        result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
-        result = sorted(result)
-        result = [move for rank, move in result]
+        if game_state["turn"] >= 3:
+            result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
+            result = sorted(result)
+            result = [move for rank, move in result]
         return result
 
     def chasing_tail():
