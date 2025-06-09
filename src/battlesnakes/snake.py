@@ -842,6 +842,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #routine move always exists and set as default
         if len(game_state["board"]["snakes"]) >=3:
             game_state["next_head_coord"] = go_straight()
+            if len(game_state["you"]["body"]) >= 15:
+                result = chasing_my_tail()
+                if len(result) != 0:
+                    game_state["next_head_coord"] = result[0]
         elif len(game_state["board"]["snakes"]) ==2:
             #1v1 mode
             #game_state["next_head_coord"] = game_state["routine_move"]
