@@ -339,7 +339,72 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         #suggest = [p for p in adj_cells(get_my_head()) if on_border(p)]
         game_state["try_kill"].append(suggest)
-       
+
+
+    def best_choice():
+
+        #lower priority first, higher priority will override lower priority
+
+        #routine move always exists and set as default
+        if len(game_state["board"]["snakes"]) >=3:
+            game_state["next_head_coord"] = go_straight()
+            if len(game_state["you"]["body"]) >= 15:
+                result = chasing_my_tail()
+                if len(result) != 0:
+                    game_state["next_head_coord"] = result[0]
+        elif len(game_state["board"]["snakes"]) ==2:
+            #1v1 mode
+            #game_state["next_head_coord"] = game_state["routine_move"]
+            game_state["next_head_coord"] = go_straight()
+            result = chasing_tail()
+            if len(result) != 0:
+                game_state["next_head_coord"] = result[0]
+        else:
+            #self
+            game_state["next_head_coord"] = game_state["routine_move"]
+            result = chasing_my_tail()
+            if len(result) != 0:
+                game_state["next_head_coord"] = result[0]
+
+
+        if len(game_state["allowed_move"]) == 0:
+            #most strict allowed move empty
+            #immediate allowed move may still have some
+            if len(game_state["allowed_move_1"]) != 0:
+                #use the first of the allowed move
+                game_state["next_head_coord"] = game_state["allowed_move_1"][0]
+            return
+
+        #set to the first of the allowed moves, then let other considerations override it
+
+        if game_state["next_head_coord"] not in game_state["allowed_move"]:
+            game_state["next_head_coord"] = game_state["allowed_move"][0]
+
+        if len(game_state["find_food"]) != 0:
+            suggest = game_state["find_food"][0]
+            if len(suggest) != 0:
+                food = suggest[0]
+                if food in game_state["allowed_move"]:
+                    game_state["next_head_coord"] = food
+
+        #do not check off-border anymore
+        #instead let attractor boxes move the snake off-border
+
+        #new avoid danger
+        best_choice_avoid_danger()
+
+        #try kill
+        if len(game_state["try_kill"]) != 0:
+            #try kill is activated
+            result = game_state["try_kill"][0]
+
+            #no danger in 3 steps
+            result = [move for move in result if move in game_state["allowed_move"]]
+            if len(result) != 0:
+                if game_state["next_head_coord"] not in result:
+                    game_state["next_head_coord"] = result[0]
+
+
     def best_choice_avoid_danger():
 
         if len(game_state["avoid_danger"]) == 0:
@@ -500,6 +565,57 @@ def move(game_state: typing.Dict) -> typing.Dict:
         avoid_danger_default_process()
 
 
+    def logging():
+
+        #logging
+        log_move = game_state["next_move"]
+        log_routine_move = game_state["routine_move"]
+        log_allowed_move = game_state["allowed_move"]
+        log_avoid_danger = game_state["avoid_danger"]
+        log_time_diff = game_state["end_time"] - game_state["start_time"]
+        log_time_diff = f"time: {log_time_diff:.3f}s"
+        log_find_food = game_state["find_food"]
+        log_try_kill = game_state["try_kill"]
+        log_target_kill_pos = game_state.get("target_kill_position", [])
+        log_entered_trap = game_state.get("entered_trap", "")
+        log_chasing_tail = game_state.get("chasing_tail", {})
+
+        log_board = {
+            "id": game_state["game"]["id"],
+            "turn": game_state["turn"],
+            "me": {
+                "name": game_state["me"]["name"],
+                "length": len(game_state["me"]["body"]),
+                "head": game_state["me"]["body"][0],
+                "health": game_state["me"]["health"],
+            },
+            "others": [ {
+                "name": snake["name"],
+                "length": len(snake["body"]),
+                "head": snake["body"][0],
+                "health": snake["health"],
+            } for snake in game_state["others"] ],
+        } 
+        log_traps = game_state.get("log_traps", [])
+        log_dead_end = game_state.get("log_dead_end", [])
+
+        log_text = ", ".join([
+            f"board: {log_board}",
+            f"move: {log_move}",
+            f"routine_move: {log_routine_move}",
+            f"avoid_danger: {log_avoid_danger}",
+            f"allowed_move: {log_allowed_move}",
+            f"find_food: {log_find_food}",
+            f"try_kill: {log_try_kill}, target: {log_target_kill_pos}, entered_trap: {log_entered_trap}",
+            f"trap: {log_traps}",
+            f"dead_end: {log_dead_end}",
+            f"chasing_tail: {log_chasing_tail}",
+            log_time_diff,
+        ])
+
+        print(log_text)
+
+
     def path_distance_pq(p, q):
         occuppied = game_state["occupied_cells"][0]
         connected = [set([p])]
@@ -583,72 +699,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #this is only used in 1v1 case
         result_me = chasing_my_tail()
         result_other = chasing_other_tail(game_state["others"][0])
+        game_state["chasing_tail"] = {
+            "me": result_me,
+            "other": result_other,
+        }
         if len(result_other) != 0:
             return result_other
         return result_me
-
-    def best_choice():
-
-        #lower priority first, higher priority will override lower priority
-
-        #routine move always exists and set as default
-        if len(game_state["board"]["snakes"]) >=3:
-            game_state["next_head_coord"] = go_straight()
-            if len(game_state["you"]["body"]) >= 15:
-                result = chasing_my_tail()
-                if len(result) != 0:
-                    game_state["next_head_coord"] = result[0]
-        elif len(game_state["board"]["snakes"]) ==2:
-            #1v1 mode
-            #game_state["next_head_coord"] = game_state["routine_move"]
-            game_state["next_head_coord"] = go_straight()
-            result = chasing_tail()
-            if len(result) != 0:
-                game_state["next_head_coord"] = result[0]
-        else:
-            #self
-            game_state["next_head_coord"] = game_state["routine_move"]
-            result = chasing_my_tail()
-            if len(result) != 0:
-                game_state["next_head_coord"] = result[0]
-
-
-        if len(game_state["allowed_move"]) == 0:
-            #most strict allowed move empty
-            #immediate allowed move may still have some
-            if len(game_state["allowed_move_1"]) != 0:
-                #use the first of the allowed move
-                game_state["next_head_coord"] = game_state["allowed_move_1"][0]
-            return
-
-        #set to the first of the allowed moves, then let other considerations override it
-
-        if game_state["next_head_coord"] not in game_state["allowed_move"]:
-            game_state["next_head_coord"] = game_state["allowed_move"][0]
-
-        if len(game_state["find_food"]) != 0:
-            suggest = game_state["find_food"][0]
-            if len(suggest) != 0:
-                food = suggest[0]
-                if food in game_state["allowed_move"]:
-                    game_state["next_head_coord"] = food
-
-        #do not check off-border anymore
-        #instead let attractor boxes move the snake off-border
-
-        #new avoid danger
-        best_choice_avoid_danger()
-
-        #try kill
-        if len(game_state["try_kill"]) != 0:
-            #try kill is activated
-            result = game_state["try_kill"][0]
-
-            #no danger in 3 steps
-            result = [move for move in result if move in game_state["allowed_move"]]
-            if len(result) != 0:
-                if game_state["next_head_coord"] not in result:
-                    game_state["next_head_coord"] = result[0]
 
 
 #############################################
@@ -728,54 +785,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def get_coord(items: typing.List) -> typing.List:
         return [(c["x"], c["y"]) for c in items]
-
-    def logging():
-
-        #logging
-        log_move = game_state["next_move"]
-        log_routine_move = game_state["routine_move"]
-        log_allowed_move = game_state["allowed_move"]
-        log_avoid_danger = game_state["avoid_danger"]
-        log_time_diff = game_state["end_time"] - game_state["start_time"]
-        log_time_diff = f"time: {log_time_diff:.3f}s"
-        log_find_food = game_state["find_food"]
-        log_try_kill = game_state["try_kill"]
-        log_target_kill_pos = game_state.get("target_kill_position", [])
-        log_entered_trap = game_state.get("entered_trap", "")
-
-        log_board = {
-            "id": game_state["game"]["id"],
-            "turn": game_state["turn"],
-            "me": {
-                "name": game_state["me"]["name"],
-                "length": len(game_state["me"]["body"]),
-                "head": game_state["me"]["body"][0],
-                "health": game_state["me"]["health"],
-            },
-            "others": [ {
-                "name": snake["name"],
-                "length": len(snake["body"]),
-                "head": snake["body"][0],
-                "health": snake["health"],
-            } for snake in game_state["others"] ],
-        } 
-        log_traps = game_state.get("log_traps", [])
-        log_dead_end = game_state.get("log_dead_end", [])
-
-        log_text = ", ".join([
-            f"board: {log_board}",
-            f"move: {log_move}",
-            f"routine_move: {log_routine_move}",
-            f"avoid_danger: {log_avoid_danger}",
-            f"allowed_move: {log_allowed_move}",
-            f"find_food: {log_find_food}",
-            f"try_kill: {log_try_kill}, target: {log_target_kill_pos}, entered_trap: {log_entered_trap}",
-            f"trap: {log_traps}",
-            f"dead_end: {log_dead_end}",
-            log_time_diff,
-        ])
-
-        print(log_text)
 
 #############################################
 # end of utility functions
