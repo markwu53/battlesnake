@@ -15,28 +15,6 @@ def info() -> typing.Dict:
         "tail": "flake",  # TODO: Choose tail
     }
 
-def get_up_coord(head_coord: dict[str, int]) -> dict[str, int]:
-    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
-        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
-
-    return {"x": head_coord["x"], "y": head_coord["y"] + 1}
-
-def get_direction_coord(direction: str, head_coord: dict[str, int]) -> dict[str, int]:
-    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
-        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
-
-    match direction:
-        case "up":
-            return {"x": head_coord["x"], "y": head_coord["y"] + 1}
-        case "down":
-            return {"x": head_coord["x"], "y": head_coord["y"] - 1}
-        case "left":
-            return {"x": head_coord["x"] - 1, "y": head_coord["y"]}
-        case "right":
-            return {"x": head_coord["x"] + 1, "y": head_coord["y"]}
-
-    raise ValueError(f"invalid direction: {direction}")
-
 # start is called when your Battlesnake begins a game
 def start(game_state: typing.Dict):
     print("GAME START")
@@ -55,18 +33,23 @@ def move(game_state: typing.Dict) -> typing.Dict:
         game_state["start_time"] = time.time()
 
         #do this first
-        save_lean_board()
-        save_occupied_cells()
+        initialization()
 
         #gather information, provide suggestions
         allowed_move()
         routine_move()
-        avoid_danger()
+        collision_ranking()
+        trap_ranking()
+        dead_end_ranking()
+        killer_near_watching()
+        crowded_ranking()
+        food_ranking()
         find_food()
         try_kill()
 
         #combine information and suggestions and make a decision
-        best_choice()
+        #best_choice()
+        decision_making()
 
         game_state["end_time"] = time.time()
 
@@ -75,7 +58,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
         logging()
 
 
-    def save_lean_board():
+    def initialization():
+
+        #lean board
         me = game_state["you"]
         me = {
             "name": me["name"],
@@ -95,48 +80,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
         game_state["snakes"] = [me, *others]
         game_state["food"] = get_coord(game_state["board"]["food"])
 
-    def save_occupied_cells():
-
-        def occupied_cells(step):
-            #not including head
-            #assuming no die
-            #assuming no eating food
-            #if eating food it will be more
-            snakes = game_state["snakes"]
-            sbody = []
-            for s in snakes:
-                body = s["body"]
-                if s["health"] == 100:
-                    #eat food, tail will not move in the next step
-                    body = body + [body[-1]]
-                sbody.append(body[:-step])
-            cells = [c for s in sbody for c in s]
-            return cells
-
+        #estimated 5-step occupied cells
         game_state["occupied_cells"] = [
             occupied_cells(step)
             for step in [1,2,3,4,5]
         ]
 
+
     def allowed_move():
-
-        def permissible_nstep(head, n):
-            paths = [[head]]
-            for step in range(1, n+1):
-                occupied = game_state["occupied_cells"][step-1]
-                paths = [ npath 
-                        for path in paths 
-                        for npath in [path+[p] for p in adj_cells(path[-1]) 
-                                if p not in occupied and p not in path] ]
-            result = list(set([path[1] for path in paths]))
-            return result
-
-
-        head = get_my_head()
-        allowed = permissible_nstep(head, 5)
-        allowed_1 = permissible_nstep(head, 1)
+        occupied = game_state["occupied_cells"][0]
+        allowed = [p for p in adj_cells(game_state["me"]["body"][0]) if p not in occupied]
         game_state["allowed_move"] = allowed
-        game_state["allowed_move_1"] = allowed_1
+        game_state["danger_ranking"] = {p:{} for p in allowed}
 
     def routine_move():
         #sophistacated routine move is not very useful now
@@ -145,8 +100,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         move = go_straight()
         game_state["routine_move"] = move
 
-    def avoid_danger():
-        game_state["avoid_danger"] = []
+    def collision_ranking():
+        game_state["danger_ranking"] = []
 
         max_step = 3
         if len(game_state["snakes"]) <=3:
@@ -169,7 +124,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
         my_snake = game_state["me"]
 
-        def danger_rank(apath, safer):
+        def collision_rank(apath, safer):
             length = len(apath)
             if apath[-1] in [
                 path[length-1] 
@@ -184,20 +139,29 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if length == max_step+1:
                 #no danger
                 return 99
-            return max([danger_rank(apath+[nhead], safer)
+            return max([collision_rank(apath+[nhead], safer)
                 for nhead in set([
                     path[length]
                     for path in my_snake["paths"]
                     if tuple(path[:length]) == tuple(apath)
                 ])])
         
-        game_state["avoid_danger"].append([
-            [(apath[1], danger_rank(list(apath), safer=True))
-                    for apath in set([tuple(path[:2]) for path in my_snake["paths"]])],
-            [(apath[1], danger_rank(list(apath), safer=False))
-                    for apath in set([tuple(path[:2]) for path in my_snake["paths"]])],
-        ])
+        collision_ranking_1 = [(apath[1], collision_rank(list(apath), safer=True))
+                    for apath in set([tuple(path[:2]) for path in my_snake["paths"]])]
+        collision_ranking_2 = [(apath[1], collision_rank(list(apath), safer=False))
+                    for apath in set([tuple(path[:2]) for path in my_snake["paths"]])]
 
+        for p,rank in collision_ranking_1:
+            game_state["danger_ranking"][p]["collision_1"] = rank
+        for p,rank in collision_ranking_2:
+            game_state["danger_ranking"][p]["collision_2"] = rank
+
+
+    def food_ranking():
+        game_state["food_ranking"] = [(p, 
+                 path_distance_pq(game_state["me"]["body"][0], p),
+                 [(path_distance_pq(snake["body"][0], p), len(snake["body"])) for snake in game_state["snakes"]],
+                 ) for p in game_state["food"]]
 
     def find_food():
 
@@ -215,8 +179,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             snakes = game_state["others"]
             snake_heads = [snake["body"][0] for snake in snakes]
             my_head = get_my_head()
-            food_target = game_state["food"]
-            food_target = [p for p in food_target 
+            food_target = [p for p in game_state["food"] 
                            if all([path_distance_pq(my_head, p) < path_distance_pq(snake_head, p) 
                                    for snake_head in snake_heads ])]
             if len(food_target) == 0:
@@ -235,9 +198,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
             game_state["find_food"].append({"target": target, "move": result})
 
         game_state["find_food"] = []
+        #if find_food_condition():
+        food_move()
 
-        if find_food_condition():
-            food_move()
 
     def try_kill():
         game_state["try_kill"] = []
@@ -340,6 +303,244 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #suggest = [p for p in adj_cells(get_my_head()) if on_border(p)]
         game_state["try_kill"].append(suggest)
 
+    def trap_ranking():
+
+        def is_a_trap(p):
+            #p has only one allowed move
+            #besides head, p is blocked in two directions
+            #each direction is either a border
+            #or a cell of snake body that moves in the same direction
+            snakes = game_state["snakes"]
+            head = game_state["me"]["body"][0]
+
+            if on_border(p):
+                if not on_border(head):
+                    return False
+                for snake in snakes:
+                    for i,ic in enumerate(snake["body"]):
+                        if 1<= i < len(snake["body"])-1:
+                            if is_adjacent(ic, p) and not on_border(ic):
+                                if get_adjacent_dir(head, p) == get_adjacent_dir(ic, snake["body"][i-1]):
+                                    return True
+                return False
+            else:
+                #p has 4 adjacent cells
+                #one of it is current head
+                #two others are occupied
+                #the last one is the only direction to move
+                #this is a trap signal
+                abc = [q for q in adj_cells(p) if q != head]
+                c = [q for q in abc if q not in game_state["occupied_cells"][1]]
+                if len(c) != 1:
+                    return False
+                c = c[0]
+                for a in [q for q in abc if q != c]:
+                    for snake in snakes:
+                        for i,ic in enumerate(snake["body"]):
+                            if 1 <= i < len(snake["body"])-2:
+                                if ic == a:
+                                    if get_adjacent_dir(a, snake["body"][i-1]) == get_adjacent_dir(p, c):
+                                        return True
+                return False
+
+        for p in game_state["allowed_move"]:
+            game_state["danger_ranking"][p]["trap"] = is_a_trap(p)
+
+    def dead_end_ranking():
+
+        def dead_end_rank(p):
+            connected = path_connected(p)
+            return len(connected)
+
+        for p in game_state["allowed_move"]:
+            game_state["danger_ranking"][p]["dead_end"] = dead_end_rank(p)
+
+    def killer_near_watching():
+        killers = [snake for snake in game_state["snakes"] if len(game_state["me"]["body"]) < len(snake["body"])]
+        killers = [(head, path_distance_pq(get_my_head(), head)) for snake in killers for head in [snake["body"][0]]]
+        game_state["killer_near"] = killers
+
+    def crowded_rank(p):
+        cells = [q 
+            for x in range(game_state["board"]["width"]) 
+            for y in range(game_state["board"]["height"]) 
+            for q in [(x,y)]
+            ]
+        layers = [[q for q in cells if distance_pq(p,q) == d] for d in range(21)]
+        layers = [layer for layer in layers if len(layer) != 0]
+        nlayers = [[p]]
+        for layer in layers[1:]:
+            nlayers.append(nlayers[-1]+layer)
+        elayers = [[q for q in layer if q not in game_state["occupied_cells"][0]] for layer in nlayers]
+        watching = [(len(a), len(b)) for a,b in zip(nlayers, elayers)]
+        return watching
+
+    def crowded_ranking():
+        game_state["crowded_ranking"] = crowded_rank(get_my_head())
+
+    def decision_making():
+        if len(game_state["snakes"]) != 1:
+            decision_1_v_n()
+        else:
+            decision_1_v_1()
+
+    def decision_1_v_n():
+        #4 aspects consideration
+        #allowed move - must satisfy
+        #danger rank
+        #   trap
+        #   dead end
+        #   off-border
+        #   being chased
+        #   crowd danger
+        #food rank
+        #kill oppotunities
+        #basic scheme:
+        #allowed --> routine -->avoid danger --> food --> kill oppo
+        #log the decision making process
+
+        #no allowed move - die on self
+        if len(game_state["allowed_move"]) == 0:
+            game_state["next_head_coord"] = game_state["me"]["body"][1]
+            return
+
+        #base
+        game_state["next_head_coord"] = game_state["allowed_move"][0]
+
+        #routine
+        move = game_state["routine_move"]
+        if move in game_state["allowed_move"]:
+            if move != game_state["next_head_coord"]:
+                game_state["decision_path"].append("routine")
+                game_state["next_head_coord"] = move
+        
+        #danger ranking always exists and not empty at this point
+        #and they are already compatible with allowed moves
+
+        def food_decision(passed_moves):
+            def food_move(target):
+                moves = shortest_path_move(get_my_head(), target)
+                moves = [move for move in moves if move in passed_moves]
+                if len(moves) != 0:
+                    off_border = [move for move in moves if not on_border(move)]
+                    if len(off_border) != 0:
+                        move = off_border[0]
+                    else:
+                        move = moves[0]
+                    if move != game_state["next_head_coord"]:
+                        game_state["decision_path"].append("food")
+                        game_state["next_head_coord"] = move
+
+            def get_food(target):
+                if not on_border(target):
+                    food_move(target)
+                else:
+                    #food on border
+                    if is_adjacent(get_my_head(), target):
+                        if all([d>6 for p, d in game_state["killer_near"]]):
+                            if target != game_state["next_head_coord"]:
+                                game_state["decision_path"].append("food")
+                                game_state["next_head_coord"] = target
+                    else:
+                        one_next = [p for p in adj_cells(target) if p not in game_state["occupied_cells"][0] and not on_border(p)]
+                        if len(one_next) != 0:
+                            food_move(one_next[0])
+                        else:
+                            food_move(target)
+
+            food_near = [food for food in game_state["food_ranking"] for p,d,ds in [food] if d <= 10]
+            my_len = len(game_state["me"]["body"])
+            food_good = [(p,d) for food in food_near for p,d,ds in [food] 
+                         if all([d<de if my_len <= size else d<=de for de,size in ds])]
+            if len(food_good) != 0:
+                result = first_group(food_good)
+                get_food(result[0])
+
+        def try_kill_decision():
+            result = game_state["try_kill"][0]
+
+            #no danger in 3 steps
+            result = [move for move in result if move in game_state["allowed_move"]]
+            if len(result) != 0:
+                if game_state["next_head_coord"] not in result:
+                    game_state["decision_path"].append("try_kill")
+                    game_state["next_head_coord"] = result[0]
+
+
+        def default_decision_path():
+
+            #happy_path_1
+            moves = [move 
+                    for move, ranking in game_state["danger_ranking"].items()
+                    if 1==1
+                    and ranking["collision_1"] == 99
+                    and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
+                    and not ranking["trap"]
+                    ]
+
+            if len(moves) != 0:
+                game_state["decision_path"].append("happy_path_1")
+                off_border = [p for p in moves if not on_border(p)]
+                if len(off_border) != 0:
+                    if game_state["next_head_coord"] not in off_border:
+                        game_state["decision_path"].append("off_border")
+                        game_state["next_head_coord"] = off_border[0]
+                else:
+                    if game_state["next_head_coord"] not in moves:
+                        game_state["decision_path"].append("on_border")
+                        game_state["next_head_coord"] = moves[0]
+
+                food_decision()
+                try_kill_decision()
+                return
+
+            #happy_path_2
+            moves = [move 
+                    for move, ranking in game_state["danger_ranking"].items()
+                    if 1==1
+                    and ranking["collision_2"] == 99
+                    and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
+                    and not ranking["trap"]
+                    ]
+
+            if len(moves) != 0:
+                game_state["decision_path"].append("happy_path_2")
+                off_border = [p for p in moves if not on_border(p)]
+                if len(off_border) != 0:
+                    if game_state["next_head_coord"] not in off_border:
+                        game_state["decision_path"].append("off_border")
+                        game_state["next_head_coord"] = off_border[0]
+                else:
+                    if game_state["next_head_coord"] not in moves:
+                        game_state["decision_path"].append("on_border")
+                        game_state["next_head_coord"] = moves[0]
+                return
+
+            #unhappy_path
+            #not taking dead_end and trap, take collision risk
+            moves = [move 
+                        for move, ranking in game_state["danger_ranking"].items()
+                        if (1==1
+                        and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
+                        and not ranking["trap"]
+                    ) ]
+            #let's try taking risk fast, if passed hopefully danger is dropped
+            if len(moves) != 0:
+                game_state["decision_path"].append("take_collision")
+                #remove on border
+                off_border = [(move, ranking) for move, ranking in moves if not on_border(move)]
+                if len(off_border) != 0:
+                    moves = [(move, ranking["collision_2"]) for move, ranking in off_border]
+                else:
+                    moves = [(move, ranking["collision_2"]) for move, ranking in moves]
+                moves = first_group(moves)
+                if game_state["next_head_coord"] not in moves:
+                    game_state["next_head_coord"] = moves[0]
+                return
+
+
+    def decision_1_v_1():
+        decision_1_v_n()
 
     def best_choice():
 
@@ -449,10 +650,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def best_choice_avoid_danger():
 
-        if len(game_state["avoid_danger"]) == 0:
+        if len(game_state["danger_ranking"]) == 0:
             return
 
-        avoid_danger_1, avoid_danger_2 = game_state["avoid_danger"][0]
+        avoid_danger_1, avoid_danger_2 = game_state["danger_ranking"][0]
         #avoid_danger_1 consider dangers coming from all opponents snakes that have length greater or equal to 
         #avoid_danger_2 only consider length greater than mine
 
@@ -604,7 +805,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         #more special cases here:
 
 
-        #avoid_trap function modifies avoid_danger suggest
+        #avoid_trap function modifies danger_ranking suggest
         avoid_trap()
         avoid_dead_end()
 
@@ -618,15 +819,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
         log_move = game_state["next_move"]
         log_routine_move = game_state["routine_move"]
         log_allowed_move = game_state["allowed_move"]
-        log_avoid_danger = game_state["avoid_danger"]
+        log_avoid_danger = game_state["danger_ranking"]
         log_time_diff = game_state["end_time"] - game_state["start_time"]
         log_time_diff = f"time: {log_time_diff:.3f}s"
         log_find_food = game_state["find_food"]
         log_try_kill = game_state["try_kill"]
-        log_target_kill_pos = game_state.get("target_kill_position", [])
-        log_entered_trap = game_state.get("entered_trap", "")
-        log_chasing_tail = game_state.get("chasing_tail", {})
-        log_1v1_try_kill = game_state.get("log_1v1_try_kill", [])
 
         log_board = {
             "id": game_state["game"]["id"],
@@ -651,22 +848,38 @@ def move(game_state: typing.Dict) -> typing.Dict:
             f"board: {log_board}",
             f"move: {log_move}",
             f"routine_move: {log_routine_move}",
-            f"avoid_danger: {log_avoid_danger}",
+            f"danger_ranking: {log_avoid_danger}",
             f"allowed_move: {log_allowed_move}",
             f"find_food: {log_find_food}",
-            f"try_kill: {log_try_kill}, target: {log_target_kill_pos}, entered_trap: {log_entered_trap}",
             f"trap: {log_traps}",
             f"dead_end: {log_dead_end}",
-            f"chasing_tail: {log_chasing_tail}",
-            f"log_1v1_try_kill: {log_1v1_try_kill}",
             log_time_diff,
         ])
 
         print(log_text)
 
 
+    def occupied_cells(step):
+        #not including head
+        #assuming no die
+        #assuming no eating food
+        #if eating food it will be more
+        snakes = game_state["snakes"]
+        sbody = []
+        for s in snakes:
+            body = s["body"]
+            if s["health"] == 100:
+                #eat food, tail will not move in the next step
+                body = body + [body[-1]]
+            sbody.append(body[:-step])
+        cells = [c for s in sbody for c in s]
+        return cells
+
     def path_distance_pq(p, q):
         occuppied = game_state["occupied_cells"][0]
+        #remove q from occupied otherwise there is no path
+        occuppied = [p for p in occuppied if p != q]
+
         connected = [set([p])]
         layer = set([q for q in adj_cells(p) if q not in occuppied])
         while len(layer) != 0:

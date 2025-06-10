@@ -441,7 +441,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             if len(snakes) >= 2 and game_state["you"]["length"] < 20: return True
             if len(snakes) >= 3 and game_state["you"]["health"] < 60: return True
             if len(snakes) >= 2 and game_state["you"]["health"] < 40: return True
-            if len(snakes) == 1 and game_state["you"]["length"] < 40: return True
+            if len(snakes) == 1 and game_state["you"]["length"] < 25: return True
+            if len(snakes) == 1 and game_state["you"]["length"] < snakes[0]["length"]+5: return True
             if len(snakes) == 1 and game_state["you"]["health"] < 20: return True
             if len(snakes) == 0: return True
             return False
@@ -761,6 +762,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def path_distance_pq(p, q):
         occuppied = occupied_cells(1)
+        #remove q from occupied
+        occuppied = [p for p in occuppied if p != q]
         connected = [set([p])]
         layer = set([q for q in adj_cells(p) if q not in occuppied])
         while len(layer) != 0:
