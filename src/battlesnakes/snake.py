@@ -762,6 +762,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def path_distance_pq(p, q):
         occuppied = occupied_cells(1)
+        #remove q from occupied
+        occuppied = [p for p in occuppied if p != q]
         connected = [set([p])]
         layer = set([q for q in adj_cells(p) if q not in occuppied])
         while len(layer) != 0:
