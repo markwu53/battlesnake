@@ -482,8 +482,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 get_food(result[0])
 
         def try_kill_decision():
-            result = game_state["try_kill"][0]
+            result = game_state["try_kill"]
+            if len(result) == 0:
+                return
 
+            result = result[0]
             #no danger in 3 steps
             result = [move for move in result if move in game_state["allowed_move"]]
             if len(result) != 0:
