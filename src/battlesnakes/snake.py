@@ -563,6 +563,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     game_state["next_head_coord"] = moves[0]
                 return
 
+        default_decision_path()
+
 
     def decision_1_v_1():
         decision_1_v_n()
@@ -879,7 +881,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             f"find_food: {log_find_food}",
             f"trap: {log_traps}",
             f"dead_end: {log_dead_end}",
-            f"desicion_path: {log_decision_path}",
+            f"decision_path: {log_decision_path}",
             log_time_diff,
         ])
 
