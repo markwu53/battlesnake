@@ -439,6 +439,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             my_len = len(game_state["me"]["body"])
             good_food = [(p,d) for food in food_near for p,d,ds in [food] 
                          if all([d<de if my_len <= size else d<=de for de,size in ds])]
+            game_state["food_log"] = [len(game_state["food_ranking"]), len(food_near), len(good_food)]
             if len(good_food) != 0:
                 result = first_group(good_food)
                 get_food(result[0])
@@ -816,6 +817,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         log_time_diff = f"time: {log_time_diff:.3f}s"
         log_decision_path = game_state["decision_path"]
         log_food_decision = game_state.get("food_decision", [])
+        log_food = game_state.get("food_log", [])
 
         log_board = {
             "id": game_state["game"]["id"],
@@ -846,6 +848,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             f"dead_end: {log_dead_end}",
             f"food_decision: {log_food_decision}",
             f"decision_path: {log_decision_path}",
+            f"food_log: {log_food}",
             log_time_diff,
         ])
 
