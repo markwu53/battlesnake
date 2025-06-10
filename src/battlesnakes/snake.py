@@ -402,6 +402,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         game_state["crowded_ranking"] = crowded_rank(get_my_head())
 
     def decision_making():
+        game_state["decision_path"] = []
         if len(game_state["snakes"]) != 1:
             decision_1_v_n()
         else:
