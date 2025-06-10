@@ -515,7 +515,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         game_state["decision_path"].append("on_border")
                         game_state["next_head_coord"] = moves[0]
 
-                food_decision()
+                food_decision(moves)
                 try_kill_decision()
                 return
 
