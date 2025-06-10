@@ -123,7 +123,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         game_state["routine_move"] = move
 
     def collision_ranking():
-        game_state["danger_ranking"] = []
+        #game_state["danger_ranking"] is now a dict, initialized in allowed move
+        #game_state["danger_ranking"] = []
 
         max_step = 3
         if len(game_state["snakes"]) <=3:
