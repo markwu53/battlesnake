@@ -438,7 +438,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             food_near = [food for food in game_state["food_ranking"] for p,d,ds in [food] if d <= 10]
             my_len = len(game_state["me"]["body"])
             good_food = [(p,d) for food in food_near for p,d,ds in [food] 
-                         if all([d<de if my_len <= size else d<=de for de,size in ds])]
+                         if all([(d<de) if my_len <= size else (d<=de) for de,size in ds])]
             game_state["food_log"] = [len(game_state["food_ranking"]), len(food_near), len(good_food), food_near[:2]]
             if len(good_food) != 0:
                 result = first_group(good_food)
