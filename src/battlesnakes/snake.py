@@ -429,6 +429,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return
 
         #base
+        game_state["decision_path"].append("base")
         game_state["next_head_coord"] = game_state["allowed_move"][0]
 
         #routine
@@ -848,6 +849,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         log_time_diff = f"time: {log_time_diff:.3f}s"
         log_find_food = game_state["find_food"]
         log_try_kill = game_state["try_kill"]
+        log_decision_path = game_state["decision_path"]
 
         log_board = {
             "id": game_state["game"]["id"],
@@ -877,6 +879,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             f"find_food: {log_find_food}",
             f"trap: {log_traps}",
             f"dead_end: {log_dead_end}",
+            f"desicion_path: {log_decision_path}",
             log_time_diff,
         ])
 
