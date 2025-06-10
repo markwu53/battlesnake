@@ -182,7 +182,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
     def food_ranking():
         game_state["food_ranking"] = [(p, 
                  path_distance_pq(game_state["me"]["body"][0], p),
-                 [(path_distance_pq(snake["body"][0], p), len(snake["body"])) for snake in game_state["snakes"]],
+                 [(path_distance_pq(snake["body"][0], p), len(snake["body"])) for snake in game_state["others"]],
                  ) for p in game_state["food"]]
 
 
