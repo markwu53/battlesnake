@@ -66,7 +66,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
         killer_near_watching()
         crowded_ranking()
         food_ranking()
-        find_food()
         try_kill()
 
         #combine information and suggestions and make a decision
@@ -123,7 +122,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         game_state["routine_move"] = move
 
     def collision_ranking():
-        game_state["danger_ranking"] = []
+        #game_state["danger_ranking"] is now a dict, initialized in allowed move
+        #game_state["danger_ranking"] = []
 
         max_step = 3
         if len(game_state["snakes"]) <=3:
@@ -182,46 +182,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
     def food_ranking():
         game_state["food_ranking"] = [(p, 
                  path_distance_pq(game_state["me"]["body"][0], p),
-                 [(path_distance_pq(snake["body"][0], p), len(snake["body"])) for snake in game_state["snakes"]],
+                 [(path_distance_pq(snake["body"][0], p), len(snake["body"])) for snake in game_state["others"]],
                  ) for p in game_state["food"]]
-
-    def find_food():
-
-        def find_food_condition() -> bool:
-            snakes = game_state["others"]
-            if len(snakes) >= 2 and game_state["you"]["length"] < 20: return True
-            if len(snakes) >= 3 and game_state["you"]["health"] < 60: return True
-            if len(snakes) >= 2 and game_state["you"]["health"] < 40: return True
-            if len(snakes) == 1 and game_state["you"]["length"] < 40: return True
-            if len(snakes) == 1 and game_state["you"]["health"] < 20: return True
-            if len(snakes) == 0: return True
-            return False
-
-        def food_move():
-            snakes = game_state["others"]
-            snake_heads = [snake["body"][0] for snake in snakes]
-            my_head = get_my_head()
-            food_target = [p for p in game_state["food"] 
-                           if all([path_distance_pq(my_head, p) < path_distance_pq(snake_head, p) 
-                                   for snake_head in snake_heads ])]
-            if len(food_target) == 0:
-                return
-            food_target = sorted([(path_distance_pq(my_head, p), p) for p in food_target])
-            _, target = food_target[0]
-            my_body = game_state["me"]["body"]
-            result = shortest_path_move(my_head, target)
-            if len(result) == 0:
-                return
-            if game_state["turn"] > 3:
-                #assumption: before turn 3 the body is fold, no direction
-                result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_body[1], my_head) else 1, move) for move in result]
-                result = sorted(result)
-                result = [move for rank, move in result]
-            game_state["find_food"].append({"target": target, "move": result})
-
-        game_state["find_food"] = []
-        #if find_food_condition():
-        food_move()
 
 
     def try_kill():
@@ -401,6 +363,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         game_state["crowded_ranking"] = crowded_rank(get_my_head())
 
     def decision_making():
+        game_state["decision_path"] = []
         if len(game_state["snakes"]) != 1:
             decision_1_v_n()
         else:
@@ -427,6 +390,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             return
 
         #base
+        game_state["decision_path"].append("base")
         game_state["next_head_coord"] = game_state["allowed_move"][0]
 
         #routine
@@ -454,6 +418,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         game_state["next_head_coord"] = move
 
             def get_food(target):
+                game_state["food_decision"] = [target]
                 if not on_border(target):
                     food_move(target)
                 else:
@@ -472,15 +437,19 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             food_near = [food for food in game_state["food_ranking"] for p,d,ds in [food] if d <= 10]
             my_len = len(game_state["me"]["body"])
-            food_good = [(p,d) for food in food_near for p,d,ds in [food] 
-                         if all([d<de if my_len <= size else d<=de for de,size in ds])]
-            if len(food_good) != 0:
-                result = first_group(food_good)
+            good_food = [(p,d) for food in food_near for p,d,ds in [food] 
+                         if all([(d<de) if my_len <= size else (d<=de) for de,size in ds])]
+            game_state["food_log"] = [len(game_state["food_ranking"]), len(food_near), len(good_food), food_near[:2]]
+            if len(good_food) != 0:
+                result = first_group(good_food)
                 get_food(result[0])
 
         def try_kill_decision():
-            result = game_state["try_kill"][0]
+            result = game_state["try_kill"]
+            if len(result) == 0:
+                return
 
+            result = result[0]
             #no danger in 3 steps
             result = [move for move in result if move in game_state["allowed_move"]]
             if len(result) != 0:
@@ -495,6 +464,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             moves = [move 
                     for move, ranking in game_state["danger_ranking"].items()
                     if 1==1
+                    and 
                     and ranking["collision_1"] == 99
                     and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                     and not ranking["trap"]
@@ -512,7 +482,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         game_state["decision_path"].append("on_border")
                         game_state["next_head_coord"] = moves[0]
 
-                food_decision()
+                food_decision(moves)
                 try_kill_decision()
                 return
 
@@ -559,6 +529,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 if game_state["next_head_coord"] not in moves:
                     game_state["next_head_coord"] = moves[0]
                 return
+
+        default_decision_path()
 
 
     def decision_1_v_1():
@@ -844,8 +816,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
         log_avoid_danger = game_state["danger_ranking"]
         log_time_diff = game_state["end_time"] - game_state["start_time"]
         log_time_diff = f"time: {log_time_diff:.3f}s"
-        log_find_food = game_state["find_food"]
-        log_try_kill = game_state["try_kill"]
+        log_decision_path = game_state["decision_path"]
+        log_food_decision = game_state.get("food_decision", [])
+        log_food = game_state.get("food_log", [])
 
         log_board = {
             "id": game_state["game"]["id"],
@@ -872,9 +845,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
             f"routine_move: {log_routine_move}",
             f"danger_ranking: {log_avoid_danger}",
             f"allowed_move: {log_allowed_move}",
-            f"find_food: {log_find_food}",
             f"trap: {log_traps}",
             f"dead_end: {log_dead_end}",
+            f"food_decision: {log_food_decision}",
+            f"decision_path: {log_decision_path}",
+            f"food_log: {log_food}",
             log_time_diff,
         ])
 
