@@ -424,7 +424,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 else:
                     #food on border
                     if is_adjacent(get_my_head(), target):
-                        if all([d>6 for p, d in game_state["killer_near"]]):
+                        if all([d>=6 for p, d in game_state["killer_near"]]):
                             if target != game_state["next_head_coord"]:
                                 game_state["decision_path"].append("food")
                                 game_state["next_head_coord"] = target
