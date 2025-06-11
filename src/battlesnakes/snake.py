@@ -341,7 +341,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     def killer_near_watching():
         killers = [snake for snake in game_state["snakes"] if len(game_state["me"]["body"]) < len(snake["body"])]
-        killers = [(head, path_distance_pq(get_my_head(), head)) for snake in killers for head in [snake["body"][0]]]
+        killers = [(head, path_distance_pq(get_my_head(), head), len(snake["body"])) for snake in killers for head in [snake["body"][0]]]
         game_state["killer_near"] = killers
 
     def crowded_rank(p):
@@ -424,10 +424,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 else:
                     #food on border
                     if is_adjacent(get_my_head(), target):
-                        if all([d>=6 for p, d in game_state["killer_near"]]):
+                        if all([d>=6 for _,d,_ in game_state["killer_near"]]):
                             if target != game_state["next_head_coord"]:
                                 game_state["decision_path"].append("food")
                                 game_state["next_head_coord"] = target
+                        else:
+                            killers = [killer for killer in game_state["killer_near"] for p,d,L in [killer] if L>len(game_state["me"]["body"])+1]
+                            if len(killers) == 0:
+                                if target != game_state["next_head_coord"]:
+                                    game_state["decision_path"].append("food")
+                                    game_state["next_head_coord"] = target
                     else:
                         one_next = [p for p in adj_cells(target) if p not in game_state["occupied_cells"][0] and not on_border(p)]
                         if len(one_next) != 0:
