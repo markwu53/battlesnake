@@ -512,8 +512,9 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
             #unhappy_path
             #not taking dead_end and trap, take collision risk
-            moves = [move 
-                        for move, ranking in game_state["danger_ranking"].items()
+            moves = [item 
+                        for item in game_state["danger_ranking"].items()
+                        for move, ranking in [item]
                         if (1==1
                         and "collision_1" in ranking
                         and "collision_2" in ranking
