@@ -1,5 +1,7 @@
-a = [1,2,3,4]
-b = a
-a = a+ [5]
-print(a)
-print(b)
+dic = {
+    "a": 5,
+    "b": 6,
+}
+
+print("a" in dic.keys())
+print("c" in dic)

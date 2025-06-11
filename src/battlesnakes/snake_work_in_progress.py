@@ -464,7 +464,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             moves = [move 
                     for move, ranking in game_state["danger_ranking"].items()
                     if 1==1
-                    and 
+                    and "collision_1" in ranking
                     and ranking["collision_1"] == 99
                     and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                     and not ranking["trap"]
@@ -482,6 +482,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
                         game_state["decision_path"].append("on_border")
                         game_state["next_head_coord"] = moves[0]
 
+                #food and try_kill only happen in the happy path 1
                 food_decision(moves)
                 try_kill_decision()
                 return
@@ -490,6 +491,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             moves = [move 
                     for move, ranking in game_state["danger_ranking"].items()
                     if 1==1
+                    and "collision_2" in ranking
                     and ranking["collision_2"] == 99
                     and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                     and not ranking["trap"]
@@ -513,6 +515,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
             moves = [move 
                         for move, ranking in game_state["danger_ranking"].items()
                         if (1==1
+                        and "collision_1" in ranking
+                        and "collision_2" in ranking
                         and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                         and not ranking["trap"]
                     ) ]
