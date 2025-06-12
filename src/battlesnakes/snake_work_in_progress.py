@@ -344,7 +344,7 @@ def special_experimenting_code(game_state):
 
     def decision_making():
         game_state["decision_path"] = []
-        if len(game_state["snakes"]) != 1:
+        if len(game_state["others"]) != 1:
             decision_1_v_n()
         else:
             decision_1_v_1()
