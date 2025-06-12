@@ -1,7 +1,7 @@
 import typing
 import math
 import time
-from battlesnakes.snake_work_in_progress import special_experimenting_code
+#from snake_work_in_progress import special_experimenting_code
 
 # info is called when you create your Battlesnake on play.battlesnake.com
 # and controls your Battlesnake's appearance
@@ -17,28 +17,6 @@ def info() -> typing.Dict:
         "tail": "flake",  # TODO: Choose tail
     }
 
-def get_up_coord(head_coord: dict[str, int]) -> dict[str, int]:
-    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
-        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
-
-    return {"x": head_coord["x"], "y": head_coord["y"] + 1}
-
-def get_direction_coord(direction: str, head_coord: dict[str, int]) -> dict[str, int]:
-    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
-        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
-
-    match direction:
-        case "up":
-            return {"x": head_coord["x"], "y": head_coord["y"] + 1}
-        case "down":
-            return {"x": head_coord["x"], "y": head_coord["y"] - 1}
-        case "left":
-            return {"x": head_coord["x"] - 1, "y": head_coord["y"]}
-        case "right":
-            return {"x": head_coord["x"] + 1, "y": head_coord["y"]}
-
-    raise ValueError(f"invalid direction: {direction}")
-
 # start is called when your Battlesnake begins a game
 def start(game_state: typing.Dict):
     print("GAME START")
@@ -52,8 +30,7 @@ def end(game_state: typing.Dict):
 #this gives me #20 score 8603 on 6/3/2025
 def move(game_state: typing.Dict) -> typing.Dict:
 
-    if special_experimenting_code(game_state):
-        return {"move": game_state["next_move"]}
+    #if special_experimenting_code(game_state): return {"move": game_state["next_move"]}
 
     #ideas:
     #1. In avoid_danger:
