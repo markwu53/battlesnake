@@ -28,13 +28,43 @@ def end(game_state: typing.Dict):
 #this gives me #20 score 8603 on 6/3/2025
 #def move(game_state: typing.Dict) -> typing.Dict:
 def special_experimenting_code(game_state):
-    initialization()
+
+    def initialization():
+        game_state["logging"] = {}
+
+        #lean board
+        me = game_state["you"]
+        me = {
+            "name": me["name"],
+            "health": me["health"],
+            "body": get_coord(me["body"]),
+        }
+        others = [
+            {
+                "name": snake["name"],
+                "health": snake["health"],
+                "body": get_coord(snake["body"]),
+            } for snake in game_state["board"]["snakes"]
+        ]
+        others = [snake for snake in others if snake["body"][0] != me["body"][0]]
+        game_state["me"] = me
+        game_state["others"] = others
+        game_state["snakes"] = [me, *others]
+        game_state["food"] = get_coord(game_state["board"]["food"])
+
+        #estimated 5-step occupied cells
+        game_state["occupied_cells"] = [
+            occupied_cells(step)
+            for step in [1,2,3,4,5]
+        ]
+
 
     def experiment_condition():
         if len(game_state["others"]) != 1: return False
         if game_state["others"][0]["name"] != "Snakeformatika": return False
         return True
     
+    initialization()
     if not experiment_condition(): return False
     game_state["logging"]["version"] = "Experiment"
 
@@ -65,35 +95,6 @@ def special_experimenting_code(game_state):
 
         logging()
 
-
-    def initialization():
-        game_state["logging"] = {}
-
-        #lean board
-        me = game_state["you"]
-        me = {
-            "name": me["name"],
-            "health": me["health"],
-            "body": get_coord(me["body"]),
-        }
-        others = [
-            {
-                "name": snake["name"],
-                "health": snake["health"],
-                "body": get_coord(snake["body"]),
-            } for snake in game_state["board"]["snakes"]
-        ]
-        others = [snake for snake in others if snake["body"][0] != me["body"][0]]
-        game_state["me"] = me
-        game_state["others"] = others
-        game_state["snakes"] = [me, *others]
-        game_state["food"] = get_coord(game_state["board"]["food"])
-
-        #estimated 5-step occupied cells
-        game_state["occupied_cells"] = [
-            occupied_cells(step)
-            for step in [1,2,3,4,5]
-        ]
 
 
     def allowed_move():
