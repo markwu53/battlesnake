@@ -43,6 +43,7 @@ def special_experimenting_code(game_state):
         collision_ranking()
         trap_ranking()
         dead_end_ranking()
+        tail_connect_ranking()
         killer_near_watching()
         crowded_ranking()
         food_ranking()
@@ -322,11 +323,10 @@ def special_experimenting_code(game_state):
     def tail_connect_ranking():
         my_head = get_my_head()
         my_tail = get_my_tail()
-        game_state["tail_connect"] = [
-            path_distance_pq(my_head, my_tail),
-            [path_distance_pq(my_head, snake["body"][-1]) for snake in game_state["others"]],
-        ]
-        game_state["logging"]["tail_connect"] = game_state["tail_connect"]
+        for p in game_state["allowed_move"]:
+            game_state["danger_ranking"][p]["tail_connect"] = (
+                path_distance_pq(p, my_tail),
+                *[path_distance_pq(p, snake["body"][-1]) for snake in game_state["others"]])
 
     def killer_near_watching():
         killers = [snake for snake in game_state["snakes"] if len(game_state["me"]["body"]) < len(snake["body"])]
@@ -651,7 +651,7 @@ def special_experimenting_code(game_state):
                     and ranking["collision_1"] == 99
                     and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                     and not ranking["trap"]
-                    and not all([x == 999 for d,ds in game_state["tail_connect"] for x in [d, *ds]])
+                    and not all([d == 999 for d in ranking["tail_connect"]])
                     ]
 
             if len(moves) != 0:
@@ -679,7 +679,7 @@ def special_experimenting_code(game_state):
                     and ranking["collision_2"] == 99
                     and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                     and not ranking["trap"]
-                    and not all([x == 999 for d,ds in game_state["tail_connect"] for x in [d, *ds]])
+                    and not all([d == 999 for d in ranking["tail_connect"]])
                     ]
 
             if len(moves) != 0:
@@ -705,7 +705,7 @@ def special_experimenting_code(game_state):
                         and "collision_2" in ranking
                         and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                         and not ranking["trap"]
-                        and not all([x == 999 for d,ds in game_state["tail_connect"] for x in [d, *ds]])
+                        and not all([d == 999 for d in ranking["tail_connect"]])
                     ) ]
             #let's try taking risk fast, if passed hopefully danger is dropped
             if len(moves) != 0:
