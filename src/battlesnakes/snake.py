@@ -1,7 +1,7 @@
 import typing
 import math
 import time
-from snake_work_in_progress import special_experimenting_code
+#from snake_work_in_progress import special_experimenting_code
 
 # info is called when you create your Battlesnake on play.battlesnake.com
 # and controls your Battlesnake's appearance
@@ -30,8 +30,7 @@ def end(game_state: typing.Dict):
 #this gives me #20 score 8603 on 6/3/2025
 def move(game_state: typing.Dict) -> typing.Dict:
 
-    if special_experimenting_code(game_state):
-        return {"move": game_state["next_move"]}
+    #if special_experimenting_code(game_state): return {"move": game_state["next_move"]}
 
     #ideas:
     #1. In avoid_danger:
