@@ -1,7 +1,7 @@
 import typing
 import math
 import time
-from battlesnakes.snake_work_in_progress import special_experimenting_code
+from snake_work_in_progress import special_experimenting_code
 
 # info is called when you create your Battlesnake on play.battlesnake.com
 # and controls your Battlesnake's appearance
