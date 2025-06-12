@@ -29,6 +29,36 @@ def end(game_state: typing.Dict):
 #def move(game_state: typing.Dict) -> typing.Dict:
 def special_experimenting_code(game_state):
 
+    def main():
+
+        game_state["start_time"] = time.time()
+
+        #do this first
+        #do in outside
+        #initialization()
+
+        #gather information, provide suggestions
+        allowed_move()
+        routine_move()
+        collision_ranking()
+        trap_ranking()
+        dead_end_ranking()
+        killer_near_watching()
+        crowded_ranking()
+        food_ranking()
+        try_kill()
+
+        #combine information and suggestions and make a decision
+        #best_choice()
+        decision_making()
+
+        game_state["end_time"] = time.time()
+
+        game_state["next_move"] = get_next_move(get_my_head(), game_state["next_head_coord"])
+
+        logging()
+
+
     def initialization():
         game_state["logging"] = {}
 
@@ -57,45 +87,6 @@ def special_experimenting_code(game_state):
             occupied_cells(step)
             for step in [1,2,3,4,5]
         ]
-
-
-    def experiment_condition():
-        if len(game_state["others"]) != 1: return False
-        if game_state["others"][0]["name"] != "Snakeformatika": return False
-        return True
-    
-    initialization()
-    if not experiment_condition(): return False
-    game_state["logging"]["version"] = "Experiment"
-
-    def main():
-
-        game_state["start_time"] = time.time()
-
-        #do this first
-
-        #gather information, provide suggestions
-        allowed_move()
-        routine_move()
-        collision_ranking()
-        trap_ranking()
-        dead_end_ranking()
-        killer_near_watching()
-        crowded_ranking()
-        food_ranking()
-        try_kill()
-
-        #combine information and suggestions and make a decision
-        #best_choice()
-        decision_making()
-
-        game_state["end_time"] = time.time()
-
-        game_state["next_move"] = get_next_move(get_my_head(), game_state["next_head_coord"])
-
-        logging()
-
-
 
     def allowed_move():
         occupied = game_state["occupied_cells"][0]
@@ -949,6 +940,15 @@ def special_experimenting_code(game_state):
 # end of utility functions
 #############################################
 
+
+    def experiment_condition():
+        if len(game_state["others"]) != 1: return False
+        if game_state["others"][0]["name"] != "Snakeformatika": return False
+        return True
+    
+    initialization()
+    if not experiment_condition(): return False
+    game_state["logging"]["version"] = "Experiment"
 
     #main
     main()
