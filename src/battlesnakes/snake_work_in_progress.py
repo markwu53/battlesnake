@@ -604,6 +604,34 @@ def special_experimenting_code(game_state):
                     game_state["decision_path"].append("try_kill")
                     game_state["next_head_coord"] = result[0]
 
+        def my_snake_bigger():
+            my_body = game_state["me"]["body"]
+            my_head = my_body[0]
+            my_neck = my_body[1]
+            my_tail = my_body[-1]
+            me_to_my_tail = path_distance_pq(my_head, my_tail)
+            snake_head = game_state["others"][0]["body"][0]
+            other_to_my_tail = path_distance_pq(snake_head, my_tail)
+            if me_to_my_tail < other_to_my_tail:
+                if len(game_state["food_ranking"]) != 0:
+                    foods = game_state["food_ranking"]
+                    min_d = min([d for _,d,_ in foods])
+                    foods = [food for food in game_state["food_ranking"] for p,d,ds in [food] if d == min_d]
+                    foods = [food for food in foods for p,d,ds in [food] if d == min_d]
+                    foods = [food for food in foods for p,d,ds in [food] 
+                             if path_distance_pq(my_head, p)+path_distance_pq(p, my_tail) <= other_to_my_tail]
+                    if len(foods) != 0:
+                        food,_,_ = foods[0]
+                        moves = shortest_path_move(my_head, food)
+                        if len(moves) != 0:
+                            game_state["decision_path"].append("food")
+                            game_state["next_head_coord"] = moves[0]
+                            return
+            moves = shortest_path_move(my_head, my_tail)
+            if len(moves) != 0:
+                game_state["decision_path"].append("my_tail")
+                game_state["next_head_coord"] = moves[0]
+
         def default_decision_path():
 
             #happy_path_1
@@ -681,33 +709,10 @@ def special_experimenting_code(game_state):
                     game_state["next_head_coord"] = moves[0]
                 return
 
-        moves = shortest_path_move(my_head, my_tail)
-        if len(moves) != 0:
-            game_state["decision_path"].append("my_tail")
-            game_state["next_head_coord"] = moves[0]
 
         if len(game_state["me"]["body"]) > len(game_state["others"][0]["body"]) and len(game_state["me"]["body"]) >= 15:
-            my_body = game_state["me"]["body"]
-            my_head = my_body[0]
-            my_neck = my_body[1]
-            my_tail = my_body[-1]
-            me_to_my_tail = path_distance_pq(my_head, my_tail)
-            snake_head = game_state["others"][0]["body"][0]
-            other_to_my_tail = path_distance_pq(snake_head, my_tail)
-            if me_to_my_tail < other_to_my_tail:
-                if len(game_state["food_ranking"]) != 0:
-                    foods = game_state["food_ranking"]
-                    min_d = min([d for _,d,_ in foods])
-                    foods = [food for food in game_state["food_ranking"] for p,d,ds in [food] if d == min_d]
-                    foods = [food for food in foods for p,d,ds in [food] if d == min_d]
-                    foods = [food for food in foods for p,d,ds in [food] 
-                             if path_distance_pq(my_head, p)+path_distance_pq(p, my_tail) <= other_to_my_tail]
-                    if len(foods) != 0:
-                        food,_,_ = foods[0]
-                        moves = shortest_path_move(my_head, food)
-                        if len(moves) != 0:
-                            game_state["decision_path"].append("my_tail")
-                            game_state["next_head_coord"] = moves[0]
+            my_snake_bigger()
+            return
 
 
 
