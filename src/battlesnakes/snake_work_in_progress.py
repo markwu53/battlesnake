@@ -58,6 +58,7 @@ def special_experimenting_code(game_state):
         return True
     
     if not experiment_condition(): return False
+    game_state["logging"]["version"] = "Experiment"
 
     def main():
 
@@ -88,6 +89,7 @@ def special_experimenting_code(game_state):
 
 
     def initialization():
+        game_state["logging"] = {}
 
         #lean board
         me = game_state["you"]
