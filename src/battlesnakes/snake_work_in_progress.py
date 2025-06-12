@@ -48,14 +48,22 @@ def end(game_state: typing.Dict):
 
 
 #this gives me #20 score 8603 on 6/3/2025
-def move(game_state: typing.Dict) -> typing.Dict:
+#def move(game_state: typing.Dict) -> typing.Dict:
+def special_experimenting_code(game_state):
+    initialization()
+
+    def experiment_condition():
+        if len(game_state["others"]) != 1: return False
+        if game_state["others"][0]["name"] != "Snakeformatika": return False
+        return True
+    
+    if not experiment_condition(): return False
 
     def main():
 
         game_state["start_time"] = time.time()
 
         #do this first
-        initialization()
 
         #gather information, provide suggestions
         allowed_move()
@@ -701,6 +709,11 @@ def move(game_state: typing.Dict) -> typing.Dict:
                     game_state["next_head_coord"] = moves[0]
                 return
 
+        moves = shortest_path_move(my_head, my_tail)
+        if len(moves) != 0:
+            game_state["decision_path"].append("my_tail")
+            game_state["next_head_coord"] = moves[0]
+
         if len(game_state["me"]["body"]) > len(game_state["others"][0]["body"]) and len(game_state["me"]["body"]) >= 15:
             my_body = game_state["me"]["body"]
             my_head = my_body[0]
@@ -709,12 +722,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             me_to_my_tail = path_distance_pq(my_head, my_tail)
             snake_head = game_state["others"][0]["body"][0]
             other_to_my_tail = path_distance_pq(snake_head, my_tail)
-            if me_to_my_tail >= other_to_my_tail:
-                moves = shortest_path_move(my_head, my_tail)
-                if len(moves) != 0:
-                    game_state["decision_path"].append("my_tail")
-                    game_state["next_head_coord"] = moves[0]
-            else:
+            if me_to_my_tail < other_to_my_tail:
                 if len(game_state["food_ranking"]) != 0:
                     foods = game_state["food_ranking"]
                     min_d = min([d for _,d,_ in foods])
@@ -735,18 +743,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
 
     def logging():
-
-        #logging
-        log_move = game_state["next_move"]
-        log_routine_move = game_state["routine_move"]
-        log_allowed_move = game_state["allowed_move"]
-        log_avoid_danger = game_state["danger_ranking"]
-        log_time_diff = game_state["end_time"] - game_state["start_time"]
-        log_time_diff = f"time: {log_time_diff:.3f}s"
-        log_decision_path = game_state["decision_path"]
-        log_food_decision = game_state.get("food_decision", [])
-        log_food = game_state.get("food_log", [])
-
         log_board = {
             "id": game_state["game"]["id"],
             "turn": game_state["turn"],
@@ -763,24 +759,18 @@ def move(game_state: typing.Dict) -> typing.Dict:
                 "health": snake["health"],
             } for snake in game_state["others"] ],
         } 
-        log_traps = game_state.get("log_traps", [])
-        log_dead_end = game_state.get("log_dead_end", [])
 
-        log_text = ", ".join([
-            f"board: {log_board}",
-            f"move: {log_move}",
-            f"routine_move: {log_routine_move}",
-            f"danger_ranking: {log_avoid_danger}",
-            f"allowed_move: {log_allowed_move}",
-            f"trap: {log_traps}",
-            f"dead_end: {log_dead_end}",
-            f"food_decision: {log_food_decision}",
-            f"decision_path: {log_decision_path}",
-            f"food_log: {log_food}",
-            log_time_diff,
-        ])
-
-        print(log_text)
+        log = game_state["logging"]
+        log["board"] = log_board
+        log["move"] = game_state["next_move"]
+        log["routine_move"] = game_state["routine_move"]
+        log["allowed_move"] = game_state["allowed_move"]
+        log["danger_ranking"] = game_state["danger_ranking"]
+        log["decision_path"] = game_state["decision_path"]
+        log["food_decision"] = game_state.get("food_decision", [])
+        time_diff = game_state["end_time"] - game_state["start_time"]
+        log["time"] = f"{time_diff:.3f}s"
+        print(game_state["logging"])
 
 
     def occupied_cells(step):
@@ -982,5 +972,6 @@ def move(game_state: typing.Dict) -> typing.Dict:
     #main
     main()
 
-    return {"move": game_state["next_move"]}
+    #return {"move": game_state["next_move"]}
+    return True
 
