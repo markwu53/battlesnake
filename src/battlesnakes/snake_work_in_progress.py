@@ -619,6 +619,8 @@ def special_experimenting_code(game_state):
             my_neck = my_body[1]
             my_tail = my_body[-1]
             me_to_my_tail = path_distance_pq(my_head, my_tail)
+            if me_to_my_tail == 999:
+                return False
             snake_head = game_state["others"][0]["body"][0]
             other_to_my_tail = path_distance_pq(snake_head, my_tail)
             if me_to_my_tail < other_to_my_tail:
@@ -635,11 +637,14 @@ def special_experimenting_code(game_state):
                         if len(moves) != 0:
                             game_state["decision_path"].append("food")
                             game_state["next_head_coord"] = moves[0]
-                            return
-            moves = shortest_path_move(my_head, my_tail)
-            if len(moves) != 0:
-                game_state["decision_path"].append("my_tail")
-                game_state["next_head_coord"] = moves[0]
+                            return True
+            if me_to_my_tail > 1 or game_state["me"]["health"] != 100:
+                moves = shortest_path_move(my_head, my_tail)
+                if len(moves) != 0:
+                    game_state["decision_path"].append("my_tail")
+                    game_state["next_head_coord"] = moves[0]
+                    return True
+            return False
 
         def default_decision_path():
 
@@ -723,8 +728,8 @@ def special_experimenting_code(game_state):
 
 
         if len(game_state["me"]["body"]) > len(game_state["others"][0]["body"]) and len(game_state["me"]["body"]) >= 15:
-            my_snake_bigger()
-            return
+            if my_snake_bigger():
+                return
 
 
 
