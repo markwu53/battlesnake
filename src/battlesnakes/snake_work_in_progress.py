@@ -943,7 +943,11 @@ def special_experimenting_code(game_state):
 
     def experiment_condition():
         if len(game_state["others"]) != 1: return False
-        if game_state["others"][0]["name"] != "Snakeformatika": return False
+        if game_state["others"][0]["name"] not in (
+            "Snakeformatika",
+            "Frank The Tank",
+        ): 
+            return False
         return True
     
     initialization()

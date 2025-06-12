@@ -819,9 +819,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if len(result) == 0:
             result = shortest_path_move(my_head, target)
         #prefer keep direction
-        result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
-        result = sorted(result)
-        result = [move for rank, move in result]
+        if game_state["turn"] > 3:
+            result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
+            result = sorted(result)
+            result = [move for rank, move in result]
         return result
 
     def best_choice():
