@@ -626,6 +626,12 @@ def special_experimenting_code(game_state):
                 #a is sensitive
                 game_state["decision_path"].append("enemy_cut")
                 game_state["next_head_coord"] = [b for b in ab if b != a][0]
+                return
+            if cn <= 10:
+                #dead end
+                game_state["decision_path"].append("dead_end")
+                game_state["next_head_coord"] = [b for b in ab if b != a][0]
+                return
 
         def my_snake_bigger():
             my_body = game_state["me"]["body"]
