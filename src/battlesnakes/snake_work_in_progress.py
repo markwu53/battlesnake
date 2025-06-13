@@ -644,7 +644,7 @@ def special_experimenting_code(game_state):
                             ] for layer in snake_paths if len(layer) != 0]
             #paths with same end point will have same effect
             #in each layer (paths with same length), group by end point
-            snake_paths = [[paths[0] 
+            snake_paths = [[list(paths)[0] 
                            for endpoint, paths in groupby(sorted(layer, key=lambda path: path[-1]), key=lambda path: path[-1])]
                            for layer in snake_paths]
             #flatten it
