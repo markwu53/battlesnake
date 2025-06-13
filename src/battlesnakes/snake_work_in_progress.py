@@ -714,8 +714,7 @@ def special_experimenting_code(game_state):
             my_neck = my_body[1]
             my_tail = my_body[-1]
             me_to_my_tail = path_distance_pq(my_head, my_tail)
-            if me_to_my_tail == 999:
-                return False
+            #if me_to_my_tail == 999: return False
             snake_head = game_state["others"][0]["body"][0]
             other_to_my_tail = path_distance_pq(snake_head, my_tail)
             if me_to_my_tail < other_to_my_tail:
@@ -734,7 +733,7 @@ def special_experimenting_code(game_state):
                             game_state["next_head_coord"] = moves[0]
                             be_careful_choices()
                             return True
-            if me_to_my_tail > 1 or game_state["me"]["health"] != 100:
+            if not is_adjacent(my_head, my_tail) or game_state["me"]["health"] != 100:
                 moves = shortest_path_move(my_head, my_tail)
                 if len(moves) != 0:
                     moves = prefer_straight(moves)
@@ -747,7 +746,7 @@ def special_experimenting_code(game_state):
                     #in this case, I can either chase the other's tail, 
                     # or calculate a path that I can walk and wait until my tail reappear
                     other_tail = game_state["others"][0]["body"][-1]
-                    if path_distance_pq(my_head, other_tail) > 1 or game_state["others"][0]["health"] != 100:
+                    if not is_adjacent(my_head, other_tail) or game_state["others"][0]["health"] != 100:
                         moves = shortest_path_move(my_head, other_tail)
                         if len(moves) != 0:
                             moves = prefer_straight(moves)
