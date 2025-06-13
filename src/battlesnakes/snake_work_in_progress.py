@@ -1,5 +1,6 @@
 import typing
 import time
+from itertools import product, groupby
 
 # info is called when you create your Battlesnake on play.battlesnake.com
 # and controls your Battlesnake's appearance
@@ -613,6 +614,41 @@ def special_experimenting_code(game_state):
                     game_state["decision_path"].append("try_kill")
                     game_state["next_head_coord"] = result[0]
 
+        def enemy_snake_danger_paths():
+
+            snake_head = game_state["others"][0]["body"][0]
+            my_head = get_my_head()
+            occupied = game_state["occupied_cells"][0]
+
+            #5 step enemy move
+            snake_connected_layers = path_connected_layers(snake_head)
+            my_connected_layers = path_connected_layers(my_head)
+            my_connected_dict = {c:i for i,c in enumerate(my_connected_layers)}
+
+            #path must in every step shorter than mine otherwise won't be danger
+            snake_paths = [[c for c in layer if c in my_connected_dict and i+2 <= my_connected_dict(c)] 
+                    for i,layer in enumerate(snake_connected_layers) if i <=5]
+            snake_paths = [layer for layer in snake_paths if len(layer) != 0]
+            #5 layers each layer has paths all with same length
+            #path must connected
+            snake_paths = [[path for path in product(*snake_paths[:i+2]) 
+                           if len(path) > 1 and all([is_adjacent(a,b) for a,b in zip(path[:-1], path[1:])])]
+                           for i in range(5) ]
+            #end point must cut an area
+            snake_paths = [[path for path in layer for p in [path[-1]]
+                            if on_border(p)
+                            or any([is_adjacent(p, c) for c in occupied])
+                            or any([distance_pq(p,c) == 2 and len([q for q in adj_cells(p) if q in adj_cells(c)]) == 2 for c in occupied])
+                            ] for layer in snake_paths if len(layer) != 0]
+            #paths with same end point will have same effect
+            #in each layer (paths with same length), group by end point
+            snake_paths = [[paths[0] 
+                           for endpoint, paths in groupby(sorted(layer, key=lambda path: path[-1]), key=lambda path: path[-1])]
+                           for layer in snake_paths]
+            #flatten it
+            snake_paths = [path for layer in snake_paths for path in layer]
+            return snake_paths
+
         def be_careful_choices():
             abc = game_state["allowed_move"]
             if len(abc) <= 1:
@@ -630,18 +666,21 @@ def special_experimenting_code(game_state):
                 if len([d for d in [ab, ac, bc] if d == 2]) == 2:
                     #all connected
                     return
-            snake_head = game_state["others"][0]["body"][0]
+
             occupied = game_state["occupied_cells"][0]
-            snake_allowed_move = [p for p in adj_cells(snake_head) if p not in occupied]
+            snake_paths = enemy_snake_danger_paths()
+
+            #snake_allowed_move = [p for p in adj_cells(snake_head) if p not in occupied]
             def sensitive_to_enemy_move(a):
                 cn = game_state["danger_ranking"][a]["dead_end"]
                 #a is sensitive
                 return any([2*x <= cn and x+10 <= cn 
-                        for p in snake_allowed_move 
-                        for x in [len(path_connected(a, occupied+[p]))]])
+                        for path in snake_paths
+                        for x in [len(path_connected(a, occupied+[path]))]])
             def dead_end_check(a):
                 cn = game_state["danger_ranking"][a]["dead_end"]
                 return cn <= 10
+
             moves = [(a, 1 if (sensitive_to_enemy_move(a) or dead_end_check(a)) else 0) for a in abc]
             moves = first_group(moves)
             if len(moves) == 0:
