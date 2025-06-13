@@ -678,7 +678,7 @@ def special_experimenting_code(game_state):
             def sensitive_to_enemy_move(a):
                 cn = game_state["danger_ranking"][a]["dead_end"]
                 #a is sensitive
-                return any([2*x <= cn and x+10 <= cn 
+                return any([x/cn <= 0.7 and x+5 <= cn 
                         for path in snake_paths
                         for x in [len(path_connected(a, occupied+[path]))]])
             def dead_end_check(a):
