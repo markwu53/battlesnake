@@ -614,24 +614,42 @@ def special_experimenting_code(game_state):
                     game_state["next_head_coord"] = result[0]
 
         def be_careful_choices():
-            ab = game_state["allowed_move"]
-            if len(ab) != 2:
+            abc = game_state["allowed_move"]
+            if len(abc) <= 1:
                 return
-            a = game_state["next_head_coord"]
+            if len(abc) == 2:
+                a,b = abc
+                if path_distance_pq(a, b) == 2:
+                    return
+            else:
+                #3 choices
+                a,b,c = abc
+                ab = path_distance_pq(a, b)
+                ac = path_distance_pq(a, c)
+                bc = path_distance_pq(b, c)
+                if len([d for d in [ab, ac, bc] if d == 2]) == 2:
+                    #all connected
+                    return
             snake_head = game_state["others"][0]["body"][0]
             occupied = game_state["occupied_cells"][0]
             snake_allowed_move = [p for p in adj_cells(snake_head) if p not in occupied]
-            cn = len(path_connected(a))
-            if any([2*x <= cn and x+10 <= cn for p in snake_allowed_move for x in [len(path_connected(a, occupied+[p]))]]):
+            def sensitive_to_enemy_move(a):
+                cn = game_state["danger_ranking"][a]["dead_end"]
                 #a is sensitive
-                game_state["decision_path"].append("enemy_cut")
-                game_state["next_head_coord"] = [b for b in ab if b != a][0]
+                return any([2*x <= cn and x+10 <= cn 
+                        for p in snake_allowed_move 
+                        for x in [len(path_connected(a, occupied+[p]))]])
+            def dead_end_check(a):
+                cn = game_state["danger_ranking"][a]["dead_end"]
+                return cn <= 10
+            moves = [(a, 1 if (sensitive_to_enemy_move(a) or dead_end_check(a)) else 0) for a in abc]
+            moves = first_group(moves)
+            if len(moves) == 0:
                 return
-            if cn <= 10:
-                #dead end
-                game_state["decision_path"].append("dead_end")
-                game_state["next_head_coord"] = [b for b in ab if b != a][0]
+            if game_state["next_head_coord"] in moves:
                 return
+            game_state["decision_path"].append("sensitive or dead_end")
+            game_state["next_head_coord"] = moves[0]
 
         def prefer_straight(moves):
             moves = [(move, 0 if get_adjacent_dir(get_my_head(), move) == get_adjacent_dir(get_my_neck(), get_my_head()) else 1) for move in moves]
