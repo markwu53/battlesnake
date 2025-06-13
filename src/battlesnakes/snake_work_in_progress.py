@@ -43,7 +43,7 @@ def special_experimenting_code(game_state):
         collision_ranking()
         trap_ranking()
         dead_end_ranking()
-        tail_connect_ranking()
+        #tail_connect_ranking()
         killer_near_watching()
         crowded_ranking()
         food_ranking()
@@ -613,6 +613,20 @@ def special_experimenting_code(game_state):
                     game_state["decision_path"].append("try_kill")
                     game_state["next_head_coord"] = result[0]
 
+        def be_careful_choices():
+            ab = game_state["allowed_move"]
+            if len(ab) != 2:
+                return
+            a = game_state["next_head_coord"]
+            snake_head = game_state["others"][0]["body"][0]
+            occupied = game_state["occupied_cells"][0]
+            snake_allowed_move = [p for p in adj_cells(snake_head) if p not in occupied]
+            cn = len(path_connected(a))
+            if any([2*x <= cn and x+10 <= cn for p in snake_allowed_move for x in [len(path_connected(a, occupied+[p]))]]):
+                #a is sensitive
+                game_state["decision_path"].append("enemy_cut")
+                game_state["next_head_coord"] = [b for b in ab if b != a][0]
+
         def my_snake_bigger():
             my_body = game_state["me"]["body"]
             my_head = my_body[0]
@@ -638,6 +652,7 @@ def special_experimenting_code(game_state):
                             moves = first_group(moves)
                             game_state["decision_path"].append("food")
                             game_state["next_head_coord"] = moves[0]
+                            be_careful_choices()
                             return True
             if me_to_my_tail > 1 or game_state["me"]["health"] != 100:
                 moves = shortest_path_move(my_head, my_tail)
@@ -646,6 +661,7 @@ def special_experimenting_code(game_state):
                     moves = first_group(moves)
                     game_state["decision_path"].append("my_tail")
                     game_state["next_head_coord"] = moves[0]
+                    be_careful_choices()
                     return True
             return False
 
@@ -801,8 +817,9 @@ def special_experimenting_code(game_state):
                 return i
         return 999
 
-    def path_connected(p):
-        occuppied = game_state["occupied_cells"][0]
+    def path_connected(p, occuppied=None):
+        if occuppied is None:
+            occuppied = game_state["occupied_cells"][0]
         #remove p from occupied
         occuppied = [q for q in occuppied if q != p]
         layers = [set([p])]
