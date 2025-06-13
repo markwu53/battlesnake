@@ -1,10 +1,8 @@
-from itertools import product
+def path_connected(a, occupied=None):
+    if occupied == None:
+        occupied = 5
+    print(a+occupied)
 
-a = [
-    set([1,2]),
-    set([4]),
-    set([5,6,7]),
-]
-
-for path in product(*a):
-    print(path)
+path_connected(3)
+path_connected(3, 4)
+path_connected(3, occupied=4)
