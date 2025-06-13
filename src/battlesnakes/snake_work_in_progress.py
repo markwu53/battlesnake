@@ -685,12 +685,23 @@ def special_experimenting_code(game_state):
             if me_to_my_tail > 1 or game_state["me"]["health"] != 100:
                 moves = shortest_path_move(my_head, my_tail)
                 if len(moves) != 0:
-                    moves = [(move, 0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1) for move in moves]
-                    moves = first_group(moves)
+                    moves = prefer_straight(moves)
                     game_state["decision_path"].append("my_tail")
                     game_state["next_head_coord"] = moves[0]
                     be_careful_choices()
                     return True
+                else:
+                    #I can't see my tail
+                    #in this case, I can either chase the other's tail, 
+                    # or calculate a path that I can walk and wait until my tail reappear
+                    other_tail = game_state["others"][0]["body"][-1]
+                    moves = shortest_path_move(my_head, other_tail)
+                    if len(moves) != 0:
+                        moves = prefer_straight(moves)
+                        game_state["decision_path"].append("other_tail")
+                        game_state["next_head_coord"] = moves[0]
+                        be_careful_choices()
+                        return True
             return False
 
         def default_decision_path():
