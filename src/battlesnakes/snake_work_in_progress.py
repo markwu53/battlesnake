@@ -560,9 +560,9 @@ def special_experimenting_code(game_state):
                 if len(moves) != 0:
                     off_border = [move for move in moves if not on_border(move)]
                     if len(off_border) != 0:
-                        move = off_border[0]
-                    else:
-                        move = moves[0]
+                        moves = off_border
+                    moves = prefer_straight(moves)
+                    move = moves[0]
                     if move != game_state["next_head_coord"]:
                         game_state["decision_path"].append("food")
                         game_state["next_head_coord"] = move
@@ -633,6 +633,11 @@ def special_experimenting_code(game_state):
                 game_state["next_head_coord"] = [b for b in ab if b != a][0]
                 return
 
+        def prefer_straight(moves):
+            moves = [(move, 0 if get_adjacent_dir(get_my_head(), move) == get_adjacent_dir(get_my_neck(), get_my_head()) else 1) for move in moves]
+            moves = first_group(moves)
+            return moves
+
         def my_snake_bigger():
             my_body = game_state["me"]["body"]
             my_head = my_body[0]
@@ -654,8 +659,7 @@ def special_experimenting_code(game_state):
                         food,_,_ = foods[0]
                         moves = shortest_path_move(my_head, food)
                         if len(moves) != 0:
-                            moves = [(move, 0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1) for move in moves]
-                            moves = first_group(moves)
+                            moves = prefer_straight(moves)
                             game_state["decision_path"].append("food")
                             game_state["next_head_coord"] = moves[0]
                             be_careful_choices()
@@ -977,6 +981,9 @@ def special_experimenting_code(game_state):
 
     def get_my_head() -> typing.Tuple:
         return game_state["me"]["body"][0]
+
+    def get_my_neck() -> typing.Tuple:
+        return game_state["me"]["body"][1]
 
     def get_my_tail() -> typing.Tuple:
         return game_state["me"]["body"][-1]
