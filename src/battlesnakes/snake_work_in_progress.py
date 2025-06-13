@@ -683,8 +683,11 @@ def special_experimenting_code(game_state):
                 cn = game_state["danger_ranking"][a]["dead_end"]
                 return cn <= 10
 
-            moves = [(a, 1 if (sensitive_to_enemy_move(a) or dead_end_check(a)) else 0) for a in abc]
-            moves = first_group(moves)
+            sensitive_to_cut = [a for a in abc if sensitive_to_enemy_move(a)]
+            dead_end = [a for a in abc if dead_end_check(a)]
+            game_state["logging"]["sensitive"] = sensitive_to_cut
+            game_state["logging"]["dead_end_1v1"] = dead_end
+            moves = [a for a in abc if a not in sensitive_to_cut and a not in dead_end]
             if len(moves) == 0:
                 return
             if game_state["next_head_coord"] in moves:
