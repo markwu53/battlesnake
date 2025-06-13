@@ -680,7 +680,8 @@ def special_experimenting_code(game_state):
                 #a is sensitive
                 return any([x/cn <= 0.7 and x+5 <= cn 
                         for path in snake_paths
-                        for x in [len(path_connected(a, occupied+[path]))]])
+                        for x in [len(path_connected(a, occupied+path))]
+                        ])
             def dead_end_check(a):
                 if path_distance_pq(a, get_my_tail()) != 999:
                     return False
