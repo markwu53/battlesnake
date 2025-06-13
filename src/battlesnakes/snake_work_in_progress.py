@@ -621,6 +621,7 @@ def special_experimenting_code(game_state):
             occupied = game_state["occupied_cells"][0]
 
             #5 step enemy move
+            nstep = 5
             snake_connected_layers = path_connected_layers(snake_head)
             my_connected_layers = path_connected_layers(my_head)
             my_connected_dict = {c:i for i,layers in enumerate(my_connected_layers) for c in layers}
@@ -629,13 +630,13 @@ def special_experimenting_code(game_state):
             snake_paths = [
                 layer if i == 0 else
                 [c for c in layer if c in my_connected_dict and i+2 <= my_connected_dict[c]] 
-                    for i,layer in enumerate(snake_connected_layers) if i <= 5]
+                    for i,layer in enumerate(snake_connected_layers) if i <= nstep]
             snake_paths = [layer for layer in snake_paths if len(layer) != 0]
             #5 layers each layer has paths all with same length
             #path must connected
             snake_paths = [[path for path in product(*snake_paths[:i+2]) 
                            if len(path) > 1 and all([is_adjacent(a,b) for a,b in zip(path[:-1], path[1:])])]
-                           for i in range(3) ]
+                           for i in range(nstep) ]
             #end point must cut an area
             snake_paths = [[path for path in layer for p in [path[-1]]
                             for occ in [[q for q in occupied if q != snake_head]]
@@ -650,18 +651,14 @@ def special_experimenting_code(game_state):
                            for layer in snake_paths]
             #flatten it
             snake_paths = [path for layer in snake_paths for path in layer]
-            game_state["logging"]["danger_path"] = snake_paths
+            #game_state["logging"]["danger_path"] = snake_paths
             return snake_paths
 
         def be_careful_choices():
             abc = game_state["allowed_move"]
             if len(abc) <= 1:
                 return
-            if len(abc) == 2:
-                a,b = abc
-                if path_distance_pq(a, b) == 2:
-                    return
-            else:
+            if len(abc) == 3:
                 #3 choices
                 a,b,c = abc
                 ab = path_distance_pq(a, b)
@@ -670,6 +667,8 @@ def special_experimenting_code(game_state):
                 if len([d for d in [ab, ac, bc] if d == 2]) == 2:
                     #all connected
                     return
+
+            #otherwise, we need to check
 
             occupied = game_state["occupied_cells"][0]
             snake_paths = enemy_snake_danger_paths()
@@ -696,6 +695,7 @@ def special_experimenting_code(game_state):
             game_state["logging"]["dead_end_1v1"] = dead_end
             moves = [a for a in abc if a not in sensitive_to_cut and a not in dead_end]
             if len(moves) == 0:
+                #find a way out
                 return
             if game_state["next_head_coord"] in moves:
                 return
