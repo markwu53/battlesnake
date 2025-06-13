@@ -635,7 +635,7 @@ def special_experimenting_code(game_state):
             #path must connected
             snake_paths = [[path for path in product(*snake_paths[:i+2]) 
                            if len(path) > 1 and all([is_adjacent(a,b) for a,b in zip(path[:-1], path[1:])])]
-                           for i in range(5) ]
+                           for i in range(3) ]
             #end point must cut an area
             snake_paths = [[path for path in layer for p in [path[-1]]
                             if on_border(p)
@@ -649,6 +649,7 @@ def special_experimenting_code(game_state):
                            for layer in snake_paths]
             #flatten it
             snake_paths = [path for layer in snake_paths for path in layer]
+            game_state["logging"]["danger_path"] = snake_paths
             return snake_paths
 
         def be_careful_choices():
