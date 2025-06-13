@@ -659,7 +659,7 @@ def special_experimenting_code(game_state):
                     and ranking["collision_1"] == 99
                     and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                     and not ranking["trap"]
-                    and not all([d == 999 for d in ranking["tail_connect"]])
+                    #and not all([d == 999 for d in ranking["tail_connect"]])
                     ]
 
             if len(moves) != 0:
@@ -687,7 +687,7 @@ def special_experimenting_code(game_state):
                     and ranking["collision_2"] == 99
                     and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                     and not ranking["trap"]
-                    and not all([d == 999 for d in ranking["tail_connect"]])
+                    #and not all([d == 999 for d in ranking["tail_connect"]])
                     ]
 
             if len(moves) != 0:
@@ -713,7 +713,7 @@ def special_experimenting_code(game_state):
                         and "collision_2" in ranking
                         and ranking["dead_end"] >=  len(game_state["me"]["body"]) *2 //3
                         and not ranking["trap"]
-                        and not all([d == 999 for d in ranking["tail_connect"]])
+                        #and not all([d == 999 for d in ranking["tail_connect"]])
                     ) ]
             #let's try taking risk fast, if passed hopefully danger is dropped
             if len(moves) != 0:
