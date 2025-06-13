@@ -1,6 +1,10 @@
-def path_connected(a, b=None):
-    if b is None:
-        b = 6
-    print(a+b)
+from itertools import product
 
-path_connected(3, 7)
+a = [
+    set([1,2]),
+    set([4]),
+    set([5,6,7]),
+]
+
+for path in product(*a):
+    print(path)
