@@ -628,7 +628,7 @@ def special_experimenting_code(game_state):
             #path must in every step shorter than mine otherwise won't be danger
             snake_paths = [
                 layer if i == 0 else
-                [c for c in layer if c in my_connected_dict and i+2 <= my_connected_dict(c)] 
+                [c for c in layer if c in my_connected_dict and i+2 <= my_connected_dict[c]] 
                     for i,layer in enumerate(snake_connected_layers) if i <= 5]
             snake_paths = [layer for layer in snake_paths if len(layer) != 0]
             #5 layers each layer has paths all with same length
