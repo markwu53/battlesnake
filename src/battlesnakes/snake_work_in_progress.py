@@ -638,9 +638,10 @@ def special_experimenting_code(game_state):
                            for i in range(3) ]
             #end point must cut an area
             snake_paths = [[path for path in layer for p in [path[-1]]
+                            for occ in [[q for q in occupied if q != snake_head]]
                             if on_border(p)
-                            or any([is_adjacent(p, c) for c in occupied])
-                            or any([distance_pq(p,c) == 2 and len([q for q in adj_cells(p) if q in adj_cells(c)]) == 2 for c in occupied])
+                            or any([is_adjacent(p, c) for c in occ])
+                            or any([distance_pq(p,c) == 2 and len([q for q in adj_cells(p) if q in adj_cells(c)]) == 2 for c in occ])
                             ] for layer in snake_paths if len(layer) != 0]
             #paths with same end point will have same effect
             #in each layer (paths with same length), group by end point
@@ -681,6 +682,10 @@ def special_experimenting_code(game_state):
                         for path in snake_paths
                         for x in [len(path_connected(a, occupied+[path]))]])
             def dead_end_check(a):
+                if path_distance_pq(a, get_my_tail()) != 999:
+                    return False
+                if path_distance_pq(a, game_state["others"][0]["body"][0]) != 999:
+                    return False
                 cn = game_state["danger_ranking"][a]["dead_end"]
                 return cn <= 10
 
@@ -850,12 +855,14 @@ def special_experimenting_code(game_state):
                 "length": len(game_state["me"]["body"]),
                 "head": game_state["me"]["body"][0],
                 "health": game_state["me"]["health"],
+                "body": game_state["me"]["body"],
             },
             "others": [ {
                 "name": snake["name"],
                 "length": len(snake["body"]),
                 "head": snake["body"][0],
                 "health": snake["health"],
+                "body": snake["body"],
             } for snake in game_state["others"] ],
         } 
 
