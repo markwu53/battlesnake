@@ -61,7 +61,9 @@ def go_straight():
 def shortest_path_move(p, q):
     if is_adjacent(p, q):
         return [q]
-    if q in path_connected_set(p):
+    occupied = game_state["occupied_cells"][0]
+    occupied = [c for c in occupied if c != q]
+    if q in path_connected_set(p, occupied):
         dist = path_distance_pq(p, q)
         layers = path_connected_layers(p)
         if len(layers) > 1:
