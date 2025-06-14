@@ -27,8 +27,13 @@ def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
 
+#global variable
+game_state = None
+
 #this gives me #20 score 8603 on 6/3/2025
-def move(game_state: typing.Dict) -> typing.Dict:
+def move(game_state_parameter: typing.Dict) -> typing.Dict:
+    global game_state
+    game_state = game_state_parameter
 
     if special_experimenting_code(game_state): return {"move": game_state["next_move"]}
 
