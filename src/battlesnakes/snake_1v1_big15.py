@@ -90,7 +90,12 @@ def my_snake_bigger():
                     path_distance_pq(my_head, target),
                     path_distance_pq(f, target),
                 )) for f in food]
-                food = [(f, math.sqrt((hp-a)*(hp-b)*(hp-c)*hp)*2/(a*b)) for f, sides in food for a,b,c in [sides] for hp in [(a+b+c)/2] if a<=b]
+                food = [(f, math.sqrt((hp-a)*(hp-b)*(hp-c)*hp)*2/(a*b)) for f, sides in food for a,b,c in [sides] for hp in [(a+b+c)/2] 
+                        if a<=b
+                        and a+b > c
+                        and a+c > b
+                        and b+c > a
+                        ]
                 if len(food) != 0:
                     food = sorted(food, key=lambda f: f[1])
                     food_target = food[0][0]
