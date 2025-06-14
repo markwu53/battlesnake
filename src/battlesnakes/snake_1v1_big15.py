@@ -112,13 +112,13 @@ def get_cut_info():
     my_head = get_my_head()
     my_tail = get_my_tail()
     for a in game_state["allowed_move"]: 
-        cuts = [ (len(path_connected_set(a, occupied+list(path))), path_distance_pq(my_head, path[-1]), path) for path in snake_paths ]
+        cuts = [ (len(path_connected_set(a, occupied+list(path))), path[-1], path) for path in snake_paths ]
         if len(cuts) != 0:
-            cut_space, cut_distance, cut_path = sorted(cuts)[0]
+            cut_space, cut_point, cut_path = sorted(cuts)[0]
         else:
-            cut_space, cut_distance, cut_path = 999, 999, tuple()
+            cut_space, cut_point, cut_path = 999, 999, tuple()
         game_state["danger_ranking"][a]["cut_space"] = cut_space
-        game_state["danger_ranking"][a]["cut_distance"] = cut_distance
+        game_state["danger_ranking"][a]["cut_point"] = cut_point
         game_state["danger_ranking"][a]["cut_path"] = cut_path
 
 def enemy_snake_danger_paths():
