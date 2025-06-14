@@ -27,13 +27,9 @@ def start(game_state: typing.Dict):
 def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
-game_state = None
-
 #def move(game_state: typing.Dict) -> typing.Dict:
-def special_experimenting_code(game_state_parameter):
-    global game_state
-    game_state = game_state_parameter
-    snake_game_state.game_state = game_state_parameter
+def special_experimenting_code(game_state):
+    snake_game_state.game_state = game_state
 
     def main():
 
