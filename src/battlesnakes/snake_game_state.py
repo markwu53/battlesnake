@@ -1,1 +1,1 @@
-game_state = None
+state = {}
