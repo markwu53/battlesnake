@@ -6,49 +6,54 @@ game_state = None
 # utility functions
 #############################################
 
-def path_distance_pq(p, q):
-    occuppied = game_state["occupied_cells"][0]
+def path_distance_pq(p, q, occupied=None):
+    if occupied is None:
+        occupied = game_state["occupied_cells"][0]
     #remove q from occupied otherwise there is no path
-    occuppied = [p for p in occuppied if p != q]
-
-    connected = [set([p])]
-    layer = set([q for q in adj_cells(p) if q not in occuppied])
-    while len(layer) != 0:
-        connected.append(layer)
-        layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in connected[-2]])
-    for i,layer in enumerate(connected):
+    occupied = [p for p in occupied if p != q]
+    layers = path_connected_layers(p, occupied)
+    for i,layer in enumerate(layers):
         if q in layer:
             return i
     return 999
 
-def path_connected_set(p, occuppied=None):
-    if occuppied is None:
-        occuppied = game_state["occupied_cells"][0]
+def path_connected_layers(p, occupied=None):
+    if occupied is None:
+        occupied = game_state["occupied_cells"][0]
     #remove p from occupied
-    occuppied = [q for q in occuppied if q != p]
+    occupied = [q for q in occupied if q != p]
     layers = [set([p])]
-    layer = set([q for q in adj_cells(p) if q not in occuppied])
+    layer = set([q for q in adj_cells(p) if q not in occupied])
     while len(layer) != 0:
         layers.append(layer)
-        layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in layers[-2]])
+        layer = set([x for q in layer for x in adj_cells(q) if x not in occupied and x not in layers[-2]])
+    return layers
+
+def path_connected_set(p, occupied=None):
+    if occupied is None:
+        occupied = game_state["occupied_cells"][0]
+    layers = path_connected_layers(p, occupied)
     return set([q for layer in layers for q in layer])
 
-def path_connected(p, q, occuppied=None):
-    if occuppied is None:
-        occuppied = game_state["occupied_cells"][0]
-    occuppied = [x for x in occuppied if x != q]
-    return q in path_connected_set(p, occuppied)
+def path_connected(p, q, occupied=None):
+    if occupied is None:
+        occupied = game_state["occupied_cells"][0]
+    occupied = [x for x in occupied if x != q]
+    return q in path_connected_set(p, occupied)
 
-def path_connected_layers(p):
-    occuppied = game_state["occupied_cells"][0]
-    #remove p from occupied
-    occuppied = [q for q in occuppied if q != p]
-    layers = [set([p])]
-    layer = set([q for q in adj_cells(p) if q not in occuppied])
-    while len(layer) != 0:
-        layers.append(layer)
-        layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in layers[-2]])
-    return layers
+def shortest_path_move(p, q, occupied=None):
+    if is_adjacent(p, q):
+        return [q]
+    if occupied is None:
+        occupied = game_state["occupied_cells"][0]
+    occupied = [c for c in occupied if c != q]
+    if q in path_connected_set(p, occupied):
+        dist = path_distance_pq(p, q, occupied)
+        layers = path_connected_layers(p, occupied)
+        if len(layers) > 1:
+            result = [x for x in layers[1] if path_distance_pq(x, q, occupied) == dist-1]
+            return result
+    return []
 
 def go_straight():
     body = get_coord(game_state["you"]["body"])
@@ -58,18 +63,12 @@ def go_straight():
     x,y = -x, -y
     return (x0+x, y0+y)
 
-def shortest_path_move(p, q):
-    if is_adjacent(p, q):
-        return [q]
-    occupied = game_state["occupied_cells"][0]
-    occupied = [c for c in occupied if c != q]
-    if q in path_connected_set(p, occupied):
-        dist = path_distance_pq(p, q)
-        layers = path_connected_layers(p)
-        if len(layers) > 1:
-            result = [x for x in layers[1] if path_distance_pq(x, q) == dist-1]
-            return result
-    return []
+
+def prefer_straight(moves):
+    if game_state["turn"] >= 3:
+        moves = [(move, 0 if get_adjacent_dir(get_my_head(), move) == get_adjacent_dir(get_my_neck(), get_my_head()) else 1) for move in moves]
+        moves = first_group(moves)
+    return moves
 
 def chasing_my_tail():
     my_body = game_state["me"]["body"]
