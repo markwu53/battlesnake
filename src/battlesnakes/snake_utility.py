@@ -1,7 +1,6 @@
 import typing
-import snake_game_state
 
-game_state = snake_game_state.get_game_state()
+game_state = None
 
 #############################################
 # utility functions
