@@ -1,5 +1,5 @@
 import typing
-from snake_work_in_progress import game_state
+from snake_game_state import game_state
 
 
 #############################################

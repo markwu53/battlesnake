@@ -1,6 +1,7 @@
 import typing
 import time
 from itertools import product, groupby
+from snake_game_state import game_state
 from snake_utility import *
 
 # info is called when you create your Battlesnake on play.battlesnake.com
