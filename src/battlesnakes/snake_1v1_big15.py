@@ -109,6 +109,8 @@ def my_snake_bigger():
         #rank = 9
         game_state["decision_path"].append(f"rank:{best_rank}")
         game_state["next_head_coord"] = best[0]
+    
+    return True
 
 def get_cut_info():
     snake_paths = enemy_snake_danger_paths()
