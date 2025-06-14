@@ -1,7 +1,7 @@
 import typing
-from snake_game_state import state
+import snake_game_state
 
-game_state = state["game_state"]
+game_state = snake_game_state.get_game_state()
 
 #############################################
 # utility functions

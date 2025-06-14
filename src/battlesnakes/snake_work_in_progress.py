@@ -1,7 +1,7 @@
 import typing
 import time
 from itertools import product, groupby
-from snake_game_state import state
+import snake_game_state
 from snake_utility import *
 
 # info is called when you create your Battlesnake on play.battlesnake.com
@@ -29,7 +29,7 @@ def end(game_state: typing.Dict):
 
 #def move(game_state: typing.Dict) -> typing.Dict:
 def special_experimenting_code(game_state):
-    state["game_state"] = game_state
+    snake_game_state.game_state = game_state
 
     def main():
 
