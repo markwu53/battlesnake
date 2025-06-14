@@ -315,7 +315,7 @@ def special_experimenting_code(game_state):
     def dead_end_ranking():
 
         def dead_end_rank(p):
-            connected = path_connected(p)
+            connected = path_connected_set(p)
             return len(connected)
 
         for p in game_state["allowed_move"]:
@@ -673,34 +673,48 @@ def special_experimenting_code(game_state):
             occupied = game_state["occupied_cells"][0]
             snake_paths = enemy_snake_danger_paths()
 
-            #snake_allowed_move = [p for p in adj_cells(snake_head) if p not in occupied]
-            def sensitive_to_enemy_move(a):
-                cn = game_state["danger_ranking"][a]["dead_end"]
-                #a is sensitive
-                return any([(x/cn <= 0.7 and x+5 <= cn) or x <= 6
-                        for path in snake_paths
-                        for x in [len(path_connected(a, occupied+list(path)))]
-                        ])
-            def dead_end_check(a):
-                if path_distance_pq(a, get_my_tail()) != 999:
-                    return False
-                if path_distance_pq(a, game_state["others"][0]["body"][0]) != 999:
-                    return False
-                cn = game_state["danger_ranking"][a]["dead_end"]
-                return cn <= 10
+            my_head = get_my_head()
+            my_tail = get_my_tail()
+            other_tail = game_state["others"][0]["body"][-1]
+            to_my_tail = path_distance_pq(my_head, my_tail)
+            to_other_tail = path_distance_pq(my_head, other_tail)
+            for a in abc: 
+                cuts = [ (len(path_connected_set(a, occupied+list(path))), path_distance_pq(my_head, path[-1])) for path in snake_paths ]
+                if len(cuts) != 0:
+                    cut_space, cut_distance = sorted(cuts)[0]
+                else:
+                    cut_space, cut_distance = 999, 999
+                game_state["danger_ranking"][a]["cut_space"] = cut_space
+                game_state["danger_ranking"][a]["cut_distance"] = cut_distance
+            
+            #now I have the following information of an allowed move:
+            #1. path connected distance to my tail
+            #2. path connected distance to other tail
+            #3. original connected space
+            #4. possible cut space
+            #5. cut point distance
+            #I will use these to determine a best move
 
-            sensitive_to_cut = [a for a in abc if sensitive_to_enemy_move(a)]
-            dead_end = [a for a in abc if dead_end_check(a)]
-            game_state["logging"]["sensitive"] = sensitive_to_cut
-            game_state["logging"]["dead_end_1v1"] = dead_end
+            a = game_state["next_head_coord"]
+            r = game_state["danger_ranking"][a]
+            if r["dead_end"] - r["cut_space"] < 6:
+                return
+            if to_my_tail < r["cut_distance"] or to_other_tail < r["cut_distance"]:
+                return
+            
+            abc = [x for x in abc if x != a]
+            game_state["next_head_coord"] = abc[0]
+
+            """
             moves = [a for a in abc if a not in sensitive_to_cut and a not in dead_end]
             if len(moves) == 0:
                 #find a way out
                 return
             if game_state["next_head_coord"] in moves:
                 return
-            game_state["decision_path"].append("sensitive or dead_end")
+            game_state["decision_path"].append("cut or dead_end")
             game_state["next_head_coord"] = moves[0]
+            """
 
         def prefer_straight(moves):
             if game_state["turn"] >= 3:
@@ -910,7 +924,7 @@ def special_experimenting_code(game_state):
                 return i
         return 999
 
-    def path_connected(p, occuppied=None):
+    def path_connected_set(p, occuppied=None):
         if occuppied is None:
             occuppied = game_state["occupied_cells"][0]
         #remove p from occupied
@@ -921,6 +935,12 @@ def special_experimenting_code(game_state):
             layers.append(layer)
             layer = set([x for q in layer for x in adj_cells(q) if x not in occuppied and x not in layers[-2]])
         return set([q for layer in layers for q in layer])
+
+    def path_connected(p, q, occuppied=None):
+        if occuppied is None:
+            occuppied = game_state["occupied_cells"][0]
+        occuppied = [x for x in occuppied if x != q]
+        return q in path_connected_set(p, occuppied)
 
     def path_connected_layers(p):
         occuppied = game_state["occupied_cells"][0]
@@ -944,7 +964,7 @@ def special_experimenting_code(game_state):
     def shortest_path_move(p, q):
         if is_adjacent(p, q):
             return [q]
-        if q in path_connected(p):
+        if q in path_connected_set(p):
             dist = path_distance_pq(p, q)
             layers = path_connected_layers(p)
             if len(layers) > 1:
