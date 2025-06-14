@@ -1,3 +1,4 @@
+import typing
 from snake_work_in_progress import game_state
 
 
