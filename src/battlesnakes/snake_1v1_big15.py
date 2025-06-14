@@ -83,27 +83,38 @@ def my_snake_bigger():
                 game_state["decision_path"].append("food1")
                 game_state["next_head_coord"] = moves[0]
         else:
-            food = [f for f in food if path_connected(my_head, f)]
+            food = [f for f in food if path_distance_pq(my_head, f) == 2 and not is_adjacent(f, get_my_neck())]
             if len(food) != 0:
-                food = [(f, (
-                    path_distance_pq(my_head, f),
-                    path_distance_pq(my_head, target),
-                    path_distance_pq(f, target),
-                )) for f in food]
-                food = [(f, math.sqrt((hp-a)*(hp-b)*(hp-c)*hp)*2/(a*b)) for f, sides in food for a,b,c in [sides] for hp in [(a+b+c)/2] 
-                        if a<=b
-                        and a+b > c
-                        and a+c > b
-                        and b+c > a
-                        ]
+                food_target = food[0]
+                moves = shortest_path_move(my_head, food_target)
+                moves = [move for move in best]
+                if len(moves) != 0:
+                    game_state["decision_path"].append(f"food: {food_target}")
+                    game_state["next_head_coord"] = moves[0]
+            else:
+
+                food = [f for f in food if path_connected(my_head, f)]
                 if len(food) != 0:
-                    food = sorted(food, key=lambda f: f[1])
-                    food_target = food[0][0]
-                    moves = shortest_path_move(my_head, food_target)
-                    moves = [move for move in best]
-                    if len(moves) != 0:
-                        game_state["decision_path"].append(f"food: {food_target}")
-                        game_state["next_head_coord"] = moves[0]
+                    food = [(f, (
+                        path_distance_pq(my_head, f),
+                        path_distance_pq(my_head, target),
+                        path_distance_pq(f, target),
+                    )) for f in food]
+                    food = [(f, math.sqrt((hp-a)*(hp-b)*(hp-c)*hp)*2/(a*b)) for f, sides in food for a,b,c in [sides] for hp in [(a+b+c)/2] 
+                            if a<=b
+                            and a+b > c
+                            and a+c > b
+                            and b+c > a
+                            ]
+                    if len(food) != 0:
+                        food = sorted(food, key=lambda f: f[1])
+                        food_target = food[0][0]
+                        moves = shortest_path_move(my_head, food_target)
+                        moves = [move for move in best]
+                        if len(moves) != 0:
+                            game_state["decision_path"].append(f"food: {food_target}")
+                            game_state["next_head_coord"] = moves[0]
+
     else:
         #rank = 5
         #rank = 9
