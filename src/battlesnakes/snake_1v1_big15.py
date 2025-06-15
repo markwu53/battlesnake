@@ -5,40 +5,6 @@ import math
 
 game_state = None
 
-def has_cut(a):
-    r = game_state["danger_ranking"][a]
-    if r["cut_space"] == 999:
-        return False
-    if r["dead_end"] - r["cut_space"] < len(r["cut_path"])+2:
-        #cut not effective
-        return False
-    return True
-
-def rank_a_move(a):
-    my_head = get_my_head()
-    my_tail = get_my_tail()
-    other_tail = game_state["others"][0]["body"][-1]
-    r = game_state["danger_ranking"][a]
-    rank = 1
-    if not has_cut(a):
-        if path_distance_pq(a, my_tail) < 999:
-            rank = 1
-        elif path_distance_pq(a, other_tail) < 999:
-            rank = 2
-        else:
-            #need calculate a wayout
-            rank = 5
-    else:
-        cut_point = r["cut_point"]
-        if path_distance_pq(a, my_tail) < path_distance_pq(a, cut_point):
-            rank = 3
-        elif path_distance_pq(a, other_tail) < path_distance_pq(a, cut_point):
-            rank = 4
-        else:
-            #dangerous, probably too late
-            rank = 9
-    return rank
-
 def my_snake_bigger():
     global game_state
     game_state = snake_utility.game_state
@@ -75,32 +41,36 @@ def my_snake_bigger():
         if len(moves) != 0:
             game_state["next_head_coord"] = moves[0]
 
-        food = game_state["food"]
-        food1 = [f for f in food if is_adjacent(my_head, f)]
-        if len(food1) != 0:
-            moves = [a for a in best if a in food1]
-            if len(moves) != 0:
-                game_state["decision_path"].append("food1")
-                game_state["next_head_coord"] = moves[0]
-        else:
-            food = [f for f in food if path_distance_pq(my_head, f) == 2 and not is_adjacent(f, get_my_neck())]
-            if len(food) != 0:
-                food_target = food[0]
-                moves = shortest_path_move(my_head, food_target)
-                moves = [move for move in best]
+        #get food
+        food = [f for f in game_state["food"] if path_connected(my_head, f)]
+
+        if len(food) != 0:
+            food1 = [f for f in food if is_adjacent(my_head, f)]
+            if len(food1) != 0:
+                moves = [a for a in best if a in food1]
                 if len(moves) != 0:
-                    game_state["decision_path"].append(f"food: {food_target}")
+                    game_state["decision_path"].append("food1")
                     game_state["next_head_coord"] = moves[0]
             else:
-
-                food = [f for f in food if path_connected(my_head, f)]
-                if len(food) != 0:
+                food2 = [f for f in food if path_distance_pq(my_head, f) == 2 and not is_adjacent(f, get_my_neck())]
+                if len(food2) != 0:
+                    food_target = food2[0]
+                    moves = shortest_path_move(my_head, food_target)
+                    moves = [move for move in moves if move in best]
+                    if len(moves) != 0:
+                        game_state["decision_path"].append(f"food2: {food_target}")
+                        game_state["next_head_coord"] = moves[0]
+                else:
                     food = [(f, (
                         path_distance_pq(my_head, f),
                         path_distance_pq(my_head, target),
                         path_distance_pq(f, target),
                     )) for f in food]
-                    food = [(f, math.sqrt((hp-a)*(hp-b)*(hp-c)*hp)*2/(a*b)) for f, sides in food for a,b,c in [sides] for hp in [(a+b+c)/2] 
+                    food = [(f, 
+                            #(my_head, food, target) should form a triangle
+                            #and we want food should roughly on the path to target
+                            #this is calculated by sine of the angle
+                            math.sqrt((hp-a)*(hp-b)*(hp-c)*hp)*2/(a*b)) for f, sides in food for a,b,c in [sides] for hp in [(a+b+c)/2] 
                             if a<=b
                             and a+b > c
                             and a+c > b
@@ -122,6 +92,41 @@ def my_snake_bigger():
         game_state["next_head_coord"] = best[0]
     
     return True
+
+def has_cut(a):
+    r = game_state["danger_ranking"][a]
+    if r["cut_space"] == 999:
+        return False
+    if r["dead_end"] - r["cut_space"] < len(r["cut_path"])+2:
+        #cut not effective
+        return False
+    return True
+
+def rank_a_move(a):
+    my_head = get_my_head()
+    my_tail = get_my_tail()
+    other_tail = game_state["others"][0]["body"][-1]
+    r = game_state["danger_ranking"][a]
+    rank = 1
+    if not has_cut(a):
+        if path_distance_pq(a, my_tail) < 999:
+            rank = 1
+        elif path_distance_pq(a, other_tail) < 999:
+            rank = 2
+        else:
+            #need calculate a wayout
+            rank = 5
+    else:
+        cut_point = r["cut_point"]
+        if path_distance_pq(a, my_tail) < path_distance_pq(a, cut_point):
+            rank = 3
+        elif path_distance_pq(a, other_tail) < path_distance_pq(a, cut_point):
+            rank = 4
+        else:
+            #dangerous, probably too late
+            rank = 9
+    r["rank_1v1"] = rank
+    return rank
 
 def get_cut_info():
     snake_paths = enemy_snake_danger_paths()
