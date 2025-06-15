@@ -21,18 +21,18 @@ def rank_a_move(a):
     r = game_state["danger_ranking"][a]
     rank = 1
     if not has_cut(a):
-        if path_distance_pq(my_head, my_tail) < 999:
+        if path_distance_pq(a, my_tail) < 999:
             rank = 1
-        elif path_distance_pq(my_head, other_tail) < 999:
+        elif path_distance_pq(a, other_tail) < 999:
             rank = 2
         else:
             #need calculate a wayout
             rank = 5
     else:
         cut_point = r["cut_point"]
-        if path_distance_pq(my_head, my_tail) < path_distance_pq(my_head, cut_point):
+        if path_distance_pq(a, my_tail) < path_distance_pq(a, cut_point):
             rank = 3
-        elif path_distance_pq(my_head, other_tail) < path_distance_pq(my_head, cut_point):
+        elif path_distance_pq(a, other_tail) < path_distance_pq(a, cut_point):
             rank = 4
         else:
             #dangerous, probably too late
