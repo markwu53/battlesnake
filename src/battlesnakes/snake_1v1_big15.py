@@ -194,10 +194,10 @@ def my_snake_bigger():
                   if len(r[a]["cut_info"]) == 0 
                   and not other["connected"]
                   ]
-    moves = sorted(moves, key=lambda a: path_distance_pq(a, r[a]["me"]["point"]), reverse=True)
+    moves = sorted(moves, key=lambda a: path_distance_pq(a, r[a]["wayout"]["me"]["point"]), reverse=True)
     for a in moves:
-        wayout_point = r[a]["me"]["point"]
-        needed_length = r[a]["me"]["needed_steps"]+1
+        wayout_point = r[a]["wayout"]["me"]["point"]
+        needed_length = r[a]["wayout"]["me"]["needed_steps"]+1
         #this is a costly calculation:
         if exist_long_enough_path(a, wayout_point, needed_length):
             #a is good
@@ -212,13 +212,13 @@ def my_snake_bigger():
                   and other["connected"]
                   ]
     for a in moves:
-        if r[a]["me"]["needed_steps"] <= r[a]["other"]["needed_steps"]:
-            if exist_long_enough_path(a, r[a]["me"]["point"], r[a]["me"]["needed_steps"]+1):
+        if r[a]["wayout"]["me"]["needed_steps"] <= r[a]["wayout"]["other"]["needed_steps"]:
+            if exist_long_enough_path(a, r[a]["wayout"]["me"]["point"], r[a]["wayout"]["me"]["needed_steps"]+1):
                 game_state["decision_path"].append("both me search_wayout")
                 game_state["next_head_coord"] = a
                 return
         else:
-            if exist_long_enough_path(a, r[a]["other"]["point"], r[a]["other"]["needed_steps"]+1):
+            if exist_long_enough_path(a, r[a]["wayout"]["other"]["point"], r[a]["wayout"]["other"]["needed_steps"]+1):
                 game_state["decision_path"].append("both other search_wayout")
                 game_state["next_head_coord"] = a
                 return
@@ -228,8 +228,8 @@ def my_snake_bigger():
     for a in moves:
         cut_path, nspace = r[a]["cut_info"][0]
         occupied = game_state["occupied_cells"][0]+cut_path[1:]
-        if r[a]["me"]["needed_steps"] <= r[a]["other"]["needed_steps"]:
-            if exist_long_enough_path(a, r[a]["me"]["point"], r[a]["me"]["needed_steps"]+1, occupied):
+        if r[a]["wayout"]["me"]["needed_steps"] <= r[a]["wayout"]["other"]["needed_steps"]:
+            if exist_long_enough_path(a, r[a]["wayout"]["me"]["point"], r[a]["wayout"]["me"]["needed_steps"]+1, occupied):
                 game_state["decision_path"].append("cut me search_wayout")
                 game_state["next_head_coord"] = a
                 return
