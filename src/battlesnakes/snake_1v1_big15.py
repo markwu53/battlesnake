@@ -305,7 +305,7 @@ def exist_long_enough_path(a, b, needed_length, occupied=None):
     foods = r["wayout"]["confined_food"]
     while len(layer) != 0:
         layers.append(layer)
-        layer = [path+[p] for layer in layers for path in layers for end in [path[-1]] for p in adj_cells(end)
+        layer = [path+[p] for layer in layers for path in layer for end in [path[-1]] for p in adj_cells(end)
                  if p not in path and p not in occupied]
     for layer in layers:
         for path in layer:
