@@ -1,4 +1,5 @@
 import typing
+import time
 
 game_state = None
 
@@ -192,3 +193,49 @@ def get_coord(items: typing.List) -> typing.List:
 # end of utility functions
 #############################################
 
+def run():
+    global game_state
+    game_state = {}
+    game_state["board"] = {}
+    game_state["board"]["width"] = 11
+    game_state["board"]["height"] = 11
+    game_state["occupied_cells"] = [[
+        (0,4), (1,4), (2,4), (3,4), (4,4),
+        (5,3), (5,2), (5,1), (5,0) 
+        ] ]
+    a = (0,1)
+    layers = []
+    occupied = game_state["occupied_cells"][0]
+    layer = [[a]]
+    start_time = time.time()
+    for i in range(100):
+        if len(layer) == 0: break 
+        #print(i, len(layer))
+        layers.append(layer)
+        layer = [path+[p] for path in layers[-1] for end in [path[-1]] for p in adj_cells(end) if p not in occupied and p not in path]
+    end_time = time.time()
+    log_time_diff = end_time - start_time
+    log_time_diff = f"time: {log_time_diff:.3f}s"
+    print(log_time_diff)
+    #for i,layer in enumerate(layers): print(i, len(layer))
+
+    b = (4,3)
+    print(b)
+    target_paths = [[path for path in layer if path[-1] == b] for layer in layers]
+    for i,layer in enumerate(target_paths): print(i, len(layer))
+    print()
+
+    b = (4,0)
+    print(b)
+    target_paths = [[path for path in layer if path[-1] == b] for layer in layers]
+    for i,layer in enumerate(target_paths): print(i, len(layer))
+    print()
+
+    b = (4,0)
+    print(b)
+    target_paths = [[path for path in layer if path[-1] == b] for layer in layers]
+    for i,layer in enumerate(target_paths): print(i, len(layer))
+    print()
+
+if __name__ == "__main__":
+    run()

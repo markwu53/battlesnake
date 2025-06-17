@@ -5,182 +5,405 @@ import math
 
 game_state = None
 
+def get_food(moves):
+    pass
+
 def my_snake_bigger():
     global game_state
     game_state = snake_utility.game_state
 
-    #chase my tail first
-    #if not, chase other tail
-    #in the route, get food if near
-    #consider possible cut and dead end
-
-    #1. no cut and can see tail
-    #2. cut not effective - still can see tail
-    #3. no cut but dead end but can calculate a way out
-
-    get_cut_info()
+    store_enemy_possible_paths()
 
     my_head = get_my_head()
     my_tail = get_my_tail()
+    other_head = game_state["others"][0]["body"][0]
     other_tail = game_state["others"][0]["body"][-1]
 
+    r = game_state["danger_ranking"]
     abc = game_state["allowed_move"]
-    abc = [(a, rank_a_move(a)) for a in abc]
-    best_rank = min([rank for a, rank in abc])
-    best = [a for a, rank in abc if rank == best_rank]
-    target = None
-    if best_rank in (1,2,3,4):
-        if best_rank in (1,3):
-            game_state["decision_path"].append("my_tail")
-            target = my_tail
-        elif best_rank in (2,4):
-            game_state["decision_path"].append("other_tail")
-            target = other_tail
+    for a in abc:
+        r[a]["cut_info"] = enemy_possible_cut_path(a)
+        r[a]["see_my_tail"] = path_connected(a, my_tail)
+        r[a]["see_other_head"] = path_connected(a, other_head)
+        r[a]["see_other_tail"] = path_connected(a, other_tail)
 
-        moves = shortest_path_move(my_head, target)
-        if len(moves) != 0:
+
+    #################################
+    # can see tail either no cut or after cut
+    #################################
+
+    #category - no cut, can see my tail
+    moves = [a for a in abc if len(r[a]["cut_info"]) == 0 and r[a]["see_my_tail"]]
+    if len(moves) != 0:
+        game_state["decision_path"].append("no_cut my_tail")
+        if game_state["next_head_coord"] not in moves:
             game_state["next_head_coord"] = moves[0]
+        get_food(moves)
+        return
+    
+    #category - no cut, can see other tail
+    moves = [a for a in abc if len(r[a]["cut_info"]) == 0 and r[a]["see_other_tail"]]
+    if len(moves) != 0:
+        game_state["decision_path"].append("no_cut other_tail")
+        if game_state["next_head_coord"] not in moves:
+            game_state["next_head_coord"] = moves[0]
+        get_food(moves)
+        return
 
-        #get food
-        food = [f for f in game_state["food"] if path_connected(my_head, f)]
+    #category - has cut, can see my tail
+    moves = [a for a in abc
+             for cut_info in [r[a]["cut_info"]]
+             for cut_path, nspace in cut_info
+             for occupied in [game_state["occupied"][0]+cut_path[1:]]
+             if len(cut_info) == 1
+             and path_connected(a, my_tail, occupied)
+             ]
+    if len(moves) != 0:
+        game_state["decision_path"].append("has_cut my_tail")
+        if game_state["next_head_coord"] not in moves:
+            game_state["next_head_coord"] = moves[0]
+        get_food(moves)
+        return
 
-        if len(food) != 0:
-            food1 = [f for f in food if is_adjacent(my_head, f)]
-            if len(food1) != 0:
-                moves = [a for a in best if a in food1]
+    #category - has cut, can see other tail
+    moves = [a for a in abc
+             for cut_info in [r[a]["cut_info"]]
+             for cut_path, nspace in cut_info
+             for occupied in [game_state["occupied"][0]+cut_path[1:]]
+             if len(cut_info) == 1
+             and path_connected(a, other_tail, occupied)
+             ]
+    if len(moves) != 0:
+        game_state["decision_path"].append("has_cut other_tail")
+        if game_state["next_head_coord"] not in moves:
+            game_state["next_head_coord"] = moves[0]
+        get_food(moves)
+        return
+
+    #################################
+    # no tail
+    #################################
+
+    #category - can't see any tail, no cut, confined space has enough room
+    moves = [a for a in abc 
+             if len(r[a]["cut_info"]) == 0
+             and r[a]["dead_end"] >= len(game_state["me"]["body"]) *3 //2
+             ]
+    if len(moves) != 0:
+        game_state["decision_path"].append("static spacious")
+        if game_state["next_head_coord"] not in moves:
+            game_state["next_head_coord"] = moves[0]
+        #get_food(moves)
+        return
+
+    #category - can't see any tail, has cut, cut space has enough room
+    moves = [a for a in abc
+             for cut_info in [r[a]["cut_info"]]
+             for cut_path, nspace in cut_info
+             if len(cut_info) == 1
+             and nspace >= len(game_state["me"]["body"]) *3 //2
+             ]
+    if len(moves) != 0:
+        game_state["decision_path"].append("has_cut spacious")
+        if game_state["next_head_coord"] not in moves:
+            game_state["next_head_coord"] = moves[0]
+        #get_food(moves)
+        return
+
+    #################################
+    # limited space - find a wayout
+    #################################
+
+    for a in abc:
+        wayout = {}
+
+        confined_space = path_connected_set(a)
+        if len(r[a]["cut_info"]) == 1:
+            cut_path, nspace = r[a]["cut_info"][0]
+            occupied = game_state["occupied"][0]+cut_path[1:]
+            confined_space = path_connected_set(a, occupied)
+        wayout["confined_food"] = [f for f in game_state["food"] if f in confined_space]
+
+        wayout["me"] = {}
+        my_body = game_state["me"]["body"]
+        my_index = max([i for i,cell in enumerate(my_body) if path_connected(a, cell)])
+        wayout["me"]["point"] = my_body[my_index]
+        wayout["me"]["needed_steps"] = len(my_body) - my_index-1
+        wayout["me"]["direct_distance"] = path_distance_pq(a, wayout["me"]["point"])
+
+        wayout["other"] = {}
+        other_body = game_state["others"][0]["body"]
+        #this can be empty
+        other_connected_body = [i for i,cell in enumerate(other_body) if path_connected(a, cell)]
+        wayout["other"]["connected"] = len(other_connected_body) != 0
+        if wayout["other"]["connected"]:
+            other_index = max(other_connected_body)
+            wayout["other"]["point"] = other_body[other_index]
+            wayout["other"]["needed_steps"] = len(other_body) - other_index-1
+            wayout["other"]["direct_distance"] = path_distance_pq(a, wayout["other"]["point"])
+
+        r[a]["wayout"] = wayout
+
+    #category - simple wayout: long enough path towards wayout
+    moves = [a for a in abc
+             for way in [r[a]["wayout"]["me"]]
+             if way["direct_distance"] >= way["needed_steps"]
+             ]
+    if len(moves) != 0:
+        game_state["decision_path"].append("simple_wayout me")
+        if game_state["next_head_coord"] not in moves:
+            game_state["next_head_coord"] = moves[0]
+        return
+
+    moves = [a for a in abc
+             for way in [r[a]["wayout"]["other"]]
+             if way["connected"] and way["direct_distance"] >= way["needed_steps"]
+             ]
+    if len(moves) != 0:
+        game_state["decision_path"].append("simple_wayout other")
+        if game_state["next_head_coord"] not in moves:
+            game_state["next_head_coord"] = moves[0]
+        return
+
+    #no simple wayout, need to calculate a path long enough towards wayout
+    #first remove no hope ones
+    #sort by most hopeful one
+    #go one by one return on first success to avoid costly calculation
+    nohope = [a for a in abc 
+                  for me in [r[a]["wayout"]["me"]] 
+                  for other in [r[a]["wayout"]["other"]] 
+                  for food in [r[a]["confined_food"]]
+                  if len(r[a]["cut_info"]) == 0
+                  and not other["connected"]
+                  and r[a]["dead_end"]-len(food) < me["needed_steps"]
+                  ]
+    nohope2 = [a for a in abc 
+                  for me in [r[a]["wayout"]["me"]] 
+                  for other in [r[a]["wayout"]["other"]] 
+                  for food in [r[a]["confined_food"]]
+                  if len(r[a]["cut_info"]) == 0
+                  and other["connected"]
+                  and r[a]["dead_end"]-len(food) < me["needed_steps"]
+                  and r[a]["dead_end"]-len(food) < other["needed_steps"]
+                  ]
+    hopeful = [a for a in abc if a not in nohope and a not in nohope2]
+
+    #category - static, only me
+    moves = [a for a in hopeful
+                  for other in [r[a]["wayout"]["other"]] 
+                  if len(r[a]["cut_info"]) == 0 
+                  and not other["connected"]
+                  ]
+    moves = sorted(moves, key=lambda a: path_distance_pq(a, r[a]["me"]["point"]), reverse=True)
+    for a in moves:
+        wayout_point = r[a]["me"]["point"]
+        needed_length = r[a]["me"]["needed_steps"]+1
+        #this is a costly calculation:
+        if exist_long_enough_path(a, wayout_point, needed_length):
+            #a is good
+            game_state["decision_path"].append("myself search_wayout")
+            game_state["next_head_coord"] = a
+            return
+
+    #category - static, connected to both
+    moves = [a for a in hopeful
+                  for other in [r[a]["wayout"]["other"]] 
+                  if len(r[a]["cut_info"]) == 0 
+                  and other["connected"]
+                  ]
+    for a in moves:
+        if r[a]["me"]["needed_steps"] <= r[a]["other"]["needed_steps"]:
+            if exist_long_enough_path(a, r[a]["me"]["point"], r[a]["me"]["needed_steps"]+1):
+                game_state["decision_path"].append("both me search_wayout")
+                game_state["next_head_coord"] = a
+                return
+        else:
+            if exist_long_enough_path(a, r[a]["other"]["point"], r[a]["other"]["needed_steps"]+1):
+                game_state["decision_path"].append("both other search_wayout")
+                game_state["next_head_coord"] = a
+                return
+
+    #category - has cut, search wayout
+    moves = [a for a in hopeful if len(r[a]["cut_info"]) == 1 ]
+    for a in moves:
+        cut_path, nspace = r[a]["cut_info"][0]
+        occupied = game_state["occupied"][0]+cut_path[1:]
+        if r[a]["me"]["needed_steps"] <= r[a]["other"]["needed_steps"]:
+            if exist_long_enough_path(a, r[a]["me"]["point"], r[a]["me"]["needed_steps"]+1, occupied):
+                game_state["decision_path"].append("cut me search_wayout")
+                game_state["next_head_coord"] = a
+                return
+        else:
+            if exist_long_enough_path(a, r[a]["other"]["point"], r[a]["other"]["needed_steps"]+1, occupied):
+                game_state["decision_path"].append("cut other search_wayout")
+                game_state["next_head_coord"] = a
+                return
+
+    ##############################################################
+
+def get_food2():
+
+    my_head = get_my_head()
+    best = []
+    target = game_state["food"][0]
+
+    #get food
+    food = [f for f in game_state["food"] if path_connected(my_head, f)]
+
+    if len(food) != 0:
+        food1 = [f for f in food if is_adjacent(my_head, f)]
+        if len(food1) != 0:
+            moves = [a for a in food1 if a in best]
+            if len(moves) != 0:
+                game_state["decision_path"].append("food1")
+                game_state["next_head_coord"] = moves[0]
+        else:
+            food2 = [f for f in food if path_distance_pq(my_head, f) == 2 and not is_adjacent(f, get_my_neck())]
+            if len(food2) != 0:
+                food_target = food2[0]
+                moves = shortest_path_move(my_head, food_target)
+                moves = [move for move in moves if move in best]
                 if len(moves) != 0:
-                    game_state["decision_path"].append("food1")
+                    game_state["decision_path"].append(f"food2: {food_target}")
                     game_state["next_head_coord"] = moves[0]
             else:
-                food2 = [f for f in food if path_distance_pq(my_head, f) == 2 and not is_adjacent(f, get_my_neck())]
-                if len(food2) != 0:
-                    food_target = food2[0]
+                food = [(f, (
+                    path_distance_pq(my_head, f),
+                    path_distance_pq(my_head, target),
+                    path_distance_pq(f, target),
+                )) for f in food]
+                food = [(f, 
+                        #(my_head, food, target) should form a triangle
+                        #and we want food should roughly on the path to target
+                        #this is calculated by sine of the angle
+                        math.sqrt((hp-a)*(hp-b)*(hp-c)*hp)*2/(a*b)) for f, sides in food for a,b,c in [sides] for hp in [(a+b+c)/2] 
+                        if 1==1
+                        and a == distance_pq(my_head, f)
+                        and b == distance_pq(my_head, target)
+                        and c == distance_pq(f, target)
+                        and a<=b
+                        and a+b > c
+                        and a+c > b
+                        and b+c > a
+                        ]
+                if len(food) != 0:
+                    food = sorted(food, key=lambda f: f[1])
+                    food_target, sine = food[0]
                     moves = shortest_path_move(my_head, food_target)
                     moves = [move for move in moves if move in best]
                     if len(moves) != 0:
-                        game_state["decision_path"].append(f"food2: {food_target}")
+                        game_state["decision_path"].append(f"food: {food_target}")
                         game_state["next_head_coord"] = moves[0]
-                else:
-                    food = [(f, (
-                        path_distance_pq(my_head, f),
-                        path_distance_pq(my_head, target),
-                        path_distance_pq(f, target),
-                    )) for f in food]
-                    food = [(f, 
-                            #(my_head, food, target) should form a triangle
-                            #and we want food should roughly on the path to target
-                            #this is calculated by sine of the angle
-                            math.sqrt((hp-a)*(hp-b)*(hp-c)*hp)*2/(a*b)) for f, sides in food for a,b,c in [sides] for hp in [(a+b+c)/2] 
-                            if a<=b
-                            and a+b > c
-                            and a+c > b
-                            and b+c > a
-                            ]
-                    if len(food) != 0:
-                        food = sorted(food, key=lambda f: f[1])
-                        food_target = food[0][0]
-                        moves = shortest_path_move(my_head, food_target)
-                        moves = [move for move in best]
-                        if len(moves) != 0:
-                            game_state["decision_path"].append(f"food: {food_target}")
-                            game_state["next_head_coord"] = moves[0]
 
-    else:
-        #rank = 5
-        #rank = 9
-        game_state["decision_path"].append(f"rank:{best_rank}")
-        game_state["next_head_coord"] = best[0]
-    
-    return True
-
-def has_cut(a):
+def exist_long_enough_path(a, b, needed_length, occupied=None):
+    if occupied is None:
+        occupied = game_state["occupied_cells"][0]
     r = game_state["danger_ranking"][a]
-    if r["cut_space"] == 999:
-        return False
-    if r["dead_end"] - r["cut_space"] < len(r["cut_path"])+2:
-        #cut not effective
-        return False
-    return True
+    occupied = [p for p in occupied if p != b]
+    layers = []
+    layer = [[a]]
+    foods = r["confined_food"]
+    while len(layer) != 0:
+        layers.append(layer)
+        layer = [path+[p] for layer in layers for path in layers for end in [path[-1]] for p in adj_cells(end)
+                 if p not in path and p not in occupied]
+    for layer in layers:
+        for path in layer:
+            if path[-1] != b: continue
+            if len(path) < needed_length: continue
+            f = [p for p in foods if p in path]
+            if len(path) - len(f) >= needed_length:
+                return True
+    return False
 
-def rank_a_move(a):
-    my_head = get_my_head()
-    my_tail = get_my_tail()
-    other_tail = game_state["others"][0]["body"][-1]
-    r = game_state["danger_ranking"][a]
-    rank = 1
-    if not has_cut(a):
-        if path_distance_pq(a, my_tail) < 999:
-            rank = 1
-        elif path_distance_pq(a, other_tail) < 999:
-            rank = 2
-        else:
-            #need calculate a wayout
-            rank = 5
-    else:
-        cut_point = r["cut_point"]
-        if path_distance_pq(a, my_tail) < path_distance_pq(a, cut_point):
-            rank = 3
-        elif path_distance_pq(a, other_tail) < path_distance_pq(a, cut_point):
-            rank = 4
-        else:
-            #dangerous, probably too late
-            rank = 9
-    r["rank_1v1"] = rank
-    return rank
-
-def get_cut_info():
-    snake_paths = enemy_snake_danger_paths()
-
-    occupied = game_state["occupied_cells"][0]
-    my_head = get_my_head()
-    my_tail = get_my_tail()
-    for a in game_state["allowed_move"]: 
-        cuts = [ (len(path_connected_set(a, occupied+list(path))), path[-1], path) for path in snake_paths ]
-        if len(cuts) != 0:
-            cut_space, cut_point, cut_path = sorted(cuts)[0]
-        else:
-            cut_space, cut_point, cut_path = 999, 999, tuple()
-        game_state["danger_ranking"][a]["cut_space"] = cut_space
-        game_state["danger_ranking"][a]["cut_point"] = cut_point
-        game_state["danger_ranking"][a]["cut_path"] = cut_path
-
-def enemy_snake_danger_paths():
-
+def store_enemy_possible_paths(nstep=5, max_paths=200):
+    #calculate enemy snake possible path
+    #assuming my snake static
+    #limit nstep or a fix number of total paths
     snake_head = game_state["others"][0]["body"][0]
-    my_head = get_my_head()
-    occupied = game_state["occupied_cells"][0]
+    layers = [[[snake_head]]]
+    for ilayer in range(nstep):
+        if sum([len(layer) for layer in layers]) > max_paths: break
+        layer = [npath
+                 for path in layers[-1] 
+                 for head in [path[-1]] 
+                 for nhead in adj_cells(head)
+                 for npath in [ path+[nhead] ]
+                 if nhead not in path 
+                    and nhead not in game_state["occupied"][ilayer] 
+                 ]
+        layers.append(layer)
+    game_state["enemy_paths"] = layers
 
-    #5 step enemy move
-    nstep = 5
-    snake_connected_layers = path_connected_layers(snake_head)
-    my_connected_layers = path_connected_layers(my_head)
-    my_connected_dict = {c:i for i,layers in enumerate(my_connected_layers) for c in layers}
+def enemy_possible_cut_path(a, nstep=5, max_paths=200):
+    occ = game_state["occupied"]
+    n_original_space = game_state["danger_ranking"][a]["dead_end"]
+    #layers = enemy_possible_paths(nstep, max_paths)
 
-    #path must in every step shorter than mine otherwise won't be danger
-    snake_paths = [
-        layer if i == 0 else
-        [c for c in layer if c in my_connected_dict and i+2 <= my_connected_dict[c]] 
-            for i,layer in enumerate(snake_connected_layers) if i <= nstep]
-    snake_paths = [layer for layer in snake_paths if len(layer) != 0]
-    #5 layers each layer has paths all with same length
-    #path must connected
-    snake_paths = [[path for path in product(*snake_paths[:i+2]) 
-                    if len(path) > 1 and all([is_adjacent(a,b) for a,b in zip(path[:-1], path[1:])])]
-                    for i in range(nstep) ]
-    #end point must cut an area
-    snake_paths = [[path for path in layer for p in [path[-1]]
-                    for occ in [[q for q in occupied if q != snake_head]]
-                    if on_border(p)
-                    or any([is_adjacent(p, c) for c in occ])
-                    or any([distance_pq(p,c) == 2 and len([q for q in adj_cells(p) if q in adj_cells(c)]) == 2 for c in occ])
-                    ] for layer in snake_paths if len(layer) != 0]
-    #paths with same end point will have same effect
-    #in each layer (paths with same length), group by end point
-    snake_paths = [[list(paths)[0] 
-                    for endpoint, paths in groupby(sorted(layer, key=lambda path: path[-1]), key=lambda path: path[-1])]
-                    for layer in snake_paths]
-    #flatten it
-    snake_paths = [path for layer in snake_paths for path in layer]
-    #game_state["logging"]["danger_path"] = snake_paths
-    return snake_paths
+    #stored once
+    layers = game_state["enemy_paths"]
+
+    cut_paths = []
+    for layer in layers:
+        for path in layer:
+            #1. must cut an area
+            #2. new head can't expose in the cut space - assuming my snake is bigger
+            #3. if exposed it must be shorter than the distance for my head
+            occupied = occ[len(path)-2]+path[1:]
+            cut_space = path_connected_set(a, occupied)
+            n_cut_space = len(cut_space)
+            n_orig = n_original_space-len(path)+1
+            if n_cut_space / n_orig > 0.4:
+                #not a substantial cut
+                continue
+            if len(path) > path_distance_pq(a, path[-1]):
+                #enemy head doesn't reach the cut point earlier than I
+                #so won't be a danger assuming I'm bigger
+                continue
+
+            #my_new_tail = game_state["me"]["body"][-len(path)]
+            #enemy_new_tail = game_state["others"][0]["body"][-len(path)]
+            #if path_connected(a, my_new_tail): continue
+            #if path_connected(a, enemy_new_tail): continue
+
+            cut_paths.append((path, n_cut_space))
+
+    if len(cut_paths) != 0:
+        min_cut_space = min([n for path, n in cut_paths])
+        cut_paths = [path for path, n in cut_paths if n == min_cut_space]
+        cut_paths = [(path, len(path)) for path in cut_paths]
+        min_cut_length = min([n for path, n in cut_paths])
+        cut_paths = [path for path, n in cut_paths if n == min_cut_length]
+        cut_path = cut_paths[0]
+        return [(cut_path, min_cut_space)]
+    return []
+
+def test_init_game():
+    snake_utility.game_state = {}
+    snake_utility.game_state["board"] = {}
+    snake_utility.game_state["board"]["width"] = 11
+    snake_utility.game_state["board"]["height"] = 11
+
+def test_path(p=None, nstep=None):
+    if p is None: p = (5,5)
+    if nstep is None: nstep = 5
+    layers = [[[p]]]
+    for ilayer in range(nstep):
+        layer = [npath
+                 for path in layers[-1] 
+                 for end in [path[-1]] 
+                 for p in adj_cells(end)
+                 for npath in [ path+[p] ]
+                 if p not in path ]
+        layers.append(layer)
+    paths = [path for layer in layers for path in layer]
+    print(len(paths))
+    for layer in layers: print(len(layer))
+
+def run():
+    test_init_game()
+    test_path()
+
+if __name__ == "__main__":
+    run()
 

@@ -1,8 +1,6 @@
-def path_connected(a, occupied=None):
-    if occupied == None:
-        occupied = 5
-    print(a+occupied)
+a = (1,2,3)
+b = (1,3)
 
-path_connected(3)
-path_connected(3, 4)
-path_connected(3, occupied=4)
+print(a > b)
+
+print(a < b)
