@@ -54,7 +54,7 @@ def my_snake_bigger():
     moves = [a for a in abc
              for cut_info in [r[a]["cut_info"]]
              for cut_path, nspace in cut_info
-             for occupied in [game_state["occupied"][0]+cut_path[1:]]
+             for occupied in [game_state["occupied_cells"][0]+cut_path[1:]]
              if len(cut_info) == 1
              and path_connected(a, my_tail, occupied)
              ]
@@ -69,7 +69,7 @@ def my_snake_bigger():
     moves = [a for a in abc
              for cut_info in [r[a]["cut_info"]]
              for cut_path, nspace in cut_info
-             for occupied in [game_state["occupied"][0]+cut_path[1:]]
+             for occupied in [game_state["occupied_cells"][0]+cut_path[1:]]
              if len(cut_info) == 1
              and path_connected(a, other_tail, occupied)
              ]
@@ -120,7 +120,7 @@ def my_snake_bigger():
         confined_space = path_connected_set(a)
         if len(r[a]["cut_info"]) == 1:
             cut_path, nspace = r[a]["cut_info"][0]
-            occupied = game_state["occupied"][0]+cut_path[1:]
+            occupied = game_state["occupied_cells"][0]+cut_path[1:]
             confined_space = path_connected_set(a, occupied)
         wayout["confined_food"] = [f for f in game_state["food"] if f in confined_space]
 
@@ -227,7 +227,7 @@ def my_snake_bigger():
     moves = [a for a in hopeful if len(r[a]["cut_info"]) == 1 ]
     for a in moves:
         cut_path, nspace = r[a]["cut_info"][0]
-        occupied = game_state["occupied"][0]+cut_path[1:]
+        occupied = game_state["occupied_cells"][0]+cut_path[1:]
         if r[a]["me"]["needed_steps"] <= r[a]["other"]["needed_steps"]:
             if exist_long_enough_path(a, r[a]["me"]["point"], r[a]["me"]["needed_steps"]+1, occupied):
                 game_state["decision_path"].append("cut me search_wayout")
@@ -330,13 +330,13 @@ def store_enemy_possible_paths(nstep=5, max_paths=200):
                  for nhead in adj_cells(head)
                  for npath in [ path+[nhead] ]
                  if nhead not in path 
-                    and nhead not in game_state["occupied"][ilayer] 
+                    and nhead not in game_state["occupied_cells"][ilayer] 
                  ]
         layers.append(layer)
     game_state["enemy_paths"] = layers
 
 def enemy_possible_cut_path(a, nstep=5, max_paths=200):
-    occ = game_state["occupied"]
+    occ = game_state["occupied_cells"]
     n_original_space = game_state["danger_ranking"][a]["dead_end"]
     #layers = enemy_possible_paths(nstep, max_paths)
 
