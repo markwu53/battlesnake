@@ -353,6 +353,8 @@ def enemy_possible_cut_path(a, nstep=5, max_paths=200):
             cut_space = path_connected_set(a, occupied)
             n_cut_space = len(cut_space)
             n_orig = n_original_space-len(path)+1
+            if n_orig <= 0:
+                continue
             if n_cut_space / n_orig > 0.4:
                 #not a substantial cut
                 continue
