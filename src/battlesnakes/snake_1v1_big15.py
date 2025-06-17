@@ -172,7 +172,7 @@ def my_snake_bigger():
     nohope = [a for a in abc 
                   for me in [r[a]["wayout"]["me"]] 
                   for other in [r[a]["wayout"]["other"]] 
-                  for food in [r[a]["confined_food"]]
+                  for food in [r[a]["wayout"]["confined_food"]]
                   if len(r[a]["cut_info"]) == 0
                   and not other["connected"]
                   and r[a]["dead_end"]-len(food) < me["needed_steps"]
@@ -180,7 +180,7 @@ def my_snake_bigger():
     nohope2 = [a for a in abc 
                   for me in [r[a]["wayout"]["me"]] 
                   for other in [r[a]["wayout"]["other"]] 
-                  for food in [r[a]["confined_food"]]
+                  for food in [r[a]["wayout"]["confined_food"]]
                   if len(r[a]["cut_info"]) == 0
                   and other["connected"]
                   and r[a]["dead_end"]-len(food) < me["needed_steps"]
@@ -302,7 +302,7 @@ def exist_long_enough_path(a, b, needed_length, occupied=None):
     occupied = [p for p in occupied if p != b]
     layers = []
     layer = [[a]]
-    foods = r["confined_food"]
+    foods = r["wayout"]["confined_food"]
     while len(layer) != 0:
         layers.append(layer)
         layer = [path+[p] for layer in layers for path in layers for end in [path[-1]] for p in adj_cells(end)
