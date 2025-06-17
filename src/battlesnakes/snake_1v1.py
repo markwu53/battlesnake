@@ -170,8 +170,8 @@ def decision_1_v_1():
 
 
     if len(game_state["me"]["body"]) > len(game_state["others"][0]["body"]) and len(game_state["me"]["body"]) >= 15:
-        if my_snake_bigger():
-            return
+        my_snake_bigger()
+        return
 
 
 
