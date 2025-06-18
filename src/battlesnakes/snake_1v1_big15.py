@@ -28,6 +28,7 @@ def my_snake_bigger():
         r[a]["see_my_tail"] = path_connected(a, my_tail)
         r[a]["see_other_head"] = path_connected(a, other_head)
         r[a]["see_other_tail"] = path_connected(a, other_tail)
+        r[a]["allowed_moves"] = [p for p in adj_cells(a) if p in abc if p not in game_state["occupied_cells"][0]]
 
 
     #################################
@@ -38,6 +39,7 @@ def my_snake_bigger():
     moves = [a for a in abc if len(r[a]["cut_info"]) == 0 and r[a]["see_my_tail"]]
     if len(moves) != 0:
         game_state["decision_path"].append("no_cut my_tail")
+        moves = first_group([(a, r[a]["allowed_moves"]) for a in moves], reverse=True)
         if game_state["next_head_coord"] not in moves:
             game_state["next_head_coord"] = moves[0]
         get_food(moves)
@@ -47,6 +49,7 @@ def my_snake_bigger():
     moves = [a for a in abc if len(r[a]["cut_info"]) == 0 and r[a]["see_other_tail"]]
     if len(moves) != 0:
         game_state["decision_path"].append("no_cut other_tail")
+        moves = first_group([(a, r[a]["allowed_moves"]) for a in moves], reverse=True)
         if game_state["next_head_coord"] not in moves:
             game_state["next_head_coord"] = moves[0]
         get_food(moves)
@@ -62,6 +65,7 @@ def my_snake_bigger():
              ]
     if len(moves) != 0:
         game_state["decision_path"].append("has_cut my_tail")
+        moves = first_group([(a, r[a]["allowed_moves"]) for a in moves], reverse=True)
         if game_state["next_head_coord"] not in moves:
             game_state["next_head_coord"] = moves[0]
         get_food(moves)
@@ -77,6 +81,7 @@ def my_snake_bigger():
              ]
     if len(moves) != 0:
         game_state["decision_path"].append("has_cut other_tail")
+        moves = first_group([(a, r[a]["allowed_moves"]) for a in moves], reverse=True)
         if game_state["next_head_coord"] not in moves:
             game_state["next_head_coord"] = moves[0]
         get_food(moves)
