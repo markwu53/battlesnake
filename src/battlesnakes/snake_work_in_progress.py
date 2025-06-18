@@ -418,6 +418,7 @@ def special_experimenting_code(game_state):
         if len(game_state["others"]) != 1: return False
         if game_state["others"][0]["name"] not in (
             "Snakeformatika",
+            "Wim HU [dev]",
             #"Frank The Tank",
         ): 
             return False
