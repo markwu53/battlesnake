@@ -232,7 +232,7 @@ def my_snake_bigger():
                 return
 
     #category - has cut, search wayout
-    moves = [a for a in hopeful if len(r[a]["cut_info"]) == 1 ]
+    moves = [a for a in hopeful if len(r[a]["cut_info"]) == 1 and r[a]["wayout"]["other"]["connected"]]
     for a in moves:
         cut_path, nspace = r[a]["cut_info"][0]
         occupied = game_state["occupied_cells"][0]+cut_path[1:]
