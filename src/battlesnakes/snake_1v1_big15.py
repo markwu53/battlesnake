@@ -235,7 +235,7 @@ def my_snake_bigger():
                 game_state["next_head_coord"] = a
                 return
         else:
-            if exist_long_enough_path(a, r[a]["other"]["point"], r[a]["other"]["needed_steps"]+1, occupied):
+            if exist_long_enough_path(a, r[a]["wayout"]["other"]["point"], r[a]["wayout"]["other"]["needed_steps"]+1, occupied):
                 game_state["decision_path"].append("cut other search_wayout")
                 game_state["next_head_coord"] = a
                 return
