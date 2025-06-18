@@ -30,7 +30,6 @@ def my_snake_bigger():
         r[a]["see_other_tail"] = path_connected(a, other_tail)
         r[a]["allowed_moves"] = len([p for p in adj_cells(a) if p not in game_state["occupied_cells"][0]])
 
-
     #################################
     # can see tail either no cut or after cut
     #################################
@@ -220,13 +219,17 @@ def my_snake_bigger():
                   and other["connected"]
                   ]
     for a in moves:
-        if r[a]["wayout"]["me"]["needed_steps"] <= r[a]["wayout"]["other"]["needed_steps"]:
-            if exist_long_enough_path(a, r[a]["wayout"]["me"]["point"], r[a]["wayout"]["me"]["needed_steps"]+1):
+        me_steps = r[a]["wayout"]["me"]["needed_steps"]
+        other_steps = r[a]["wayout"]["other"]["needed_steps"]
+        if me_steps <= other_steps:
+            r[a]["wayout"]["me"]["has_wayout"] = exist_long_enough_path(a, r[a]["wayout"]["me"]["point"], me_steps+1)
+            if r[a]["wayout"]["me"]["has_wayout"]:
                 game_state["decision_path"].append("both me search_wayout")
                 game_state["next_head_coord"] = a
                 return
         else:
-            if exist_long_enough_path(a, r[a]["wayout"]["other"]["point"], r[a]["wayout"]["other"]["needed_steps"]+1):
+            r[a]["wayout"]["other"]["has_wayout"] = exist_long_enough_path(a, r[a]["wayout"]["other"]["point"], other_steps+1)
+            if r[a]["wayout"]["other"]["has_wayout"]:
                 game_state["decision_path"].append("both other search_wayout")
                 game_state["next_head_coord"] = a
                 return
@@ -236,13 +239,17 @@ def my_snake_bigger():
     for a in moves:
         cut_path, nspace = r[a]["cut_info"][0]
         occupied = game_state["occupied_cells"][0]+cut_path[1:]
-        if r[a]["wayout"]["me"]["needed_steps"] <= r[a]["wayout"]["other"]["needed_steps"]:
-            if exist_long_enough_path(a, r[a]["wayout"]["me"]["point"], r[a]["wayout"]["me"]["needed_steps"]+1, occupied):
+        me_steps = r[a]["wayout"]["me"]["needed_steps"]
+        other_steps = r[a]["wayout"]["other"]["needed_steps"]
+        if me_steps <= other_steps:
+            r[a]["wayout"]["me"]["has_wayout"] = exist_long_enough_path(a, r[a]["wayout"]["me"]["point"], me_steps+1, occupied)
+            if r[a]["wayout"]["me"]["has_wayout"]:
                 game_state["decision_path"].append("cut me search_wayout")
                 game_state["next_head_coord"] = a
                 return
         else:
-            if exist_long_enough_path(a, r[a]["wayout"]["other"]["point"], r[a]["wayout"]["other"]["needed_steps"]+1, occupied):
+            r[a]["wayout"]["other"]["has_wayout"] = exist_long_enough_path(a, r[a]["wayout"]["other"]["point"], other_steps+1, occupied)
+            if r[a]["wayout"]["other"]["has_wayout"]:
                 game_state["decision_path"].append("cut other search_wayout")
                 game_state["next_head_coord"] = a
                 return
@@ -313,7 +320,7 @@ def exist_long_enough_path(a, b, needed_length, occupied=None):
     foods = r["wayout"]["confined_food"]
     while len(layer) != 0:
         layers.append(layer)
-        layer = [path+[p] for layer in layers for path in layer for end in [path[-1]] for p in adj_cells(end)
+        layer = [path+[p] for path in layer for end in [path[-1]] for p in adj_cells(end)
                  if p not in path and p not in occupied]
     for layer in layers:
         for path in layer:
@@ -393,6 +400,10 @@ def test_init_game():
     snake_utility.game_state["board"] = {}
     snake_utility.game_state["board"]["width"] = 11
     snake_utility.game_state["board"]["height"] = 11
+
+
+
+
 
 def test_path(p=None, nstep=None):
     if p is None: p = (5,5)
