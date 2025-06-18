@@ -6,6 +6,7 @@ import math
 game_state = None
 
 def get_food(moves):
+    #something wrong deploy again
     pass
 
 def my_snake_bigger():
