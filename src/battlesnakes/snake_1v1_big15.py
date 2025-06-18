@@ -363,7 +363,7 @@ def enemy_possible_cut_path(a, nstep=5, max_paths=200):
             n_orig = n_original_space-len(path)+1
             if n_orig <= 0:
                 continue
-            if n_cut_space / n_orig > 0.4:
+            if n_cut_space > len(game_state["me"]["body"]) and n_cut_space / n_orig > 0.4:
                 #not a substantial cut
                 continue
             if len(path) > path_distance_pq(a, path[-1]):
