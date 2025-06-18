@@ -28,7 +28,7 @@ def my_snake_bigger():
         r[a]["see_my_tail"] = path_connected(a, my_tail)
         r[a]["see_other_head"] = path_connected(a, other_head)
         r[a]["see_other_tail"] = path_connected(a, other_tail)
-        r[a]["allowed_moves"] = [p for p in adj_cells(a) if p in abc if p not in game_state["occupied_cells"][0]]
+        r[a]["allowed_moves"] = len([p for p in adj_cells(a) if p in abc if p not in game_state["occupied_cells"][0]])
 
 
     #################################
