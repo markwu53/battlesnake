@@ -382,12 +382,12 @@ def special_experimenting_code(game_state):
                 "health": snake["health"],
                 "body": snake["body"],
             } for snake in game_state["others"] ],
+            "food": game_state["food"],
         } 
 
         log = game_state["logging"]
         log["board"] = log_board
         log["move"] = game_state["next_move"]
-        log["routine_move"] = game_state["routine_move"]
         log["allowed_move"] = game_state["allowed_move"]
         log["danger_ranking"] = game_state["danger_ranking"]
         log["decision_path"] = game_state["decision_path"]
@@ -432,3 +432,74 @@ def special_experimenting_code(game_state):
 
     #return {"move": game_state["next_move"]}
     return True
+
+
+def test_init_game():
+    log = {'version': 'Experiment', 'board': {'id': 'f555bfef-d447-46ab-8fa7-08f8181fe2be', 'turn': 355, 'me': {
+        'name': 'mark_snake', 'length': 29, 'head': (6, 1), 'health': 97, 
+        'body': [(6, 1), (7, 1), (7, 2), (6, 2), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (9, 9), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (3, 7), (3, 6)]}, 
+        'others': [{'name': 'Snakeformatika', 'length': 26, 'head': (2, 9), 'health': 89, 'body': [(2, 9), (2, 8), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3), (2, 2), (1, 2), (1, 3), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (8, 1), (9, 1)]}]}, 'move': 'left', 'routine_move': (5, 1), 'allowed_move': [(5, 1)], 'danger_ranking': {(5, 1): {'collision_1': 99, 'collision_2': 99, 'trap': True, 'dead_end': 21, 'cut_info': [([(2, 9), (3, 9)], 21)], 'see_my_tail': True, 'see_other_head': False, 'see_other_tail': False, 'allowed_moves': 1}}, 'decision_path': ['base', 'has_cut my_tail'], 'food_decision': [], 'time': '0.026s'}
+    log = {'version': 'Experiment', 'board': {'id': 'f555bfef-d447-46ab-8fa7-08f8181fe2be', 
+                                              'turn': 356, 'me': {
+        'name': 'mark_snake', 'length': 29, 'head': (6, 1), 'health': 96, 
+        'body': [(5, 1), (6, 1), (7, 1), (7, 2), (6, 2), (5, 2), (5, 3), (5, 4), (5, 5), 
+                 (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (10, 8), (10, 9), 
+                 (10, 10), (9, 10), (9, 9), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (3, 7), ]}, 
+        'others': [{'name': 'Snakeformatika', 'length': 26, 'head': (2, 9), 'health': 88, 
+                    'body': [(1, 9), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3), 
+                             (2, 2), (1, 2), (1, 3), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), 
+                             (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (8, 1), ]}]}, 'move': 'left', 'routine_move': (5, 1), 'allowed_move': [(5, 1)], 'danger_ranking': {(5, 1): {'collision_1': 99, 'collision_2': 99, 'trap': True, 'dead_end': 21, 'cut_info': [([(2, 9), (3, 9)], 21)], 'see_my_tail': True, 'see_other_head': False, 'see_other_tail': False, 'allowed_moves': 1}}, 
+                    'decision_path': ['base', 'has_cut my_tail'], 'food_decision': [], 'time': '0.026s'}
+    log = {'version': 'Experiment', 'board': {'id': 'f555bfef-d447-46ab-8fa7-08f8181fe2be', 
+                                              'turn': 357, 'me': {
+        'name': 'mark_snake', 'length': 29, 'head': (6, 1), 'health': 95, 
+        'body': [(4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (6, 2), (5, 2), (5, 3), (5, 4), (5, 5), 
+                 (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (10, 8), (10, 9), 
+                 (10, 10), (9, 10), (9, 9), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), ]}, 
+        'others': [{'name': 'Snakeformatika', 'length': 26, 'head': (2, 9), 'health': 87, 
+                    'body': [(1, 10), (1, 9), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3), 
+                             (2, 2), (1, 2), (1, 3), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), 
+                             (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), ]}]}, 'move': 'left', 'routine_move': (5, 1), 'allowed_move': [(5, 1)], 'danger_ranking': {(5, 1): {'collision_1': 99, 'collision_2': 99, 'trap': True, 'dead_end': 21, 'cut_info': [([(2, 9), (3, 9)], 21)], 'see_my_tail': True, 'see_other_head': False, 'see_other_tail': False, 'allowed_moves': 1}}, 
+                    'decision_path': ['base', 'has_cut my_tail'], 'food_decision': [], 'time': '0.026s'}
+    log2 = {'version': 'Experiment', 'board': {'id': 'f555bfef-d447-46ab-8fa7-08f8181fe2be', 
+                                              'turn': 358, 'me': {
+        'name': 'mark_snake', 'length': 29, 'head': (6, 1), 'health': 94, 
+        'body': [(3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (6, 2), (5, 2), (5, 3), (5, 4), (5, 5), 
+                 (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (10, 8), (10, 9), 
+                 (10, 10), (9, 10), (9, 9), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), ]}, 
+        'others': [{'name': 'Snakeformatika', 'length': 26, 'head': (2, 9), 'health': 86, 
+                    'body': [(2, 10), (1, 10), (1, 9), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3), 
+                             (2, 2), (1, 2), (1, 3), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), 
+                             (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), ]}]}, 'move': 'left', 'routine_move': (5, 1), 'allowed_move': [(5, 1)], 'danger_ranking': {(5, 1): {'collision_1': 99, 'collision_2': 99, 'trap': True, 'dead_end': 21, 'cut_info': [([(2, 9), (3, 9)], 21)], 'see_my_tail': True, 'see_other_head': False, 'see_other_tail': False, 'allowed_moves': 1}}, 
+                    'decision_path': ['base', 'has_cut my_tail'], 'food_decision': [], 'time': '0.026s'}
+    game_state = {}
+    game_state["game"] = {}
+    game_state["game"]["id"] = log["board"]["id"]
+    game_state["board"] = {}
+    game_state["turn"] = log["board"]["turn"]
+    game_state["board"]["width"] = 11
+    game_state["board"]["height"] = 11
+
+    game_state["you"] = {}
+    game_state["you"]["name"] = log["board"]["me"]["name"]
+    game_state["you"]["length"] = log["board"]["me"]["length"]
+    game_state["you"]["health"] = log["board"]["me"]["health"]
+    game_state["you"]["body"] = [{"x":x, "y":y} for x,y in log["board"]["me"]["body"]]
+
+    game_state["board"]["snakes"] = [
+        game_state["you"],
+        *[ { "name": snake["name"],
+                "length": snake["length"],
+                "health": snake["health"],
+                "body": [{"x": x, "y": y} for x, y in snake["body"]]
+            } for snake in log["board"]["others"] ]
+    ]
+    game_state["board"]["food"] = []
+    return game_state
+
+def run():
+    game_state = test_init_game()
+    special_experimenting_code(game_state)
+
+if __name__ == "__main__":
+    run()
