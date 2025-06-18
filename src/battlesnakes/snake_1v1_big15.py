@@ -117,16 +117,17 @@ def my_snake_bigger():
     for a in abc:
         wayout = {}
 
-        confined_space = path_connected_set(a)
+        occupied = game_state["occupied_cells"][0]
+        confined_space = path_connected_set(a, occupied)
         if len(r[a]["cut_info"]) == 1:
             cut_path, nspace = r[a]["cut_info"][0]
-            occupied = game_state["occupied_cells"][0]+cut_path[1:]
+            occupied += cut_path[1:]
             confined_space = path_connected_set(a, occupied)
         wayout["confined_food"] = [f for f in game_state["food"] if f in confined_space]
 
         wayout["me"] = {}
         my_body = game_state["me"]["body"]
-        my_index = max([i for i,cell in enumerate(my_body) if path_connected(a, cell)])
+        my_index = max([i for i,cell in enumerate(my_body) if path_connected(a, cell, occupied)])
         wayout["me"]["point"] = my_body[my_index]
         wayout["me"]["needed_steps"] = len(my_body) - my_index-1
         wayout["me"]["direct_distance"] = path_distance_pq(a, wayout["me"]["point"])
@@ -134,7 +135,7 @@ def my_snake_bigger():
         wayout["other"] = {}
         other_body = game_state["others"][0]["body"]
         #this can be empty
-        other_connected_body = [i for i,cell in enumerate(other_body) if path_connected(a, cell)]
+        other_connected_body = [i for i,cell in enumerate(other_body) if path_connected(a, cell, occupied)]
         wayout["other"]["connected"] = len(other_connected_body) != 0
         if wayout["other"]["connected"]:
             other_index = max(other_connected_body)
