@@ -382,12 +382,12 @@ def special_experimenting_code(game_state):
                 "health": snake["health"],
                 "body": snake["body"],
             } for snake in game_state["others"] ],
+            "food": game_state["food"],
         } 
 
         log = game_state["logging"]
         log["board"] = log_board
         log["move"] = game_state["next_move"]
-        log["routine_move"] = game_state["routine_move"]
         log["allowed_move"] = game_state["allowed_move"]
         log["danger_ranking"] = game_state["danger_ranking"]
         log["decision_path"] = game_state["decision_path"]
