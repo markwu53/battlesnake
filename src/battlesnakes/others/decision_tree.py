@@ -28,6 +28,8 @@ def special_experimenting_code(game_state):
     game_state["start_time"] = time.time()
     decision()
     game_state["end_time"] = time.time()
+    time_diff = game_state["end_time"] - game_state["start_time"]
+    logger["time"] = f"{time_diff:.3f}s"
     print(logger)
 
     game_state["next_move"] = get_next_move(get_my_head(), game_state["next_head_coord"])
@@ -183,6 +185,7 @@ def decision():
         node.gather_info()
         yes_group = [a for a in node.moves if node.question(a)]
         if len(yes_group) == 1:
+            logger["decision_path"].append(f"{node.question_description}")
             game_state["next_head_coord"] = yes_group[0]
             return
         if len(yes_group) > 1:
