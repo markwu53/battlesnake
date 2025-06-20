@@ -186,14 +186,14 @@ def decision():
             game_state["next_head_coord"] = yes_group[0]
             return
         if len(yes_group) > 1:
+            logger["decision_path"].append(f"{node.question_description}: Y")
             node = node.yes
             node.moves = yes_group
-            logger["decision_path"].append(f"{node.question_description}: Y")
         else:
+            logger["decision_path"].append(f"{node.question_description}: N")
             moves = node.moves
             node = node.no
             node.moves = moves
-            logger["decision_path"].append(f"{node.question_description}: N")
 
 def nothing():
     # Placeholder for a function that does nothing
@@ -216,6 +216,7 @@ def initialize_game_state(state):
     logger = game_state["logger"]
     board = {
         "id": game_state["game"]["id"],
+        "turn": game_state["turn"],
         "me": {
             "name": game_state["you"]["name"],
             "health": game_state["you"]["health"],
