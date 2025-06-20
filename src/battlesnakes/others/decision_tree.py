@@ -241,6 +241,7 @@ def initialize_game_state(state):
     logger["board"] = board
     game_state["me"] = board["me"]
     game_state["others"] = board["others"]
+    game_state["snakes"] = [board["me"], *board["others"]]
 
 
 ###########################################
