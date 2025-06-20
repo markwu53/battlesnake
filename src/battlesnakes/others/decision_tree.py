@@ -54,7 +54,7 @@ def filling_decision_functions():
     )})
     dt["env_less_than_8?"].gather_info = lambda: env.update({"env_less_than_8?": len(board["me"]["body"]) < 8})
     dt["env_lt8_smaller?"].gather_info = lambda: env.update({"env_lt8_smaller?": len(board["me"]["body"]) < len(board["others"][0]["body"])})
-    dt["env_lt8_enemy_far?"].gather_info = lambda: env.update({"env_lt8_enemy_far?": distance_pq(my_head, other_head) > 8})
+    dt["env_lt8_enemy_far?"].gather_info = lambda: env.update({"env_lt8_enemy_far?": distance_pq(my_head, other_head) > 6})
     
     def env_lt8_food_1():
         adjacent_food = [f for f in board["food"] if is_adjacent(f, my_head)]
