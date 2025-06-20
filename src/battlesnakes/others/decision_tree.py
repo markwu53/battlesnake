@@ -239,6 +239,8 @@ def initialize_game_state(state):
         "food": get_coord(game_state["board"]["food"]),
     }
     logger["board"] = board
+    game_state["me"] = board["me"]
+    game_state["others"] = board["others"]
 
 
 ###########################################
