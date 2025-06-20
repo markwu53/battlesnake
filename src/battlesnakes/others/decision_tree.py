@@ -176,6 +176,7 @@ def decision():
     #2 or 3 choices
     node = game_state["decision_root"]
     node.moves = allowed_moves
+    logger["decision_path"] = []
 
     while True:
         game_state["node"] = node
