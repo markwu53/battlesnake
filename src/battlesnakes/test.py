@@ -1,6 +1,4 @@
-a = (1,2,3)
-b = (1,3)
+from others.special import state
 
-print(a > b)
-
-print(a < b)
+state["test"] = "This is a test state variable."
+print(state)
