@@ -58,8 +58,8 @@ def filling_decision_functions():
         adjacent_food = [f for f in board["food"] if is_adjacent(f, my_head)]
         if len(adjacent_food) != 0:
             env["adjacent_food"] = adjacent_food
-            return True
-        return False
+            env["env_lt8_food_1?"] = True
+        env["env_lt8_food_1?"] = False
 
     dt["env_lt8_food_1?"].gather_info = env_lt8_food_1
 
@@ -75,8 +75,9 @@ def filling_decision_functions():
         food_near = [(f, d) for f in food_near for d in [path_distance_pq(f, my_head)] if d <= 8]
         if len(food_near) != 0:
             env["food_near"] = first_group(food_near)
-            return True
-        return False
+            env["env_food_near?"] = True
+        env["env_food_near?"] = False
+
     dt["env_food_near?"].gather_info = env_food_near
 
     def prefer_straight(moves):
