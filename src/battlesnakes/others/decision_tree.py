@@ -122,7 +122,7 @@ def assemble_decision_tree():
         if b in nodes: continue
         nodes[b] = Node(b)
         if b.startswith("env_"):
-                nodes[b].question = lambda a: game_state["env"][b]
+            nodes[b].question = lambda a: game_state["env"][b]
         elif "?" in b:
             #regular question
             pass
