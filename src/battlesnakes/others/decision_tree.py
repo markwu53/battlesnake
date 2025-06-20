@@ -45,8 +45,6 @@ def filling_decision_functions():
     dt = game_state["decision_tree"]
     env = game_state["env"]
 
-    env["TODO"] = True
-
     dt["env_1_vs_1?"].gather_info = lambda: env.update({"env_1_vs_1?": len(board["others"]) == 1})
     dt["env_mine_bigger?"].gather_info = lambda: env.update({"env_mine_bigger?": (1==1
         and len(board["me"]["body"]) > len(board["others"][0]["body"])
@@ -207,15 +205,6 @@ class Node:
         self.yes = None
         self.no = None
         self.moves = None
-
-def node_todo():
-    """
-    Placeholder for a node that will be implemented later.
-    """
-    node = Node("TODO")
-    node.gather_info = nothing
-    node.question = lambda a: True  # Always returns True for now
-    return node
 
 def initialize_game_state(state):
     global game_state, logger, board
