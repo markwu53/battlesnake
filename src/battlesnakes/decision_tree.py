@@ -1,7 +1,7 @@
 import time
-from others.decision_tree_text import algorithm 
-import others.utility_functions as ut
-from others.utility_functions import *
+from decision_tree_text import algorithm 
+import snake_utility as ut
+from snake_utility import *
 
 game_state = None
 logger = None
