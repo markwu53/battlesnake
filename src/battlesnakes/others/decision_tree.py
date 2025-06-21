@@ -96,7 +96,7 @@ def filling_decision_functions():
     dt["env_food_closer?"].gather_info = env_food_closer
 
     def goto_food():
-        food_closer = env["env_food_closer?"]
+        food_closer = env["food_closer"]
         food_closer = [(f, path_distance_pq(my_head, f)) for f in food_closer]
         foods = first_group(food_closer)
         food_target = foods[0]
