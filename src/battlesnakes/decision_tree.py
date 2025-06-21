@@ -43,6 +43,7 @@ def filling_decision_functions():
     game.dn["env_lt8_smaller?"].gather_info = lambda: game.env.update({"env_lt8_smaller?": game.my_length < game.other_length})
     game.dn["env_lt8_len_eq?"].gather_info = lambda: game.env.update({"env_lt8_len_eq?": game.my_length == game.other_length})
     game.dn["env_lt8_enemy_far?"].gather_info = lambda: game.env.update({"env_lt8_enemy_far?": distance_pq(game.my_head, game.other_head) > 6})
+    game.dn["env_food_danger_1?"].gather_info = lambda: game.env.update({"env_food_danger_1?": distance_pq(game.my_head, game.other_head) == 2})
     
     def env_food_1():
         adjacent_food = [f for f in game.board["food"] if is_adjacent(f, game.my_head)]
