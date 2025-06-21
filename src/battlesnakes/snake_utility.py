@@ -189,6 +189,22 @@ def get_my_tail() -> typing.Tuple:
 def get_coord(items: typing.List) -> typing.List:
     return [(c["x"], c["y"]) for c in items]
 
+def occupied_cells(step):
+    #not including head
+    #assuming no die
+    #assuming no eating food
+    #if eating food it will be more
+    snakes = game_state["snakes"]
+    sbody = []
+    for s in snakes:
+        body = s["body"]
+        if s["health"] == 100:
+            #eat food, tail will not move in the next step
+            body = body + [body[-1]]
+        sbody.append(body[:-step])
+    cells = [c for s in sbody for c in s]
+    return cells
+
 #############################################
 # end of utility functions
 #############################################
