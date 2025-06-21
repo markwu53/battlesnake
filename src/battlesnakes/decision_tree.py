@@ -41,6 +41,7 @@ def filling_decision_functions():
     )})
     game.dn["env_less_than_8?"].gather_info = lambda: game.env.update({"env_less_than_8?": game.my_length < 8})
     game.dn["env_lt8_smaller?"].gather_info = lambda: game.env.update({"env_lt8_smaller?": game.my_length < game.other_length})
+    game.dn["env_lt8_len_eq?"].gather_info = lambda: game.env.update({"env_lt8_len_eq?": game.my_length == game.other_length})
     game.dn["env_lt8_enemy_far?"].gather_info = lambda: game.env.update({"env_lt8_enemy_far?": distance_pq(game.my_head, game.other_head) > 6})
     
     def env_food_1():
