@@ -1,6 +1,6 @@
 import time
 from others.decision_tree_text import algorithm 
-import others.utility_functions
+import others.utility_functions as ut
 from others.utility_functions import *
 
 game_state = None
@@ -27,6 +27,7 @@ def special_experimenting_code(game_state):
     logger["experiment"] = True
     game_state["start_time"] = time.time()
     decision()
+    logger["env"] = game_state["env"]
     game_state["end_time"] = time.time()
     time_diff = game_state["end_time"] - game_state["start_time"]
     logger["time"] = f"{time_diff:.3f}s"
@@ -75,34 +76,54 @@ def filling_decision_functions():
 
     def env_food_near():
         food_near = [f for f in board["food"] if distance_pq(f, my_head) <= 8]
-        food_near = [(f, d) for f in food_near for d in [path_distance_pq(f, my_head)] if d <= 8]
         if len(food_near) != 0:
-            env["food_near"] = first_group(food_near)
+            env["food_near"] = food_near
             env["env_food_near?"] = True
         else:
             env["env_food_near?"] = False
 
     dt["env_food_near?"].gather_info = env_food_near
 
-    def prefer_straight(moves):
-        if game_state["turn"] <= 3:
-            return moves
-        moves = [(move, 0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1) for move in moves]
-        moves = first_group(moves)
-        return moves
+    def env_food_closer():
+        food_near = env["food_near"]
+        food_closer = [f for f in food_near if path_distance_pq(my_head, f) < path_distance_pq(other_head, f)]
+        if len(food_closer) != 0:
+            env["food_closer"] = food_closer
+            env["env_food_closer?"] = True
+        else:
+            env["env_food_closer?"] = False
 
-    def prefer_more_next_moves(moves):
-        moves = [(move, len([p for p in adj_cells(move) if p not in game_state["occupied_cells"][0]])) for move in moves]
-        moves = first_group(moves, reverse=True)
-        return moves
+    dt["env_food_closer?"].gather_info = env_food_closer
 
     def goto_food():
-        food_target = env["food_near"][0]
+        food_closer = env["env_food_closer?"]
+        food_closer = [(f, path_distance_pq(my_head, f)) for f in food_closer]
+        foods = first_group(food_closer)
+        food_target = foods[0]
         moves = shortest_path_move(my_head, food_target)
         moves = prefer_straight(moves)
         env["move"] = moves[0]
 
     dt["goto_food!"].gather_info = goto_food
+
+    def goto_food2():
+        food_near = env["food_near"]
+        other_rank = [(f, path_distance_pq(other_head, f)) for f in food_near]
+        other_first_group = first_group(other_rank)
+        my_food = [f for f in food_near if f not in other_first_group]
+        if len(my_food) != 0:
+            env["my_food"] = my_food
+            my_rank = [(f, path_distance_pq(my_head, f)) for f in my_food]
+            my_first_group = first_group(my_rank)
+            food_target = my_first_group[0]
+        else:
+            food_target = food_near[0]
+        env["food_target"] = food_target
+        moves = shortest_path_move(my_head, food_target)
+        moves = prefer_straight(moves)
+        env["move"] = moves[0]
+
+    dt["goto_food2!"].gather_info = goto_food2
 
     def routine_move():
         moves = game_state["node"].moves
@@ -200,6 +221,18 @@ def decision():
             node = node.no
             node.moves = moves
 
+def prefer_straight(moves):
+    if game_state["turn"] <= 3:
+        return moves
+    moves = [(move, 0 if get_adjacent_dir(get_my_head(), move) == get_adjacent_dir(get_my_neck(), get_my_head()) else 1) for move in moves]
+    moves = first_group(moves)
+    return moves
+
+def prefer_more_next_moves(moves):
+    moves = [(move, len([p for p in adj_cells(move) if p not in game_state["occupied_cells"][0]])) for move in moves]
+    moves = first_group(moves, reverse=True)
+    return moves
+
 def nothing():
     # Placeholder for a function that does nothing
     pass
@@ -215,27 +248,29 @@ class Node:
 
 def initialize_game_state(state):
     global game_state, logger, board
-    others.utility_functions.game_state = state
+    ut.game_state = state
     game_state = state
     game_state["logger"] = {}
     logger = game_state["logger"]
-    board = {
-        "id": game_state["game"]["id"],
-        "turn": game_state["turn"],
-        "me": {
+    me = {
             "name": game_state["you"]["name"],
             "health": game_state["you"]["health"],
             "body": get_coord(game_state["you"]["body"]),
-        },
-        "others": [
+        }
+    snakes = [
             {
                 "name": snake["name"],
                 "health": snake["health"],
                 "body": get_coord(snake["body"]),
             }
             for snake in game_state["board"]["snakes"]
-            if snake["id"] != game_state["you"]["id"]
-        ],
+        ]
+    others = [snake for snake in snakes if snake["body"][0] != me["body"][0]]
+    board = {
+        "id": game_state["game"]["id"],
+        "turn": game_state["turn"],
+        "me": me,
+        "others": others,
         "food": get_coord(game_state["board"]["food"]),
     }
     logger["board"] = board
@@ -249,7 +284,32 @@ def initialize_game_state(state):
 ###########################################
 
 def init_from_log():
-    return None
+    log = {'board': {'id': '19fa9bec-610a-4fa1-93fb-3e591b305598', 'turn': 16, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(9, 7), (9, 6), (8, 6), (8, 5), (8, 4)]}, 'others': [{'name': 'Snakeformatika', 'health': 98, 'body': [(6, 6), (6, 7), (7, 7), (7, 6), (7, 5), (7, 4)]}], 'food': [(3, 5), (0, 0)]}, 'experiment': True, 'allowed_moves': [(10, 7), (8, 7), (9, 8)], 'decision_path': ['env_1_vs_1?: Y', 'env_mine_bigger?: N', 'env_less_than_8?: Y', 'env_lt8_smaller?: Y', 'env_lt8_enemy_far?: N', 'env_lt8_food_1?: N', 'env_food_near?: N', 'routine_move!'], 'time': '0.000s'}
+    log = {'board': {'id': '19fa9bec-610a-4fa1-93fb-3e591b305598', 'turn': 3, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(0, 3), (0, 4), (1, 4), (1, 5)]}, 'others': [{'name': 'Snakeformatika', 'health': 99, 'body': [(4, 9), (4, 10), (5, 10), (5, 9)]}], 'food': [(5, 5), (8, 3)]}, 'experiment': True, 'allowed_moves': [(1, 3), (0, 2)], 'decision_path': ['env_1_vs_1?: Y', 'env_mine_bigger?: N', 'env_less_than_8?: Y', 'env_lt8_smaller?: N', 'env_food_near?: Y', 'goto_food!'], 'time': '0.002s'}
+    log = {'board': {'id': '19fa9bec-610a-4fa1-93fb-3e591b305598', 'turn': 7, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(4, 3), (3, 3), (2, 3), (1, 3)]}, 'others': [{'name': 'Snakeformatika', 'health': 95, 'body': [(5, 6), (5, 7), (5, 8), (4, 8)]}], 'food': [(5, 5), (8, 3)]}, 'experiment': True, 'allowed_moves': [(5, 3), (4, 4), (4, 2)], 'decision_path': ['env_1_vs_1?: Y', 'env_mine_bigger?: N', 'env_less_than_8?: Y', 'env_lt8_smaller?: N', 'env_food_near?: Y', 'goto_food!'], 'time': '0.002s'}
+    log = {'board': {'id': '19fa9bec-610a-4fa1-93fb-3e591b305598', 'turn': 8, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(5, 3), (4, 3), (3, 3), (2, 3)]}, 'others': [{'name': 'Snakeformatika', 'health': 100, 'body': [(5, 5), (5, 6), (5, 7), (5, 8), (5, 8)]}], 'food': [(8, 3)]}, 'experiment': True, 'allowed_moves': [(6, 3), (5, 4), (5, 2)], 'decision_path': ['env_1_vs_1?: Y', 'env_mine_bigger?: N', 'env_less_than_8?: Y', 'env_lt8_smaller?: Y', 'env_lt8_enemy_far?: N', 'env_lt8_food_1?: N', 'env_food_near?: Y', 'goto_food!'], 'time': '0.002s'}
+    board = log["board"]
+    game_state = {}
+    game_state["turn"] = board["turn"]
+    game_state["game"] = {}
+    game_state["game"]["id"] = board["id"]
+    game_state["board"] = {}
+    game_state["board"]["width"] = 11
+    game_state["board"]["height"] = 11
+    game_state["you"] = {}
+    game_state["you"]["name"] = board["me"]["name"]
+    game_state["you"]["health"] = board["me"]["health"]
+    game_state["you"]["body"] = [{"x": x, "y": y} for x,y in board["me"]["body"]]
+    others = [
+        {
+            "name": snake["name"],
+            "health": snake["health"],
+            "body": [{"x": x, "y": y} for x,y in snake["body"]]
+        } for snake in board["others"]
+    ]
+    game_state["board"]["snakes"] = [game_state["you"], *others]
+    game_state["board"]["food"] = [{"x": x, "y": y} for x,y in board["food"]]
+    return game_state
 
 def test_run():
     state = init_from_log()

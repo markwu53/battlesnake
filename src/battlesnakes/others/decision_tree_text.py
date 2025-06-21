@@ -24,7 +24,9 @@ BEGIN = env_1_vs_1?
                     env_lt8_enemy_far+ = env_lt8_food_1?
                         env_lt8_food_1+ = eat!
                         env_lt8_food_1- = env_food_near?
-                            env_food_near+ = goto_food!
+                            env_food_near+ = env_food_closer?
+                                env_food_closer+ = goto_food!
+                                env_food_closer- = goto_food2!
                             env_food_near- = routine_move!
 
                     ##################
