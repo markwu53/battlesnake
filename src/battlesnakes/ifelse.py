@@ -118,7 +118,8 @@ def get_food():
 def type_2_collision():
 
     g.e.collision_type = 2
-    collision_points = [p for p in g.e.common_adj if p not in g.occupied_cells[0]]
+    common_adj = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
+    collision_points = [p for p in common_adj if p not in g.occupied_cells[0]]
     if len(collision_points) == 2:
         avoid_points = [p for p in g.e.allowed_moves if p not in collision_points]
         g.e.avoid_points = avoid_points
@@ -186,7 +187,8 @@ def type_2_collision():
 def type_1_collision():
 
     #type 1 collision with exactly one collision point - because heads are path connected
-    collision_point = g.e.common_adj[0]
+    common_adj = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
+    collision_point = common_adj[0]
     me_heading_collision_point = get_adjacent_dir(g.s.my_head, collision_point) == get_adjacent_dir(g.s.my_neck, g.s.my_head)
     other_heading_collision_point = get_adjacent_dir(g.s.other_head, collision_point) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
     same_dir = get_adjacent_dir(g.s.my_neck, g.s.my_head) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
@@ -299,8 +301,8 @@ def avoid_danger():
         g.e.head_path_distance = path_distance_pq(g.s.my_head, g.s.other_head)
         if g.e.head_path_distance <= d_danger:
             if g.e.head_path_distance == 2:
-                g.e.common_adj = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
-                if len(g.e.common_adj) == 2:
+                common_adj = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
+                if len(common_adj) == 2:
                     type_2_collision()
                 else:
                     type_1_collision()
@@ -309,13 +311,22 @@ def avoid_danger():
                     if g.s.my_length+1 == g.s.other_length and g.next_coord in g.food:
                         pass
                     else:
-                        #don't go border
-                        if on_border(g.next_coord):
-                            moves = [a for a in g.e.allowed_moves if a != g.next_coord]
-                            moves = prefer_straight(prefer_more_next_move(moves))
-                            g.next_coord = moves[0]
+                        if on_border(g.s.my_head):
+                            if not on_border(g.s.my_neck):
+                                move_rank = [(a, distance_pq(a, g.s.other_head)) for a in g.e.allowed_moves]
+                                moves = first_group(move_rank, reverse=True)
+                                g.next_coord = moves[0]
+                            else:
+                                #crawl on border
+                                default()
                         else:
-                            pass
+                            #don't go border
+                            if on_border(g.next_coord):
+                                moves = [a for a in g.e.allowed_moves if a != g.next_coord]
+                                moves = prefer_straight(prefer_more_next_move(moves))
+                                g.next_coord = moves[0]
+                            else:
+                                pass
                 else:
                     pass
             else:
