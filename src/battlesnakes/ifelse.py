@@ -104,7 +104,7 @@ def get_food():
             moves = prefer_straight(prefer_more_next_move(moves))
             g.next_coord = moves[0]
         else:
-            food_worth = [f for f in food_near if path_distance_pq(f, g.s.other_head) > 2]
+            food_worth = [f for f in food_near if 2 < path_distance_pq(f, g.s.other_head) < 999]
             g.e.food_worth = food_worth
             if len(food_worth) != 0:
                 food_worth_d = [(f, path_distance_pq(f, g.s.my_head)) for f in food_worth]
