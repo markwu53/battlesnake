@@ -163,7 +163,8 @@ def head_collision():
                     #enemy is chasing
                     #go straight to the end
                     g.e.situation = "enemy is chasing"
-                    go_straight()
+                    if g.next_coord == collision_point:
+                        go_straight()
                 else:
                     #equal length
                     #nothing need to do
