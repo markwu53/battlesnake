@@ -43,7 +43,17 @@ def filling_decision_functions():
     game.dn["env_lt8_smaller?"].gather_info = lambda: game.env.update({"env_lt8_smaller?": game.my_length < game.other_length})
     game.dn["env_lt8_len_eq?"].gather_info = lambda: game.env.update({"env_lt8_len_eq?": game.my_length == game.other_length})
     game.dn["env_lt8_enemy_far?"].gather_info = lambda: game.env.update({"env_lt8_enemy_far?": distance_pq(game.my_head, game.other_head) > 6})
-    game.dn["env_food_danger_1?"].gather_info = lambda: game.env.update({"env_food_danger_1?": distance_pq(game.my_head, game.other_head) == 2})
+
+    def env_food_danger_1():
+        danger_food = [f for f in game.env["adjacent_food"] 
+                       if is_adjacent(f, game.other_head) and game.my_length <= game.other_length ]
+        if len(danger_food) == 0:
+            game.env["env_food_danger_1?"] = False
+            return
+        game.env["danger_food"] = danger_food
+        game.env["env_food_danger_1?"] = True
+
+    game.dn["env_food_danger_1?"].gather_info = env_food_danger_1
     
     def env_food_1():
         adjacent_food = [f for f in game.board["food"] if is_adjacent(f, game.my_head)]
@@ -54,6 +64,16 @@ def filling_decision_functions():
             game.env["env_food_1?"] = False
 
     game.dn["env_food_1?"].gather_info = env_food_1
+
+    def env_can_avoid():
+        safe_food = [f for f in game.env["adjacent_food"] if f not in game.env["danger_food"]]
+        if len(safe_food) != 0:
+            game.env["food_target"] = safe_food[0]
+            game.dn["env_can_avoid?"] = True
+        else:
+            safe_move = [f for f in game.node.moves]
+
+    game.dn["env_can_avoid?"].gather_info = env_can_avoid
 
     def eat():
         moves = game.env["adjacent_food"]
@@ -84,11 +104,13 @@ def filling_decision_functions():
     game.dn["env_food_closer?"].gather_info = env_food_closer
 
     def env_danger_1():
-        if distance_pq(game.my_head, game.other_head) == 2:
-            if game.my_length <= game.other_length:
-                game.env["env_danger_1?"] = True
-                return
-        game.env["env_danger_1?"] = True
+        danger_moves = [move for move in game.node.moves 
+                        if is_adjacent(move, game.other_head) and game.my_length <= game.other_length ]
+        if len(danger_moves) != 0:
+            game.env["danger_moves"] = danger_moves
+            game.env["env_danger_1?"] = True
+            return
+        game.env["env_danger_1?"] = False
 
     game.dn["env_danger_1?"].gather_info = env_danger_1
 
@@ -205,7 +227,6 @@ def decision():
     while True:
         game.node = node
         node.gather_info()
-        print(node.question_description)
         yes_group = [a for a in node.moves if node.question(a)]
         if len(yes_group) == 1:
             game.logger["decision_path"].append(f"{node.question_description}")

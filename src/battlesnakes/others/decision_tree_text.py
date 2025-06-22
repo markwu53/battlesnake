@@ -27,8 +27,11 @@ root = env_1_vs_1?
         env_less_than_8- = env_lt8_smaller?
 
 food = env_food_1?
-    env_food_1+ = env_food_danger_1?
-        env_food_danger_1+ = eat!
+    env_food_1+ = 
+    env_food_danger_1?
+        env_food_danger_1+ = env_can_avoid?
+            env_can_avoid+ = avoid!
+            env_can_avoid- = eat!
         env_food_danger_1- = eat!
     env_food_1- = env_food_near?
         env_food_near+ = env_food_closer?
