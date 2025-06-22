@@ -310,8 +310,10 @@ def battle_not_bigger():
                             pass
                     else:
                         #parallel opposite dir
-                        #go straight
-                        pass
+                        g.e.situation = "type 1 collision, parallel opposite dir"
+                        moves = [a for a in moves if a != collision_point]
+                        moves = prefer_more_next_move(moves)
+                        g.next_coord = moves[0]
             else:
                 #distance 4
                 #consider on-border danger
