@@ -199,8 +199,8 @@ def battle_not_bigger():
                 else:
                     #type 1 collision with exactly one collision point - because heads are path connected
                     collision_point = common_adj[0]
-                    me_heading_collision_point = get_adjacent_dir(g.s.my_head, collision_point) == get_adjacent_dir(g.s.my_neck == g.s.my_head)
-                    other_heading_collision_point = get_adjacent_dir(g.s.other_head, collision_point) == get_adjacent_dir(g.s.other_neck == g.s.other_head)
+                    me_heading_collision_point = get_adjacent_dir(g.s.my_head, collision_point) == get_adjacent_dir(g.s.my_neck, g.s.my_head)
+                    other_heading_collision_point = get_adjacent_dir(g.s.other_head, collision_point) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
                     same_dir = get_adjacent_dir(g.s.my_neck, g.s.my_head) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
                     if me_heading_collision_point and other_heading_collision_point:
                         #collision trains
