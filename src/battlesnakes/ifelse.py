@@ -267,6 +267,7 @@ def type_1_collision():
 
     elif same_dir:
         #parallel same dir
+        avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
         if g.s.my_length < g.s.other_length:
             if off_border_1(g.s.my_head):
                 #my snake is 1-off border
