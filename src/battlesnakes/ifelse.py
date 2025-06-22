@@ -56,6 +56,10 @@ def prefer_straight(moves):
     moves = first_group(moves_rank)
     return moves
 
+def go_straight():
+    moves = prefer_straight(g.e.allowed_moves)
+    g.next_coord = moves[0]
+
 def todo_default():
     moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
     g.next_coord = moves[0]
@@ -186,6 +190,7 @@ def battle_not_bigger():
                                 #enemy is chasing
                                 #go straight to the end
                                 g.e.situation = "enemy is chasing"
+                                go_straight()
                             else:
                                 #equal length
                                 #nothing need to do
@@ -294,7 +299,8 @@ def battle_not_bigger():
                                     g.next_coord = collision_point
                                 else:
                                     #go straight
-                                    pass
+                                    moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
+                                    g.next_coord = moves[0]
                             else:
                                 #my snake is not 1-off border
                                 #can't think of now
