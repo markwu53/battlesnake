@@ -57,22 +57,25 @@ def prefer_straight(moves):
     moves = first_group(moves_rank)
     return moves
 
+def prefer_off_border(moves):
+    moves_rank = [(a, 1 if on_border(a) else 0) for a in moves]
+    moves = first_group(moves_rank)
+    return moves
+
 def go_straight():
     moves = prefer_straight(g.e.allowed_moves)
     g.next_coord = moves[0]
 
-def todo_default():
-    moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
+def default():
+    moves = prefer_straight(prefer_more_next_move(prefer_off_border(g.e.allowed_moves)))
     g.next_coord = moves[0]
 
 def battle_bigger():
-    moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
-    g.next_coord = moves[0]
+    default()
     get_food()
 
 def battle_not_bigger():
-    moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
-    g.next_coord = moves[0]
+    default()
     get_food()
     avoid_danger()
 
@@ -188,7 +191,7 @@ def head_collision():
                 else:
                     #2 avoid points
                     #may need intense calc but here we simply do more next move choice - for now
-                    moves = prefer_straight(prefer_more_next_move(avoid_points))
+                    moves = prefer_straight(prefer_more_next_move(prefer_off_border(avoid_points)))
                     g.next_coord = moves[0]
             else:
                 #equal length
@@ -200,7 +203,7 @@ def head_collision():
                 else:
                     #2 avoid points
                     #may need intense calc but here we simply do more next move choice - for now
-                    moves = prefer_straight(prefer_more_next_move(avoid_points))
+                    moves = prefer_straight(prefer_more_next_move(prefer_off_border(avoid_points)))
                     g.next_coord = moves[0]
 
         elif me_heading_collision_point:
@@ -215,7 +218,7 @@ def head_collision():
                 else:
                     #2 avoid points
                     #may need intense calc but here we simply do more next move choice - for now
-                    moves = prefer_straight(prefer_more_next_move(avoid_points))
+                    moves = prefer_straight(prefer_more_next_move(prefer_off_border(avoid_points)))
                     g.next_coord = moves[0]
             else:
                 #equal length
@@ -227,7 +230,7 @@ def head_collision():
                 else:
                     #2 avoid points
                     #may need intense calc but here we simply do more next move choice - for now
-                    moves = prefer_straight(prefer_more_next_move(avoid_points))
+                    moves = prefer_straight(prefer_more_next_move(prefer_off_border(avoid_points)))
                     g.next_coord = moves[0]                       
 
         elif other_heading_collision_point:
@@ -243,7 +246,7 @@ def head_collision():
                 else:
                     #2 avoid points
                     #may need intense calc but here we simply do more next move choice - for now
-                    moves = prefer_straight(prefer_more_next_move(avoid_points))
+                    moves = prefer_straight(prefer_more_next_move(prefer_off_border(avoid_points)))
                     g.next_coord = moves[0]
             else:
                 #equal length
@@ -255,7 +258,7 @@ def head_collision():
                 else:
                     #2 avoid points
                     #may need intense calc but here we simply do more next move choice - for now
-                    moves = prefer_straight(prefer_more_next_move(avoid_points))
+                    moves = prefer_straight(prefer_more_next_move(prefer_off_border(avoid_points)))
                     g.next_coord = moves[0]                       
 
         elif same_dir:
@@ -269,7 +272,7 @@ def head_collision():
                         g.next_coord = collision_point
                     else:
                         #go straight
-                        moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
+                        moves = prefer_straight(prefer_more_next_move(prefer_off_border(avoid_points)))
                         g.next_coord = moves[0]
                 else:
                     #my snake is not 1-off border
@@ -301,7 +304,7 @@ def avoid_danger():
                         #don't go border
                         if on_border(g.next_coord):
                             moves = [a for a in g.e.allowed_moves if a != g.next_coord]
-                            moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
+                            moves = prefer_straight(prefer_more_next_move(moves))
                             g.next_coord = moves[0]
                         else:
                             pass
@@ -320,7 +323,7 @@ def avoid_danger():
                             md = max([dx, dy])
                             if md < 3:
                                 moves = [a for a in g.e.allowed_moves if a != g.next_coord]
-                                moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
+                                moves = prefer_straight(prefer_more_next_move(moves))
                                 g.next_coord = moves[0]
                             else:
                                 pass
@@ -374,7 +377,7 @@ def decision():
         battle()
     else:
         #1_vs_n, for now, use the same
-        todo_default()
+        default()
 
 ######################################################
 # initial functions
