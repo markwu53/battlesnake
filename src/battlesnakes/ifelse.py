@@ -1,5 +1,7 @@
 import time
 
+#these class variables are used to trick the editor to display them in intellisense
+
 class DecisionSupport:
     n_other = 1
     allowed_moves = None
@@ -10,9 +12,11 @@ class SnakeInfo:
     my_head = None
     my_neck = None
     my_tail = None
+    my_length = None
     other_head = None
     other_neck = None
     other_tail = None
+    other_length = None
 
 class Game:
     state = None
@@ -46,9 +50,43 @@ def todo_default():
     moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
     g.next_coord = moves[0]
 
-def battle():
+def battle_mine_bigger():
     moves = prefer_straight(prefer_more_next_move(g.e.allowed_moves))
     g.next_coord = moves[0]
+
+    d_food = 8
+    food_near = [f for f in g.food if distance_pq(f, g.s.my_head) < d_food]
+    if len(food_near) == 0:
+        return
+
+    food_good_d = [f for f in food_near if distance_pq(f, g.s.my_head) <= distance_pq(f, g.s.other_head)]
+    food_good_dd = [(f, path_distance_pq(f, g.s.my_head), path_distance_pq(f, g.s.other_head)) for f in food_good_d]
+    food_good = [(f, d1) for f,d1,d2 in food_good_dd if d1 <= d2]
+    if len(food_good) != 0:
+        food_targets = first_group(food_good)
+        food_target = food_targets[0]
+        moves = shortest_path_move(g.s.my_head, food_target)
+        moves = prefer_straight(prefer_more_next_move(moves))
+        g.next_coord = moves[0]
+        return
+    
+    #enemy is closer to food
+    food_worth = [f for f in food_near if path_distance_pq(f, g.s.other_head) > 2]
+    if len(food_worth) != 0:
+        food_worth_d = [(f, path_distance_pq(f, g.s.my_head)) for f in food_worth]
+        food_worth = first_group(food_worth_d)
+        food_target = food_worth[0]
+        moves = shortest_path_move(g.s.my_head, food_target)
+        moves = prefer_straight(prefer_more_next_move(moves))
+        g.next_coord = moves[0]
+
+def battle():
+    #1_vs_1
+    if g.s.my_length > g.s.other_length:
+        #no danger
+        battle_mine_bigger()
+    else:
+        todo_default()
 
 def init_env():
     #estimated 5-step occupied cells
@@ -79,6 +117,10 @@ def decision():
     else:
         #1_vs_n, for now, use the same
         todo_default()
+
+######################################################
+# initial functions
+######################################################
 
 def init_game(game_state):
     g.state = game_state
@@ -142,6 +184,8 @@ def special_experimenting_code(game_state):
     print(g.log)
     return True
 
+######################################################
+# utility functions
 ######################################################
 
 def get_coord(ds):
@@ -208,6 +252,64 @@ def first_group(alist, reverse=False):
     result.sort(reverse=reverse)
     result = result[0][1]
     return result
+
+def distance_pq(p, q):
+    x1,y1 = p
+    x2,y2 = q
+    distance = abs(x1-x2) + abs(y1-y2)
+    return distance
+
+def is_adjacent(p, q):
+    return distance_pq(p, q) == 1
+
+def path_distance_pq(p, q, occupied=None):
+    if occupied is None:
+        occupied = g.occupied_cells[0]
+    #remove q from occupied otherwise there is no path
+    occupied = [p for p in occupied if p != q]
+    layers = path_connected_layers(p, occupied)
+    for i,layer in enumerate(layers):
+        if q in layer:
+            return i
+    return 999
+
+def path_connected_layers(p, occupied=None):
+    if occupied is None:
+        occupied = g.occupied_cells[0]
+    #remove p from occupied
+    occupied = [q for q in occupied if q != p]
+    layers = [set([p])]
+    layer = set([q for q in adj_cells(p) if q not in occupied])
+    while len(layer) != 0:
+        layers.append(layer)
+        layer = set([x for q in layer for x in adj_cells(q) if x not in occupied and x not in layers[-2]])
+    return layers
+
+def path_connected_set(p, occupied=None):
+    if occupied is None:
+        occupied = g.occupied_cells[0]
+    layers = path_connected_layers(p, occupied)
+    return set([q for layer in layers for q in layer])
+
+def path_connected(p, q, occupied=None):
+    if occupied is None:
+        occupied = g.occupied_cells[0]
+    occupied = [x for x in occupied if x != q]
+    return q in path_connected_set(p, occupied)
+
+def shortest_path_move(p, q, occupied=None):
+    if is_adjacent(p, q):
+        return [q]
+    if occupied is None:
+        occupied = g.occupied_cells[0]
+    occupied = [c for c in occupied if c != q]
+    if q in path_connected_set(p, occupied):
+        dist = path_distance_pq(p, q, occupied)
+        layers = path_connected_layers(p, occupied)
+        if len(layers) > 1:
+            result = [x for x in layers[1] if path_distance_pq(x, q, occupied) == dist-1]
+            return result
+    return []
 
 ######################################################
 
