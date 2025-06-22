@@ -115,180 +115,181 @@ def get_food():
                 moves = prefer_straight(prefer_more_next_move(moves))
                 g.next_coord = moves[0]
 
-def head_collision():
+def type_2_collision():
 
-    common_adj = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
-    if len(common_adj) == 2:
-        g.e.collision_type = 2
-        collision_points = [p for p in common_adj if p not in g.occupied_cells[0]]
-        if len(collision_points) == 2:
-            avoid_points = [p for p in g.e.allowed_moves if p not in collision_points]
-            g.e.avoid_points = avoid_points
-            if len(avoid_points) != 0:
-                avoid_point = avoid_points[0]
-                if not on_border(avoid_point):
-                    g.next_coord = avoid_point
-                else:
-                    if g.s.my_length < g.s.other_length:
-                        collision_food = [p for p in collision_points if p in g.food]
-                        g.e.collision_food = collision_food
-                        if len(collision_food) == 1:
-                            #take chance by avoiding food
-                            one = [p for p in collision_points if p not in collision_food]
-                            g.next_coord = one[0]
-                        else:
-                            avoid_point_next = [p for p in adj_cells(avoid_point) if p not in g.occupied_cells[1]]
-                            g.e.avoid_point_next = avoid_point_next
-                            g.next_coord = collision_points[0]
-                            if len(avoid_point_next) == 2:
-                                #intense calc point
-                                #let's say b is the farther point (to other_head), check if b has wayout
-                                b = [p for p in avoid_point_next if distance_pq(p, g.s.other_head) > 2][0]
-                                wayout_room = path_connected_set(b, g.occupied_cells[0]+[avoid_point])
-                                g.e.wayout_room = len(wayout_room)
-                                if g.e.wayout_room >= g.s.my_length:
-                                    g.next_coord = avoid_point
-                                else:
-                                    #take risk
-                                    g.next_coord = collision_points[0]
+    g.e.collision_type = 2
+    collision_points = [p for p in g.e.common_adj if p not in g.occupied_cells[0]]
+    if len(collision_points) == 2:
+        avoid_points = [p for p in g.e.allowed_moves if p not in collision_points]
+        g.e.avoid_points = avoid_points
+        if len(avoid_points) != 0:
+            avoid_point = avoid_points[0]
+            if not on_border(avoid_point):
+                g.next_coord = avoid_point
+            else:
+                if g.s.my_length < g.s.other_length:
+                    collision_food = [p for p in collision_points if p in g.food]
+                    g.e.collision_food = collision_food
+                    if len(collision_food) == 1:
+                        #take chance by avoiding food
+                        one = [p for p in collision_points if p not in collision_food]
+                        g.next_coord = one[0]
+                    else:
+                        avoid_point_next = [p for p in adj_cells(avoid_point) if p not in g.occupied_cells[1]]
+                        g.e.avoid_point_next = avoid_point_next
+                        g.next_coord = collision_points[0]
+                        if len(avoid_point_next) == 2:
+                            #intense calc point
+                            #let's say b is the farther point (to other_head), check if b has wayout
+                            b = [p for p in avoid_point_next if distance_pq(p, g.s.other_head) > 2][0]
+                            wayout_room = path_connected_set(b, g.occupied_cells[0]+[avoid_point])
+                            g.e.wayout_room = len(wayout_room)
+                            if g.e.wayout_room >= g.s.my_length:
+                                g.next_coord = avoid_point
                             else:
-                                #avoid point has not enough wayout dir
                                 #take risk
                                 g.next_coord = collision_points[0]
-                    else:
-                        #equal length
-                        #do nothing for now
-                        pass
-            else:
-                #no avoid point
-                #has risk, but nothing need to do
-                pass
-        else:
-            #type 2 collision, 1 collision point
-            if len(g.e.allowed_moves) == 3:
-                #type 2, 1 collision point, 3 allowed moves
-                if g.s.my_length < g.s.other_length:
-                    #enemy is chasing
-                    #go straight to the end
-                    g.e.situation = "enemy is chasing"
-                    if g.next_coord == collision_point:
-                        go_straight()
+                        else:
+                            #avoid point has not enough wayout dir
+                            #take risk
+                            g.next_coord = collision_points[0]
                 else:
                     #equal length
-                    #nothing need to do
+                    #do nothing for now
                     pass
-            else:
-                #there is an avoid point beside the single collision point
-                #take the avoid point
-                avoid_point = [p for p in g.e.allowed_moves if p not in collision_points]
-                avoid_point = avoid_point[0]
-                g.next_coord = avoid_point
+        else:
+            #no avoid point
+            #has risk, but nothing need to do
+            pass
     else:
-        #type 1 collision with exactly one collision point - because heads are path connected
-        collision_point = common_adj[0]
-        me_heading_collision_point = get_adjacent_dir(g.s.my_head, collision_point) == get_adjacent_dir(g.s.my_neck, g.s.my_head)
-        other_heading_collision_point = get_adjacent_dir(g.s.other_head, collision_point) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
-        same_dir = get_adjacent_dir(g.s.my_neck, g.s.my_head) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
-        if me_heading_collision_point and other_heading_collision_point:
-            #collision trains
-
+        #type 2 collision, 1 collision point
+        collision_point = collision_points[0]
+        if len(g.e.allowed_moves) == 3:
+            #type 2, 1 collision point, 3 allowed moves
             if g.s.my_length < g.s.other_length:
-                avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
-                if len(avoid_points) == 1:
-                    avoid_point = avoid_points[0]
-                    g.next_coord = avoid_point
-                else:
-                    #2 avoid points
-                    #may need intense calc but here we simply do more next move choice - for now
-                    default(avoid_points)
+                #enemy is chasing
+                #go straight to the end
+                g.e.situation = "enemy is chasing"
+                if g.next_coord == collision_point:
+                    go_straight()
             else:
                 #equal length
-                #do the same as shorter length - for now
-                avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
-                if len(avoid_points) == 1:
-                    avoid_point = avoid_points[0]
-                    g.next_coord = avoid_point
-                else:
-                    #2 avoid points
-                    #may need intense calc but here we simply do more next move choice - for now
-                    default(avoid_points)
-
-        elif me_heading_collision_point:
-            #perpendicular
-            #do the same as above for now
-
-            if g.s.my_length < g.s.other_length:
-                avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
-                if len(avoid_points) == 1:
-                    avoid_point = avoid_points[0]
-                    g.next_coord = avoid_point
-                else:
-                    #2 avoid points
-                    #may need intense calc but here we simply do more next move choice - for now
-                    default(avoid_points)
-            else:
-                #equal length
-                #do the same as shorter length - for now
-                avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
-                if len(avoid_points) == 1:
-                    avoid_point = avoid_points[0]
-                    g.next_coord = avoid_point
-                else:
-                    #2 avoid points
-                    #may need intense calc but here we simply do more next move choice - for now
-                    default(avoid_points)
-
-        elif other_heading_collision_point:
-            #perpendicular
-            #other is coming to me
-            #do the same as above for now
-
-            if g.s.my_length < g.s.other_length:
-                avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
-                if len(avoid_points) == 1:
-                    avoid_point = avoid_points[0]
-                    g.next_coord = avoid_point
-                else:
-                    #2 avoid points
-                    #may need intense calc but here we simply do more next move choice - for now
-                    default(avoid_points)
-            else:
-                #equal length
-                #do the same as shorter length - for now
-                avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
-                if len(avoid_points) == 1:
-                    avoid_point = avoid_points[0]
-                    g.next_coord = avoid_point
-                else:
-                    #2 avoid points
-                    #may need intense calc but here we simply do more next move choice - for now
-                    default(avoid_points)
-
-        elif same_dir:
-            #parallel same dir
-            if g.s.my_length < g.s.other_length:
-                if off_border_1(g.s.my_head):
-                    #my snake is 1-off border
-                    #go towards the border until 2 away
-                    if len([off_border_1(p) for p in adj_cells(g.s.my_head)]) == 2:
-                        #go straight to 2-off border then take risk
-                        g.next_coord = collision_point
-                    else:
-                        #go straight
-                        default(avoid_points)
-                else:
-                    #my snake is not 1-off border
-                    #can't think of now
-                    pass
-            else:
-                #equal length
+                #nothing need to do
                 pass
         else:
-            #parallel opposite dir
-            g.e.situation = "type 1 collision, parallel opposite dir"
-            moves = [a for a in moves if a != collision_point]
-            moves = prefer_more_next_move(moves)
-            g.next_coord = moves[0]
+            #there is an avoid point beside the single collision point
+            #take the avoid point
+            avoid_point = [p for p in g.e.allowed_moves if p not in collision_points]
+            avoid_point = avoid_point[0]
+            g.next_coord = avoid_point
+
+def type_1_collision():
+
+    #type 1 collision with exactly one collision point - because heads are path connected
+    collision_point = g.e.common_adj[0]
+    me_heading_collision_point = get_adjacent_dir(g.s.my_head, collision_point) == get_adjacent_dir(g.s.my_neck, g.s.my_head)
+    other_heading_collision_point = get_adjacent_dir(g.s.other_head, collision_point) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
+    same_dir = get_adjacent_dir(g.s.my_neck, g.s.my_head) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
+    if me_heading_collision_point and other_heading_collision_point:
+        #collision trains
+
+        if g.s.my_length < g.s.other_length:
+            avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
+            if len(avoid_points) == 1:
+                avoid_point = avoid_points[0]
+                g.next_coord = avoid_point
+            else:
+                #2 avoid points
+                #may need intense calc but here we simply do more next move choice - for now
+                default(avoid_points)
+        else:
+            #equal length
+            #do the same as shorter length - for now
+            avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
+            if len(avoid_points) == 1:
+                avoid_point = avoid_points[0]
+                g.next_coord = avoid_point
+            else:
+                #2 avoid points
+                #may need intense calc but here we simply do more next move choice - for now
+                default(avoid_points)
+
+    elif me_heading_collision_point:
+        #perpendicular
+        #do the same as above for now
+
+        if g.s.my_length < g.s.other_length:
+            avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
+            if len(avoid_points) == 1:
+                avoid_point = avoid_points[0]
+                g.next_coord = avoid_point
+            else:
+                #2 avoid points
+                #may need intense calc but here we simply do more next move choice - for now
+                default(avoid_points)
+        else:
+            #equal length
+            #do the same as shorter length - for now
+            avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
+            if len(avoid_points) == 1:
+                avoid_point = avoid_points[0]
+                g.next_coord = avoid_point
+            else:
+                #2 avoid points
+                #may need intense calc but here we simply do more next move choice - for now
+                default(avoid_points)
+
+    elif other_heading_collision_point:
+        #perpendicular
+        #other is coming to me
+        #do the same as above for now
+
+        if g.s.my_length < g.s.other_length:
+            avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
+            if len(avoid_points) == 1:
+                avoid_point = avoid_points[0]
+                g.next_coord = avoid_point
+            else:
+                #2 avoid points
+                #may need intense calc but here we simply do more next move choice - for now
+                default(avoid_points)
+        else:
+            #equal length
+            #do the same as shorter length - for now
+            avoid_points = [p for p in g.e.allowed_moves if p != collision_point]
+            if len(avoid_points) == 1:
+                avoid_point = avoid_points[0]
+                g.next_coord = avoid_point
+            else:
+                #2 avoid points
+                #may need intense calc but here we simply do more next move choice - for now
+                default(avoid_points)
+
+    elif same_dir:
+        #parallel same dir
+        if g.s.my_length < g.s.other_length:
+            if off_border_1(g.s.my_head):
+                #my snake is 1-off border
+                #go towards the border until 2 away
+                if len([off_border_1(p) for p in adj_cells(g.s.my_head)]) == 2:
+                    #go straight to 2-off border then take risk
+                    g.next_coord = collision_point
+                else:
+                    #go straight
+                    default(avoid_points)
+            else:
+                #my snake is not 1-off border
+                #can't think of now
+                pass
+        else:
+            #equal length
+            pass
+    else:
+        #parallel opposite dir
+        g.e.situation = "type 1 collision, parallel opposite dir"
+        moves = [a for a in moves if a != collision_point]
+        moves = prefer_more_next_move(moves)
+        g.next_coord = moves[0]
 
 def avoid_danger():
     #danger override
@@ -297,7 +298,11 @@ def avoid_danger():
         g.e.head_path_distance = path_distance_pq(g.s.my_head, g.s.other_head)
         if g.e.head_path_distance <= d_danger:
             if g.e.head_path_distance == 2:
-                head_collision()
+                g.e.common_adj = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
+                if len(g.e.common_adj) == 2:
+                    type_2_collision()
+                else:
+                    type_1_collision()
             elif g.e.head_path_distance == 4:
                 if g.s.my_length < g.s.other_length:
                     if g.s.my_length+1 == g.s.other_length and g.next_coord in g.food:
