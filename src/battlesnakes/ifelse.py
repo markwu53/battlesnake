@@ -57,6 +57,11 @@ def prefer_straight(moves):
     moves = first_group(moves_rank)
     return moves
 
+def prefer_turn(moves):
+    moves_rank = [(a, 0 if get_adjacent_dir(g.s.my_neck, g.s.my_head) == get_adjacent_dir(g.s.my_head, a) else 1) for a in moves]
+    moves = first_group(moves_rank, reverse=True)
+    return moves
+
 def prefer_off_border(moves):
     moves_rank = [(a, 1 if on_border(a) else 0) for a in moves]
     moves = first_group(moves_rank)
@@ -168,11 +173,14 @@ def type_2_collision():
         if len(g.e.allowed_moves) == 3:
             #type 2, 1 collision point, 3 allowed moves
             if g.s.my_length < g.s.other_length:
-                #enemy is chasing
-                #go straight to the end
                 g.e.situation = "enemy is chasing"
-                if g.next_coord == collision_point:
-                    go_straight()
+                if distance_to_border(g.s.my_head) == (1,1) and g.s.my_length == 4:
+                    g.e.situation = "special - enemy chasing me at corner and length 4"
+                    moves = [a for a in g.e.allowed_moves if a != collision_point]
+                    moves = prefer_turn(moves)
+                    g.next_coord = moves[0]
+                else:
+                    default()
             else:
                 #equal length
                 #nothing need to do
@@ -303,7 +311,7 @@ def killer_near():
     if on_border(g.s.my_head):
         if not on_border(g.s.my_neck):
             g.e.situation = "heading border and take a move farther to danger"
-            move_rank = [(a, distance_pq(a, g.s.other_head)) for a in g.e.allowed_moves]
+            move_rank = [(a, path_distance_pq(a, g.s.other_head)) for a in g.e.allowed_moves]
             moves = first_group(move_rank, reverse=True)
             g.next_coord = moves[0]
         else:
@@ -682,6 +690,8 @@ def run():
     log = {'id': '2310d184-a0c3-4a40-9425-aacf651eeb39', 'turn': 59, 'me': {'name': 'mark_snake', 'health': 99, 'body':     [(10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (7, 9), (8, 9), (9, 9)]
 }, 'others': [{'name': 'Snakeformatika', 'health': 89, 'body': [(9, 6), (9, 5), (10, 5), (10, 4), (10, 3), (9, 3), (9, 4), (8, 4), (8, 5)]}], 'food': [(5, 5), (5, 2), (7, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 7), (8, 7), (9, 8)], 'other_allowed_moves': [(8, 7), (8, 5)], 'head_distance': 2, 'my_snake_bigger': False, 'food_near': [(10, 10)], 'food_good': [((10, 10), 4)], 'food_target': (10, 10), 'situation': 'enemy is chasing', 'food_worth': [(7, 5), (5, 2)], 'head_path_distance': 2, 'collision_type': 2, 'avoid_points': [(2, 10)], 'collision_food': [], 'avoid_point_next': [(3, 10), (1, 10)], 'wayout_room': 109}, 'next_coord': (9, 8), 'next_move': 'up', 'time': '0.003s'}
     [(10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (7, 9), (8, 9), (9, 9)]
+    log = {'id': '6d735788-e36c-4402-ba43-f9b37b92b32a', 'turn': 32, 'me': {'name': 'mark_snake', 'health': 70, 'body': [(9, 1), (8, 1), (7, 1), (6, 1)]}, 'others': [{'name': 'Snakeformatika', 'health': 78, 'body': [(8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2)]}], 'food': [(10, 4), (9, 7), (1, 7), (6, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 1), (9, 2), (9, 0)], 'other_allowed_moves': [(9, 2), (8, 3)], 'head_distance': 2, 'my_snake_bigger': False, 'food_near': [(10, 4), (9, 7), (6, 3)], 'food_good': [((10, 4), 4), ((9, 7), 6)], 'food_target': (10, 4), 'situation': 'enemy is chasing', 'head_path_distance': 2, 'food_worth': [(1, 7)], 'collision_type': 2}, 'next_coord': (10, 1), 'next_move': 'right', 'time': '0.005s'}
+    log = {'id': '6d735788-e36c-4402-ba43-f9b37b92b32a', 'turn': 33, 'me': {'name': 'mark_snake', 'health': 69, 'body': [(9, 0), (9, 1), (8, 1), (7, 1)]}, 'others': [{'name': 'Snakeformatika', 'health': 77, 'body': [(8, 3), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2)]}], 'food': [(10, 4), (9, 7), (1, 7), (6, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 2), (10, 0)], 'other_allowed_moves': [(9, 3), (7, 3), (8, 4)], 'head_distance': 4, 'my_snake_bigger': False, 'food_near': [(10, 4), (9, 7), (6, 3)], 'food_good': [((10, 4), 3)], 'food_target': (10, 4), 'situation': 'heading border and take a move farther to danger', 'head_path_distance': 4, 'food_worth': [(1, 7)], 'collision_type': 2}, 'next_coord': (10, 0), 'next_move': 'down', 'time': '0.003s'}
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
 
