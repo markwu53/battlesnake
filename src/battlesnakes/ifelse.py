@@ -290,8 +290,41 @@ def type_1_collision():
     else:
         #parallel opposite dir
         g.e.situation = "type 1 collision, parallel opposite dir"
-        moves = [a for a in moves if a != collision_point]
+        moves = [a for a in g.e.allowed_moves if a != collision_point]
         moves = prefer_more_next_move(moves)
+        g.next_coord = moves[0]
+
+def killer_near():
+
+    if g.s.my_length+1 == g.s.other_length and g.next_coord in g.food:
+        g.e.situation = "get the food and will be equal length"
+        return
+
+    if on_border(g.s.my_head):
+        if not on_border(g.s.my_neck):
+            g.e.situation = "heading border and take a move farther to danger"
+            move_rank = [(a, distance_pq(a, g.s.other_head)) for a in g.e.allowed_moves]
+            moves = first_group(move_rank, reverse=True)
+            g.next_coord = moves[0]
+        else:
+            #crawl on border
+            g.e.situation = "crawling on border try come back"
+            default()
+        return
+
+    if g.e.head_distance == 6:
+        if on_border(g.next_coord):
+            dx,dy = distance_to_border(g.next_coord)
+            md = max([dx, dy])
+            if md >= 3:
+                g.e.situation = "head distance is 6 but next move is in the middle"
+                return
+
+    #don't go border
+    g.e.situation = "killer near don't go on border"
+    moves = [a for a in g.e.allowed_moves if not on_border(a)]
+    if len(moves) != 0:
+        moves = prefer_straight(prefer_more_next_move(moves))
         g.next_coord = moves[0]
 
 def avoid_danger():
@@ -299,72 +332,26 @@ def avoid_danger():
     d_danger = 6
     if g.e.head_distance <= d_danger:
         g.e.head_path_distance = path_distance_pq(g.s.my_head, g.s.other_head)
-        if g.e.head_path_distance <= d_danger:
-            if g.e.head_path_distance == 2:
-                common_adj = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
-                if len(common_adj) == 2:
+        if g.e.head_distance == 2:
+            common_adj = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
+            if len(common_adj) == 2:
+                if g.e.head_path_distance == 2:
                     type_2_collision()
                 else:
-                    type_1_collision()
-            elif g.e.head_path_distance == 4:
-                if g.s.my_length < g.s.other_length:
-                    if g.s.my_length+1 == g.s.other_length and g.next_coord in g.food:
-                        pass
-                    else:
-                        if on_border(g.s.my_head):
-                            if not on_border(g.s.my_neck):
-                                move_rank = [(a, distance_pq(a, g.s.other_head)) for a in g.e.allowed_moves]
-                                moves = first_group(move_rank, reverse=True)
-                                g.next_coord = moves[0]
-                            else:
-                                #crawl on border
-                                default()
-                        else:
-                            #don't go border
-                            if on_border(g.next_coord):
-                                moves = [a for a in g.e.allowed_moves if a != g.next_coord]
-                                moves = prefer_straight(prefer_more_next_move(moves))
-                                g.next_coord = moves[0]
-                            else:
-                                pass
-                else:
-                    pass
+                    g.e.situation = "type 2 form but blocked"
             else:
-                #path distance 6
-                #don't go on border unless in the middle
-                if g.s.my_length < g.s.other_length:
-                    if g.s.my_length+1 == g.s.other_length and g.next_coord in g.food:
-                        pass
-                    else:
-                        if on_border(g.s.my_head):
-                            if not on_border(g.s.my_neck):
-                                move_rank = [(a, distance_pq(a, g.s.other_head)) for a in g.e.allowed_moves]
-                                moves = first_group(move_rank, reverse=True)
-                                g.next_coord = moves[0]
-                            else:
-                                #crawl on border
-                                default()
-                        else:
-                            #don't go border
-                            if on_border(g.next_coord):
-                                dx,dy = distance_to_border(g.next_coord)
-                                md = max([dx, dy])
-                                if md < 3:
-                                    moves = [a for a in g.e.allowed_moves if a != g.next_coord]
-                                    moves = prefer_straight(prefer_more_next_move(moves))
-                                    g.next_coord = moves[0]
-                                else:
-                                    pass
-                            else:
-                                pass
+                if g.e.head_path_distance == 2:
+                    type_1_collision()
                 else:
-                    pass
+                    g.e.situation = "type 1 form but collision point is blocked"
+                    if g.e.head_path_distance <= 8:
+                        killer_near()
         else:
-            #no danger
-            pass
+            if g.s.my_length < g.s.other_length:
+                killer_near()
     else:
         #no danger
-        pass
+        g.e.situation = "distance is more than 6, no danger"
 
 def battle():
     #1_vs_1
@@ -685,6 +672,7 @@ def run():
     log = {'id': '0a97fd24-57d7-4b48-b71a-20efc2a3118e', 'turn': 64, 'me': {'name': 'mark_snake', 'health': 100, 
                 'body': [(8, 10), (8, 9), (7, 9), (6, 9), (6, 8), (6, 7)]}, 'others': [{'name': 'Snakeformatika', 'health': 100, 
                 'body': [(3, 9), (4, 9), (5, 9), (5, 8), (5, 7), (5, 6), (5, 5)]}], 'food': [(0, 7), (9, 7), (0, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 7), (5, 7), (6, 8)], 'other_allowed_moves': [(4, 6), (5, 7)], 'head_distance': 2, 'my_snake_bigger': False, 'food_near': [(8, 10), (6, 8), (3, 9), (0, 7), (9, 7)], 'food_good': [((8, 10), 5), ((6, 8), 1), ((3, 9), 5), ((0, 7), 6), ((9, 7), 3)], 'food_target': (6, 8), 'food_worth': [(3, 9)], 'head_path_distance': 2, 'collision_type': 2, 'situation': 'enemy is chasing', 'avoid_points': [(2, 3)], 'collision_food': [], 'avoid_point_next': [(4, 0), (2, 0)], 'wayout_room': 112}, 'next_coord': (6, 8), 'next_move': 'up', 'time': '0.003s'}
+    log = {'id': 'cfe00a8a-a82f-4c0c-9233-a104e0b1b96c', 'turn': 14, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(9, 9), (8, 9), (8, 8), (8, 7), (7, 7)]}, 'others': [{'name': 'Snakeformatika', 'health': 96, 'body': [(6, 6), (7, 6), (7, 5), (6, 5), (5, 5), (5, 6)]}], 'food': [(2, 4), (1, 0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 9), (9, 10), (9, 8)], 'other_allowed_moves': [(5, 6), (6, 7)], 'head_distance': 6, 'my_snake_bigger': False, 'food_near': [], 'food_good': [((8, 8), 1)], 'food_target': (8, 8), 'food_worth': [(5, 5), (2, 6)], 'head_path_distance': 8, 'collision_type': 2, 'avoid_points': [(4, 7)], 'situation': 'enemy is chasing'}, 'next_coord': (10, 9), 'next_move': 'right', 'time': '0.000s'}
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
 
