@@ -336,18 +336,27 @@ def avoid_danger():
                     if g.s.my_length+1 == g.s.other_length and g.next_coord in g.food:
                         pass
                     else:
-                        #don't go border
-                        if on_border(g.next_coord):
-                            dx,dy = distance_to_border(g.next_coord)
-                            md = max([dx, dy])
-                            if md < 3:
-                                moves = [a for a in g.e.allowed_moves if a != g.next_coord]
-                                moves = prefer_straight(prefer_more_next_move(moves))
+                        if on_border(g.s.my_head):
+                            if not on_border(g.s.my_neck):
+                                move_rank = [(a, distance_pq(a, g.s.other_head)) for a in g.e.allowed_moves]
+                                moves = first_group(move_rank, reverse=True)
                                 g.next_coord = moves[0]
                             else:
-                                pass
+                                #crawl on border
+                                default()
                         else:
-                            pass
+                            #don't go border
+                            if on_border(g.next_coord):
+                                dx,dy = distance_to_border(g.next_coord)
+                                md = max([dx, dy])
+                                if md < 3:
+                                    moves = [a for a in g.e.allowed_moves if a != g.next_coord]
+                                    moves = prefer_straight(prefer_more_next_move(moves))
+                                    g.next_coord = moves[0]
+                                else:
+                                    pass
+                            else:
+                                pass
                 else:
                     pass
         else:
@@ -612,10 +621,10 @@ def distance_to_border(p):
 
 ######################################################
 
-def init_from_log(log):
+def reverse_coord(cs):
+    return [{"x":x, "y":y} for x,y in cs]
 
-    def reverse_coord(cs):
-        return [{"x":x, "y":y} for x,y in cs]
+def init_from_log2(log):
 
     others = [ {
             "name": snake["name"],
@@ -643,8 +652,39 @@ def init_from_log(log):
     }
     return game_state
 
+def init_from_log(log):
+
+    others = [ {
+            "name": snake["name"],
+            "health": snake["health"],
+            "body": reverse_coord(snake["body"]),
+        } for snake in log["others"] ]
+    me = [ {
+            "name": snake["name"],
+            "health": snake["health"],
+            "body": reverse_coord(snake["body"]),
+        } for snake in [log["me"]] ][0]
+
+    game_state = {
+        "game": {
+                "id": log["id"]
+            },
+        "turn": log["turn"],
+        "you": me,
+        "board": {
+                "width": 11,
+                "height": 11,
+                "snakes": [me, *others],
+                "food": reverse_coord(log["food"]),
+            },
+    }
+    return game_state
+
 def run():
     log = {'board': {'id': '19fa9bec-610a-4fa1-93fb-3e591b305598', 'turn': 16, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(9, 7), (9, 6), (8, 6), (8, 5), (8, 4)]}, 'others': [{'name': 'Snakeformatika', 'health': 98, 'body': [(6, 6), (6, 7), (7, 7), (7, 6), (7, 5), (7, 4)]}], 'food': [(3, 5), (0, 0)]}, 'experiment': True, 'allowed_moves': [(10, 7), (8, 7), (9, 8)], 'decision_path': ['env_1_vs_1?: Y', 'env_mine_bigger?: N', 'env_less_than_8?: Y', 'env_lt8_smaller?: Y', 'env_lt8_enemy_far?: N', 'env_lt8_food_1?: N', 'env_food_near?: N', 'routine_move!'], 'time': '0.000s'}
+    log = {'id': '0a97fd24-57d7-4b48-b71a-20efc2a3118e', 'turn': 64, 'me': {'name': 'mark_snake', 'health': 100, 
+                'body': [(8, 10), (8, 9), (7, 9), (6, 9), (6, 8), (6, 7)]}, 'others': [{'name': 'Snakeformatika', 'health': 100, 
+                'body': [(3, 9), (4, 9), (5, 9), (5, 8), (5, 7), (5, 6), (5, 5)]}], 'food': [(0, 7), (9, 7), (0, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 7), (5, 7), (6, 8)], 'other_allowed_moves': [(4, 6), (5, 7)], 'head_distance': 2, 'my_snake_bigger': False, 'food_near': [(8, 10), (6, 8), (3, 9), (0, 7), (9, 7)], 'food_good': [((8, 10), 5), ((6, 8), 1), ((3, 9), 5), ((0, 7), 6), ((9, 7), 3)], 'food_target': (6, 8), 'food_worth': [(3, 9)], 'head_path_distance': 2, 'collision_type': 2, 'situation': 'enemy is chasing', 'avoid_points': [(2, 3)], 'collision_food': [], 'avoid_point_next': [(4, 0), (2, 0)], 'wayout_room': 112}, 'next_coord': (6, 8), 'next_move': 'up', 'time': '0.003s'}
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
 
