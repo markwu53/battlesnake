@@ -120,13 +120,45 @@ def get_food():
                 moves = prefer_straight(prefer_more_next_move(moves))
                 g.next_coord = moves[0]
 
+def type_2_avoid_near_border():
+
+    g.e.situation = "avoid point on the border"
+    collision_points = g.e.collision_points
+    avoid_point = g.e.avoid_points[0]
+    avoid_point_next = [p for p in adj_cells(avoid_point) if p not in g.occupied_cells[1]]
+    g.e.avoid_point_next = avoid_point_next
+    g.next_coord = collision_points[0]
+    if len(avoid_point_next) == 2:
+        #intense calc point
+        #let's say b is the farther point (to other_head), check if b has wayout
+        b = [p for p in avoid_point_next if distance_pq(p, g.s.other_head) > 2][0]
+        wayout_room = path_connected_set(b, g.occupied_cells[0]+[avoid_point])
+        g.e.wayout_room = len(wayout_room)
+        if g.e.wayout_room >= g.s.my_length:
+            g.next_coord = avoid_point
+            return
+
+    #take risk
+    collision_food = [p for p in collision_points if p in g.food]
+    if len(collision_food) == 1:
+        g.e.situation = "avoid point no wayout, try no food point"
+        #take chance by avoiding food
+        one = [p for p in collision_points if p not in collision_food]
+        g.next_coord = one[0]
+
+    #take risk
+    g.e.situation = "avoid point no wayout, take risk"
+    g.next_coord = collision_points[0]
+
 def type_2_collision():
 
     g.e.collision_type = 2
     common_adj = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
     collision_points = [p for p in common_adj if p not in g.occupied_cells[0]]
+    g.e.collision_points = collision_points
     if len(collision_points) == 2:
         avoid_points = [p for p in g.e.allowed_moves if p not in collision_points]
+        g.e.avoid_points = avoid_points
         g.e.avoid_points = avoid_points
         if len(avoid_points) != 0:
             avoid_point = avoid_points[0]
@@ -134,31 +166,7 @@ def type_2_collision():
                 g.next_coord = avoid_point
             else:
                 if g.s.my_length < g.s.other_length:
-                    collision_food = [p for p in collision_points if p in g.food]
-                    g.e.collision_food = collision_food
-                    if len(collision_food) == 1:
-                        #take chance by avoiding food
-                        one = [p for p in collision_points if p not in collision_food]
-                        g.next_coord = one[0]
-                    else:
-                        avoid_point_next = [p for p in adj_cells(avoid_point) if p not in g.occupied_cells[1]]
-                        g.e.avoid_point_next = avoid_point_next
-                        g.next_coord = collision_points[0]
-                        if len(avoid_point_next) == 2:
-                            #intense calc point
-                            #let's say b is the farther point (to other_head), check if b has wayout
-                            b = [p for p in avoid_point_next if distance_pq(p, g.s.other_head) > 2][0]
-                            wayout_room = path_connected_set(b, g.occupied_cells[0]+[avoid_point])
-                            g.e.wayout_room = len(wayout_room)
-                            if g.e.wayout_room >= g.s.my_length:
-                                g.next_coord = avoid_point
-                            else:
-                                #take risk
-                                g.next_coord = collision_points[0]
-                        else:
-                            #avoid point has not enough wayout dir
-                            #take risk
-                            g.next_coord = collision_points[0]
+                    type_2_avoid_near_border()
                 else:
                     #equal length
                     #do nothing for now
@@ -692,6 +700,8 @@ def run():
     [(10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (7, 9), (8, 9), (9, 9)]
     log = {'id': '6d735788-e36c-4402-ba43-f9b37b92b32a', 'turn': 32, 'me': {'name': 'mark_snake', 'health': 70, 'body': [(9, 1), (8, 1), (7, 1), (6, 1)]}, 'others': [{'name': 'Snakeformatika', 'health': 78, 'body': [(8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2)]}], 'food': [(10, 4), (9, 7), (1, 7), (6, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 1), (9, 2), (9, 0)], 'other_allowed_moves': [(9, 2), (8, 3)], 'head_distance': 2, 'my_snake_bigger': False, 'food_near': [(10, 4), (9, 7), (6, 3)], 'food_good': [((10, 4), 4), ((9, 7), 6)], 'food_target': (10, 4), 'situation': 'enemy is chasing', 'head_path_distance': 2, 'food_worth': [(1, 7)], 'collision_type': 2}, 'next_coord': (10, 1), 'next_move': 'right', 'time': '0.005s'}
     log = {'id': '6d735788-e36c-4402-ba43-f9b37b92b32a', 'turn': 33, 'me': {'name': 'mark_snake', 'health': 69, 'body': [(9, 0), (9, 1), (8, 1), (7, 1)]}, 'others': [{'name': 'Snakeformatika', 'health': 77, 'body': [(8, 3), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2)]}], 'food': [(10, 4), (9, 7), (1, 7), (6, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 2), (10, 0)], 'other_allowed_moves': [(9, 3), (7, 3), (8, 4)], 'head_distance': 4, 'my_snake_bigger': False, 'food_near': [(10, 4), (9, 7), (6, 3)], 'food_good': [((10, 4), 3)], 'food_target': (10, 4), 'situation': 'heading border and take a move farther to danger', 'head_path_distance': 4, 'food_worth': [(1, 7)], 'collision_type': 2}, 'next_coord': (10, 0), 'next_move': 'down', 'time': '0.003s'}
+    log = {'id': '4efe89ab-d90a-4cae-8350-eabe182a52f1', 'turn': 31, 'me': {'name': 'mark_snake', 'health': 71, 'body': [(1, 2), (1, 1), (2, 1), (3, 1)]}, 'others': [{'name': 'Snakeformatika', 'health': 97, 'body': [(2, 3), (3, 3), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2)]}], 'food': [(1, 3), (4, 2), (8, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 1), (8, 1), (9, 0)], 'other_allowed_moves': [(8, 3), (6, 3), (7, 2)], 'head_distance': 4, 'my_snake_bigger': False, 'food_near': [(4, 2), (8, 5)], 'food_good': [], 'food_target': (8, 5), 'situation': "killer near don't go on border", 'food_worth': [(4, 2), (8, 5)], 'head_path_distance': 4, 'collision_type': 2}, 'next_coord': (8, 1), 'next_move': 'left', 'time': '0.003s'}
+
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
 
