@@ -438,19 +438,23 @@ def init_game(game_state):
             "body": get_coord(snake["body"]),
         } for snake in [game_state["you"]] ][0]
     g.others = [snake for snake in g.snakes if snake["body"][0] != g.me["body"][0]]
-    g.other = g.others[0]
-    g.food = get_coord(game_state["board"]["food"])
 
     g.s.my_head = g.me["body"][0]
     g.s.my_neck = g.me["body"][1]
     g.s.my_tail = g.me["body"][-1]
-    g.s.other_head = g.other["body"][0]
-    g.s.other_neck = g.other["body"][1]
-    g.s.other_tail = g.other["body"][-1]
     g.s.my_length = len(g.me["body"])
-    g.s.other_length = len(g.other["body"])
 
     g.e.n_other = len(g.others)
+
+    if g.e.n_other != 0:
+        g.other = g.others[0]
+        g.s.other_head = g.other["body"][0]
+        g.s.other_neck = g.other["body"][1]
+        g.s.other_tail = g.other["body"][-1]
+        g.s.other_length = len(g.other["body"])
+
+    g.food = get_coord(game_state["board"]["food"])
+
 
     g.log["id"] = game_state["game"]["id"]
     g.log["turn"] = game_state["turn"]
