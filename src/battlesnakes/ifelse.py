@@ -189,7 +189,7 @@ def type_2_collision():
                     moves = [a for a in g.e.allowed_moves if a != collision_point]
                     moves = prefer_turn(moves)
                     g.next_coord = moves[0]
-                elif g.s.my_length+1 == g.s.other_length and g.next_coord in g.food:
+                elif g.s.my_length+1 == g.s.other_length and g.next_coord in g.food and g.next_coord != collision_point:
                     g.e.situation = "enemy is chasing but we get food and length will be equal"
                 else:
                     default()
