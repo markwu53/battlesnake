@@ -336,17 +336,21 @@ def killer_near():
         return
 
     if g.e.head_distance == 6:
-        if on_border(g.next_coord):
+        if on_border(g.next_coord) and g.next_coord in g.food:
             dx,dy = distance_to_border(g.next_coord)
             md = max([dx, dy])
             if md >= 3:
                 g.e.situation = "head distance is 6 but next move is in the middle"
                 return
 
+    if g.e.head_path_distance >= 12:
+        g.e.situation = "enemy path distance far, consider no danger"
+        return 
+
     #don't go border
     g.e.situation = "killer near don't go on border"
     moves = [a for a in g.e.allowed_moves if not on_border(a)]
-    if len(moves) != 0:
+    if g.next_coord not in moves:
         moves = prefer_straight(prefer_more_next_move(moves))
         g.next_coord = moves[0]
 
@@ -434,19 +438,23 @@ def init_game(game_state):
             "body": get_coord(snake["body"]),
         } for snake in [game_state["you"]] ][0]
     g.others = [snake for snake in g.snakes if snake["body"][0] != g.me["body"][0]]
-    g.other = g.others[0]
-    g.food = get_coord(game_state["board"]["food"])
 
     g.s.my_head = g.me["body"][0]
     g.s.my_neck = g.me["body"][1]
     g.s.my_tail = g.me["body"][-1]
-    g.s.other_head = g.other["body"][0]
-    g.s.other_neck = g.other["body"][1]
-    g.s.other_tail = g.other["body"][-1]
     g.s.my_length = len(g.me["body"])
-    g.s.other_length = len(g.other["body"])
 
     g.e.n_other = len(g.others)
+
+    if g.e.n_other != 0:
+        g.other = g.others[0]
+        g.s.other_head = g.other["body"][0]
+        g.s.other_neck = g.other["body"][1]
+        g.s.other_tail = g.other["body"][-1]
+        g.s.other_length = len(g.other["body"])
+
+    g.food = get_coord(game_state["board"]["food"])
+
 
     g.log["id"] = game_state["game"]["id"]
     g.log["turn"] = game_state["turn"]
@@ -704,6 +712,15 @@ def run():
     log = {'id': '4efe89ab-d90a-4cae-8350-eabe182a52f1', 'turn': 31, 'me': {'name': 'mark_snake', 'health': 71, 'body': [(1, 2), (1, 1), (2, 1), (3, 1)]}, 'others': [{'name': 'Snakeformatika', 'health': 97, 'body': [(2, 3), (3, 3), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2)]}], 'food': [(1, 3), (4, 2), (8, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 1), (8, 1), (9, 0)], 'other_allowed_moves': [(8, 3), (6, 3), (7, 2)], 'head_distance': 4, 'my_snake_bigger': False, 'food_near': [(4, 2), (8, 5)], 'food_good': [], 'food_target': (8, 5), 'situation': "killer near don't go on border", 'food_worth': [(4, 2), (8, 5)], 'head_path_distance': 4, 'collision_type': 2}, 'next_coord': (8, 1), 'next_move': 'left', 'time': '0.003s'}
     log = {'id': '6c0ea246-100f-4fdd-80d0-a39d9b6c992c', 'turn': 11, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(6, 5), (6, 4), (7, 4), (8, 4), (9, 4)]}, 'others': [{'name': 'Snakeformatika', 'health': 95, 'body': [(5, 4), (4, 4), (4, 3), (4, 2), (4, 1)]}], 'food': [(5, 5), (0, 7), (7, 7)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 4), (7, 5), (7, 3)], 'other_allowed_moves': [(5, 3), (3, 3), (4, 4)], 'head_distance': 4, 'my_snake_bigger': False, 'food_near': [(5, 5), (7, 7)], 'food_good': [((5, 5), 3), ((7, 7), 3)], 'food_target': (5, 5), 'situation': 'distance is more than 6, no danger', 'head_path_distance': 4, 'food_worth': [(5, 5)], 'collision_type': 2, 'collision_points': [(9, 6)], 'avoid_points': [], 'avoid_point_next': [(6, 10), (4, 10)], 'wayout_room': 112}, 'next_coord': (6, 4), 'next_move': 'left', 'time': '0.003s'}
     log = {'id': '34c019e0-2f08-49e6-ae1a-749d6565ce64', 'turn': 114, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(0, 8), (1, 8), (2, 8), (2, 7), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (10, 8), (9, 8), (9, 9)]}, 'others': [{'name': 'Snakeformatika', 'health': 96, 'body': [(0, 2), (0, 3), (0, 4), (0, 5), (1, 5), (1, 4), (1, 3), (2, 3), (3, 3), (3, 2), (2, 2), (1, 2), (1, 1), (2, 1)]}], 'food': [(2, 5), (5, 0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(9, 7), (10, 6)], 'other_allowed_moves': [(1, 1), (2, 2)], 'head_distance': 14, 'my_snake_bigger': True, 'food_near': [], 'food_good': [((10, 8), 1)], 'food_target': (10, 8), 'situation': 'distance is more than 6, no danger', 'food_worth': [(4, 3)], 'head_path_distance': 8, 'collision_type': 2, 'collision_points': [(4, 3), (5, 2)], 'avoid_points': [(6, 3)], 'avoid_point_next': [(7, 10), (5, 10)], 'wayout_room': 110}, 'next_coord': (10, 6), 'next_move': 'down', 'time': '0.000s'}
+    log = {'id': '3f537eab-c0f6-4187-ab90-a40e96738adb', 'turn': 35, 'me': {'name': 'mark_snake', 'health': 72, 'body': [(8, 1), (9, 1), (9, 2), (8, 2), (7, 2)]}, 'others': [{'name': 'Snakeformatika', 'health': 98, 'body': [(9, 4), (9, 3), (8, 3), (7, 3), (6, 3), (6, 4), (5, 4), (4, 4)]}], 'food': [(8, 0), (8, 6), (3, 5), (2, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 1), (8, 0)], 'other_allowed_moves': [(10, 4), (8, 4), (9, 5)], 'head_distance': 4, 'my_snake_bigger': False, 'food_near': [(8, 0), (8, 6)], 'food_good': [((8, 0), 1)], 'food_target': (8, 0), 'situation': "killer near don't go on border", 'food_worth': [(6, 4)], 'head_path_distance': 8, 'collision_type': 2, 'collision_points': [(9, 3)], 'avoid_points': [(2, 0)], 'avoid_point_next': [(3, 0), (1, 0)], 'wayout_room': 111}, 'next_coord': (7, 1), 'next_move': 'left', 'time': '0.001s'}
+    log = {'id': '3f537eab-c0f6-4187-ab90-a40e96738adb', 'turn': 36, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(8, 0), (8, 1), (9, 1), (9, 2), (8, 2)]}, 'others': [{'name': 'Snakeformatika', 'health': 97, 'body': [(8, 4), (9, 4), (9, 3), (8, 3), (7, 3), (6, 3), (6, 4), (5, 4)]}], 'food': [(8, 6), (3, 5), (2, 10), (6, 7)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 1), (7, 2), (7, 0)], 'other_allowed_moves': [(7, 4), (8, 5)], 'head_distance': 4, 'my_snake_bigger': False, 'food_near': [(8, 0), (8, 6), (6, 7)], 'food_good': [((8, 0), 2)], 'food_target': (8, 0), 'situation': "killer near don't go on border", 'food_worth': [(6, 4)], 'head_path_distance': 10, 'collision_type': 2, 'collision_points': [(9, 3)], 'avoid_points': [(2, 0)], 'avoid_point_next': [(3, 0), (1, 0)], 'wayout_room': 111}, 'next_coord': (6, 1), 'next_move': 'left', 'time': '0.003s'}
+    log = {'id': '3f537eab-c0f6-4187-ab90-a40e96738adb', 'turn': 48, 'me': {'name': 'mark_snake', 'health': 59, 'body': [(1, 7), (1, 6), (1, 5), (1, 4), (1, 3)]}, 'others': [{'name': 'Snakeformatika', 'health': 100, 'body': [(3, 5), (3, 4), (2, 4), (2, 3), (3, 3), (3, 2), (4, 2), (4, 3), (4, 3)]}], 'food': [(8, 0), (8, 6), (2, 10), (6, 7), (2, 7), (3, 0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(2, 7), (0, 7), (1, 8)], 'other_allowed_moves': [(4, 5), (2, 5), (3, 6)], 'head_distance': 4, 'my_snake_bigger': False, 'food_near': [(2, 10), (6, 7), (2, 7)], 'food_good': [((2, 10), 4), ((6, 7), 5), ((2, 7), 1)], 'food_target': (2, 7), 'situation': "killer near don't go on border", 'food_worth': [(6, 4)], 'head_path_distance': 4, 'collision_type': 2, 'collision_points': [(2, 5)], 'avoid_points': [(2, 0)], 'avoid_point_next': [(3, 0), (1, 0)], 'wayout_room': 111}, 'next_coord': (1, 8), 'next_move': 'up', 'time': '0.002s'}
+    log = {'id': '3f537eab-c0f6-4187-ab90-a40e96738adb', 'turn': 52, 'me': {'name': 'mark_snake', 'health': 55, 'body': [(3, 9), (2, 9), (1, 9), (1, 8), (1, 7)]}, 'others': [{'name': 'Snakeformatika', 'health': 96, 'body': [(1, 5), (2, 5), (2, 6), (3, 6), (3, 5), (3, 4), (2, 4), (2, 3), (3, 3)]}], 'food': [(8, 0), (8, 6), (2, 10), (6, 7), (2, 7), (3, 0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(4, 9), (3, 10), (3, 8)], 'other_allowed_moves': [(0, 5), (1, 6), (1, 4)], 'head_distance': 6, 'my_snake_bigger': False, 'food_near': [(2, 10), (6, 7), (2, 7)], 'food_good': [((2, 10), 2), ((6, 7), 5), ((2, 7), 3)], 'food_target': (2, 10), 'situation': 'head distance is 6 but next move is in the middle', 'food_worth': [(6, 4)], 'head_path_distance': 6, 'collision_type': 2, 'collision_points': [(2, 5)], 'avoid_points': [(2, 0)], 'avoid_point_next': [(3, 0), (1, 0)], 'wayout_room': 111}, 'next_coord': (3, 10), 'next_move': 'up', 'time': '0.004s'}
+    log = {'id': '3f537eab-c0f6-4187-ab90-a40e96738adb', 'turn': 53, 'me': {'name': 'mark_snake', 'health': 54, 'body': [(3, 10), (3, 9), (2, 9), (1, 9), (1, 8)]}, 'others': [{'name': 'Snakeformatika', 'health': 95, 'body': [(0, 5), (1, 5), (2, 5), (2, 6), (3, 6), (3, 5), (3, 4), (2, 4), (2, 3)]}], 'food': [(8, 0), (8, 6), (2, 10), (6, 7), (2, 7), (3, 0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(4, 10), (2, 10)], 'other_allowed_moves': [(0, 6), (0, 4)], 'head_distance': 8, 'my_snake_bigger': False, 'food_near': [(2, 10), (6, 7), (2, 7)], 'food_good': [((2, 10), 1), ((6, 7), 6)], 'food_target': (2, 10), 'situation': 'distance is more than 6, no danger', 'food_worth': [(6, 4)], 'head_path_distance': 6, 'collision_type': 2, 'collision_points': [(2, 5)], 'avoid_points': [(2, 0)], 'avoid_point_next': [(3, 0), (1, 0)], 'wayout_room': 111}, 'next_coord': (2, 10), 'next_move': 'left', 'time': '0.002s'}
+    log = {'id': '3f537eab-c0f6-4187-ab90-a40e96738adb', 'turn': 59, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(4, 9), (3, 9), (2, 9), (1, 9), (1, 10), (2, 10)]}, 'others': [{'name': 'Snakeformatika', 'health': 98, 'body': [(1, 8), (2, 8), (2, 7), (1, 7), (1, 6), (0, 6), (0, 5), (1, 5), (2, 5), (2, 6)]}], 'food': [(8, 0), (8, 6), (6, 7), (3, 0), (4, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 9), (4, 10), (4, 8)], 'other_allowed_moves': [(0, 8)], 'head_distance': 4, 'my_snake_bigger': False, 'food_near': [(8, 6), (6, 7), (4, 10)], 'food_good': [((8, 6), 7), ((6, 7), 4), ((4, 10), 1)], 'food_target': (4, 10), 'situation': "killer near don't go on border", 'food_worth': [], 'head_path_distance': 999, 'collision_type': 2, 'collision_points': [(3, 8)], 'avoid_points': [(2, 0)], 'avoid_point_next': [(3, 0), (1, 0)], 'wayout_room': 111}, 'next_coord': (5, 9), 'next_move': 'right', 'time': '0.002s'}
+    log = {'id': '3f537eab-c0f6-4187-ab90-a40e96738adb', 'turn': 61, 'me': {'name': 'mark_snake', 'health': 93, 'body': [(5, 10), (5, 9), (4, 9), (3, 9), (2, 9), (1, 9)]}, 'others': [{'name': 'Snakeformatika', 'health': 96, 'body': [(0, 9), (0, 8), (1, 8), (2, 8), (2, 7), (1, 7), (1, 6), (0, 6), (0, 5), (1, 5)]}], 'food': [(8, 0), (8, 6), (6, 7), (3, 0), (4, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 10), (4, 10)], 'other_allowed_moves': [(1, 9), (0, 10)], 'head_distance': 6, 'my_snake_bigger': False, 'food_near': [(8, 6), (6, 7), (4, 10)], 'food_good': [((8, 6), 7), ((6, 7), 4), ((4, 10), 1)], 'food_target': (4, 10), 'situation': 'heading border and take a move farther to danger', 'food_worth': [], 'head_path_distance': 6, 'collision_type': 2, 'collision_points': [(3, 8)], 'avoid_points': [(2, 0)], 'avoid_point_next': [(3, 0), (1, 0)], 'wayout_room': 111}, 'next_coord': (6, 10), 'next_move': 'right', 'time': '0.003s'}
+    log = {'id': '3f537eab-c0f6-4187-ab90-a40e96738adb', 'turn': 67, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (6, 10)]}, 'others': [{'name': 'Snakeformatika', 'health': 90, 'body': [(3, 10), (2, 10), (2, 9), (1, 9), (1, 10), (0, 10), (0, 9), (0, 8), (1, 8), (2, 8)]}], 'food': [(8, 0), (8, 6), (3, 0), (4, 10), (3, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 7), (6, 8), (6, 6)], 'other_allowed_moves': [(4, 10), (3, 9)], 'head_distance': 6, 'my_snake_bigger': False, 'food_near': [(8, 6), (4, 10)], 'food_good': [((8, 6), 3)], 'food_target': (8, 6), 'situation': "killer near don't go on border", 'food_worth': [], 'head_path_distance': 6, 'collision_type': 2, 'collision_points': [(3, 8)], 'avoid_points': [(2, 0)], 'avoid_point_next': [(3, 0), (1, 0)], 'wayout_room': 111}, 'next_coord': (5, 7), 'next_move': 'left', 'time': '0.003s'}
+
 
 
     game_state = init_from_log(log)
