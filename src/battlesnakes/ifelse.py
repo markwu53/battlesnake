@@ -38,6 +38,7 @@ class Game:
     food = None
     next_coord = None
     occupied_cells = None
+    dir_order = [(0,1), (-1,0), (0,-1), (1,0)]
     log = {}
     big = {}
     e = DecisionSupport()
@@ -86,11 +87,50 @@ def default(moves=None):
 def battle_bigger():
     default()
     get_food_2()
+    long_danger()
 
 def battle_not_bigger():
     default()
     get_food()
+    long_danger()
     avoid_danger()
+
+def room_rank(a):
+    room = len(path_connected_set(a))
+    rank = 0 if room >= g.s.my_length else 1
+    return rank
+
+def prefer_more_room(moves=None):
+    if moves is None:
+        moves = g.e.allowed_moves
+    moves = first_group([(a, room_rank(a) for a in moves)])
+    return moves
+
+def long_danger():
+    if g.s.my_length < 15:
+        return
+
+    g.e.situation = "my snake is long, more than 15"
+    if len(g.e.allowed_moves) == 2:
+        a,b = g.e.allowed_moves
+        if get_adjacent_dir(a, g.s.my_head) == get_adjacent_dir(g.s.my_head, b):
+            g.e.situation = "2 next moves, opposite dir"
+            moves = prefer_more_next_move(prefer_more_room())
+            g.next_coord = moves[0]
+        else:
+            if path_distance_pq(a, b) > 2:
+                g.e.situation = "2 next moves, one straight one perpendicular, but split"
+                moves = prefer_straight(prefer_more_next_move(prefer_more_room()))
+                g.next_coord = moves[0]
+
+    if len(g.e.allowed_moves) == 3:
+        g.e.situation = "3 next moves"
+        moving_dir = get_dir_number(g.s.my_neck, g.s.my_head)
+        straight = add_coord(g.s.my_head, g.dir_order[moving_dir])
+        a,b = [p for p in g.e.allowed_moves if p != straight]
+        if path_distance_pq(straight, a) > 2 or path_distance_pq(straight, b) > 2:
+            moves = prefer_straight(prefer_more_next_move(prefer_more_room()))
+            g.next_coord = moves[0]
 
 def get_food_2():
     d_food = 8
@@ -733,6 +773,23 @@ def distance_to_border(p):
     dx = min([x, g.state["board"]["width"]-x-1])
     dy = min([y, g.state["board"]["height"]-y-1])
     return (dx, dy)
+
+def get_dir_number(p, q):
+    assert(is_adjacent(p, q))
+    x1,y1 = p
+    x2,y2 = q
+    dx,dy = x2-x1,y2-y1
+    dir_dict = {dir:i for i, dir in enumerate(dir_order)}
+    return dir_dict[(dx,dy)]
+
+def add_coord(p, dq):
+    x,y = p
+    dx,dy = dq
+    return (x+dx, y+dy)
+
+def minus(dq):
+    dx,dy = dq
+    return (-dx, -dy)
 
 ######################################################
 
