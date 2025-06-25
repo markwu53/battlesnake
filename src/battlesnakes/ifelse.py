@@ -85,12 +85,42 @@ def default(moves=None):
 
 def battle_bigger():
     default()
-    get_food()
+    get_food_2()
 
 def battle_not_bigger():
     default()
     get_food()
     avoid_danger()
+
+def get_food_2():
+    d_food = 8
+    food_near = [f for f in g.food if distance_pq(f, g.s.my_head) < d_food]
+    g.e.food_near = food_near
+    if len(food_near) != 0:
+        food_good_d = [f for f in food_near if distance_pq(f, g.s.my_head) <= distance_pq(f, g.s.other_head)]
+        food_good_dd = [(f, path_distance_pq(f, g.s.my_head), path_distance_pq(f, g.s.other_head)) for f in food_good_d]
+        food_good = [(f, d1) for f,d1,d2 in food_good_dd if d1 <= d2 and d1 < 999]
+        g.e.food_good = food_good
+        if len(food_good) != 0:
+            g.e.situation = "go to food"
+            food_targets = first_group(food_good)
+            food_target = food_targets[0]
+            g.e.food_target = food_target
+            moves = shortest_path_move(g.s.my_head, food_target)
+            moves = prefer_straight(moves)
+            g.next_coord = moves[0]
+        else:
+            food_worth = [f for f in food_near if 2 < path_distance_pq(f, g.s.other_head) < 999 and path_distance_pq(f, g.s.my_head) < 999]
+            g.e.food_worth = food_worth
+            if len(food_worth) != 0:
+                g.e.situation = "food worth trying"
+                food_worth_d = [(f, path_distance_pq(f, g.s.my_head)) for f in food_worth]
+                food_worth = first_group(food_worth_d)
+                food_target = food_worth[0]
+                g.e.food_target = food_target
+                moves = shortest_path_move(g.s.my_head, food_target)
+                moves = prefer_straight(prefer_more_next_move(moves))
+                g.next_coord = moves[0]
 
 def get_food():
     d_food = 8
