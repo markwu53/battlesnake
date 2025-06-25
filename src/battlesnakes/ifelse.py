@@ -617,7 +617,7 @@ def special_experimenting_code(game_state):
 
     g.log["experiment"] = True
     g.start_time = time.time()
-    g.e.localtime = time.localtime()
+    #g.e.localtime = time.localtime()
 
     decision()
     g.state["next_move"] = get_adjacent_dir(g.s.my_head, g.next_coord)
