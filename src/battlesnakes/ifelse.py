@@ -530,8 +530,8 @@ def init_game(game_state):
 def experiment_condition():
     if g.e.n_other != 1: return False
     if g.other["name"] not in (
-        "Snakeformatika",
-        #"Wim HU [dev]",
+        #"Snakeformatika",
+        "Wim HU [dev]",
         #"Frank The Tank",
 
     ): 
