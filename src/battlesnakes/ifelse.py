@@ -599,7 +599,8 @@ def init_game(game_state):
 
 def experiment_condition():
     if g.e.n_other != 1: return False
-    #if not 6 <= time.localtime().tm_hour < 20: return False
+    #Eastern time (7AM - 8PM) + 4
+    if not 11 <= time.localtime().tm_hour <= 23: return False
     if g.other["name"] not in (
         "Snakeformatika", #inform
         "Kakemonsteret-v2", #pettso
