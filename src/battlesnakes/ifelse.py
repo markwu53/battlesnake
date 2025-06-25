@@ -781,7 +781,7 @@ def get_dir_number(p, q):
     x1,y1 = p
     x2,y2 = q
     dx,dy = x2-x1,y2-y1
-    dir_dict = {dir:i for i, dir in enumerate(dir_order)}
+    dir_dict = {dir:i for i, dir in enumerate(g.dir_order)}
     return dir_dict[(dx,dy)]
 
 def add_coord(p, dq):
