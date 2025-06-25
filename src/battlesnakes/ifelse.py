@@ -123,7 +123,7 @@ def long_danger():
                 moves = prefer_straight(prefer_more_next_move(prefer_more_room()))
                 g.next_coord = moves[0]
 
-    if len(g.e.allowed_moves) == 3:
+    elif len(g.e.allowed_moves) == 3:
         g.e.situation = "3 next moves"
         moving_dir = get_dir_number(g.s.my_neck, g.s.my_head)
         straight = add_coord(g.s.my_head, g.dir_order[moving_dir])
