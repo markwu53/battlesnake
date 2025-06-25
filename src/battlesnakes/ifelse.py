@@ -103,7 +103,7 @@ def room_rank(a):
 def prefer_more_room(moves=None):
     if moves is None:
         moves = g.e.allowed_moves
-    moves = first_group([(a, room_rank(a) for a in moves)])
+    moves = first_group([(a, room_rank(a)) for a in moves])
     return moves
 
 def long_danger():
