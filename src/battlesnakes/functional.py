@@ -21,6 +21,7 @@ class DecisionSupport:
     collision_points = None
     collision_point = None
     possible_collision_points = None
+    decision_path = None
 
 class SnakeInfo:
     my_head = None
@@ -42,7 +43,6 @@ class Game:
     next_coord = None
     occupied_cells = None
     dir_order = [(0,1), (-1,0), (0,-1), (1,0)]
-    decision_path = []
     log = {}
     big = {}
     e = DecisionSupport()
@@ -378,17 +378,17 @@ def decision():
 
 def battle_1_vs_n(moves):
     if g.e.n_other != 1:
-        g.decision_path.append("battle_1_vs_n")
+        g.e.decision_path.append("battle_1_vs_n")
         return moves
 
 def battle_1_vs_1(moves):
     if g.e.n_other == 1:
-        g.decision_path.append("battle_1_vs_1")
+        g.e.decision_path.append("battle_1_vs_1")
         return sequential_cases([shorter, equal_length, longer], moves)
 
 def shorter(moves):
     if g.s.my_length < g.s.other_length:
-        g.decision_path.append("shorter")
+        g.e.decision_path.append("shorter")
         return sequential_cases([
             head_distance_2, 
             head_distance_4, 
@@ -398,13 +398,13 @@ def shorter(moves):
 
 def head_distance_2(moves):
     if g.e.head_distance == 2:
-        g.decision_path.append("head_distance_2")
+        g.e.decision_path.append("head_distance_2")
         g.e.possible_collision_points = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
         return sequential_cases([ type_1_collision, type_2_collision ], moves)
 
 def type_1_collision(moves):
     if len(g.e.possible_collision_points) == 1:
-        g.decision_path.append("type_1_collision")
+        g.e.decision_path.append("type_1_collision")
         g.e.collision_point = g.e.possible_collision_points[0]
         g.e.me_heading_collision_point = get_adjacent_dir(g.s.my_head, g.e.collision_point) == get_adjacent_dir(g.s.my_neck, g.s.my_head)
         g.e.other_heading_collision_point = get_adjacent_dir(g.s.other_head, g.e.collision_point) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
@@ -448,7 +448,7 @@ def killer_near(moves):
 
 def type_1_blocked(moves):
     if g.e.collision_point in g.occupied_cells[0]:
-        g.decision_path.append("type_1_blocked")
+        g.e.decision_path.append("type_1_blocked")
         return sequential([
             killer_near, 
             other_considerations,
@@ -460,7 +460,7 @@ def avoid_collision_point_1(moves):
 
 def head_to_head(moves):
     if g.e.me_heading_collision_point and g.e.other_heading_collision_point:
-        g.decision_path.append("head_to_head")
+        g.e.decision_path.append("head_to_head")
         return sequential([
             avoid_collision_point_1, 
             killer_near, 
@@ -469,7 +469,7 @@ def head_to_head(moves):
 
 def other_to_me(moves):
     if g.e.other_heading_collision_point:
-        g.decision_path.append("other_to_me")
+        g.e.decision_path.append("other_to_me")
         return sequential([
             avoid_collision_point_1, 
             killer_near, 
@@ -478,7 +478,7 @@ def other_to_me(moves):
 
 def me_to_other(moves):
     if g.e.me_heading_collision_point:
-        g.decision_path.append("me_to_other")
+        g.e.decision_path.append("me_to_other")
         return sequential([
             avoid_collision_point_1, 
             killer_near, 
@@ -487,7 +487,7 @@ def me_to_other(moves):
 
 def parallel(moves):
     if get_adjacent_dir(g.s.my_neck, g.s.my_head) == get_adjacent_dir(g.s.other_neck, g.s.other_head):
-        g.decision_path.append("parallel")
+        g.e.decision_path.append("parallel")
         return sequential([
             avoid_collision_point_1, 
             killer_near, 
@@ -496,7 +496,7 @@ def parallel(moves):
 
 def parallel_opposite(moves):
     if get_adjacent_dir(g.s.my_head, g.s.my_neck) == get_adjacent_dir(g.s.other_neck, g.s.other_head):
-        g.decision_path.append("parallel_opposite")
+        g.e.decision_path.append("parallel_opposite")
         return sequential([
 
             avoid_collision_point_1, 
@@ -536,7 +536,7 @@ def type_2_with_0_collision_points(moves):
 
 def type_2_collision(moves):
     if len(g.e.possible_collision_points) == 2:
-        g.decision_path.append("type_2_collision")
+        g.e.decision_path.append("type_2_collision")
         g.e.collision_points = [p for p in g.e.possible_collision_points if p not in g.occupied_cells[0]]
         return sequential_cases([
             type_2_with_2_collision_points,
@@ -546,25 +546,25 @@ def type_2_collision(moves):
 
 def head_distance_4(moves):
     if g.e.head_distance == 4:
-        g.decision_path.append("head_distance_4")
+        g.e.decision_path.append("head_distance_4")
         return moves
 
 def head_distance_6(moves):
     if g.e.head_distance == 6:
-        g.decision_path.append("head_distance_6")
+        g.e.decision_path.append("head_distance_6")
         return moves
 
 def head_distance_more(moves):
     if g.e.head_distance > 6:
-        g.decision_path.append("head_distance_more")
+        g.e.decision_path.append("head_distance_more")
         return moves
 
 def equal_length(moves):
     if g.s.my_length == g.s.other_length:
-        g.decision_path.append("equal_length")
+        g.e.decision_path.append("equal_length")
         return moves
 
 def longer(moves):
     if g.s.my_length > g.s.other_length:
-        g.decision_path.append("longer")
+        g.e.decision_path.append("longer")
         return moves
