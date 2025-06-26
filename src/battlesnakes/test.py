@@ -1,14 +1,7 @@
-class A:
-    decision_path = []
-    length = None
+from functools import partial
 
-class B:
-    e = A()
+def add(a, b):
+    return a+b
 
-b = B()
-b.e.length = 15
-#b.e.decision_path = []
-b.e.decision_path.append("good")
-b.e.decision_path.append("morning")
-
-print(b.e.__dict__)
+x = partial(add, 5)(6)
+print(x)
