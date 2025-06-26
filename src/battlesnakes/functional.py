@@ -21,7 +21,7 @@ class DecisionSupport:
     collision_points = None
     collision_point = None
     possible_collision_points = None
-    decision_path = None
+    decision_path = []
 
 class SnakeInfo:
     my_head = None
