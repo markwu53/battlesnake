@@ -3,8 +3,8 @@ import math
 import time
 #from snake_work_in_progress import special_experimenting_code
 #from decision_tree import special_experimenting_code
-#from ifelse import special_experimenting_code
-from functional import special_experimenting_code
+from ifelse import special_experimenting_code
+#from functional import special_experimenting_code
 
 # info is called when you create your Battlesnake on play.battlesnake.com
 # and controls your Battlesnake's appearance

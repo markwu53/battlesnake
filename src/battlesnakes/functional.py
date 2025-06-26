@@ -286,7 +286,7 @@ def init_game(game_state):
     g.log["others"] = g.others
     g.log["food"] = g.food
 
-def sequential_cases(fs, moves=None):
+def cases(fs, moves=None):
     assert(len(fs) != 0)
     if moves is None:
         moves = g.e.allowed_moves
@@ -312,10 +312,6 @@ def take_first(moves):
 
 def other_considerations(moves):
     return moves
-def get_food(moves):
-    return moves
-def avoid_danger(moves=g.e.allowed_moves):
-    return moves
 
 def rank_border(p):
     if on_border(p):
@@ -335,15 +331,19 @@ def score_more_room(p):
     cells = path_connected_set(p)
     return len(cells)
 
-def prefer_by_rank(moves, rank):
-    moves = [(a, rank(a)) for a in moves]
-    moves = first_group(moves)
-    return moves
+def prefer_by_rank(rank):
+    def fn(moves):
+        moves = [(a, rank(a)) for a in moves]
+        moves = first_group(moves)
+        return moves
+    return fn
 
-def prefer_by_score(moves, score):
-    moves = [(a, score(a)) for a in moves]
-    moves = first_group(moves, reverse=True)
-    return moves
+def prefer_by_score(score):
+    def fn(moves):
+        moves = [(a, score(a)) for a in moves]
+        moves = first_group(moves, reverse=True)
+        return moves
+    return fn
 
 def id(moves):
     return moves
@@ -372,7 +372,7 @@ def decision():
     g.e.decision_path = []
 
     #allowed_moves must be 2 or 3
-    moves = sequential_cases([
+    moves = cases([
         battle_1_vs_1, 
         battle_1_vs_n,
     ])
@@ -386,24 +386,54 @@ def battle_1_vs_n(moves):
 def battle_1_vs_1(moves):
     if g.e.n_other == 1:
         g.e.decision_path.append("battle_1_vs_1")
-        return sequential_cases([shorter, equal_length, longer], moves)
+        return cases([shorter, equal_length, longer], moves)
+
+def avoid_danger(moves):
+    g.e.decision_path.append("avoid_danger")
+    return cases([
+        head_distance_2, 
+        head_distance_4, 
+        head_distance_6, 
+        head_distance_more,
+        id,
+    ], moves)
+
+from functools import partial
+
+def get_food(moves):
+    d_food = 8
+    food_near = [f for f in g.food if distance_pq(f, g.s.my_head) < d_food]
+    g.e.food_near = food_near
+    if len(food_near) != 0:
+        food_good_d = [f for f in food_near if distance_pq(f, g.s.my_head) <= distance_pq(f, g.s.other_head)]
+        food_good_dd = [(f, path_distance_pq(f, g.s.my_head), path_distance_pq(f, g.s.other_head)) for f in food_good_d]
+        food_good = [(f, d1) for f,d1,d2 in food_good_dd if d1 <= d2 and d1 < 999]
+        g.e.food_good = food_good
+        if len(food_good) != 0:
+            g.e.situation = "go to food"
+            food_targets = first_group(food_good)
+            food_target = food_targets[0]
+            g.e.food_target = food_target
+            fmoves = shortest_path_move(g.s.my_head, food_target)
+            moves = sequential([
+                prefer_by_rank(lambda a: 0 if a in fmoves else 1),
+                prefer_by_score(score_more_next_move),
+                prefer_by_rank(rank_straight),
+            ], moves)
 
 def shorter(moves):
     if g.s.my_length < g.s.other_length:
         g.e.decision_path.append("shorter")
-        return sequential_cases([
-            head_distance_2, 
-            head_distance_4, 
-            head_distance_6, 
-            head_distance_more,
-            id,
+        return sequential([
+            avoid_danger,
+            get_food,
         ], moves)
 
 def head_distance_2(moves):
     if g.e.head_distance == 2:
         g.e.decision_path.append("head_distance_2")
         g.e.possible_collision_points = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
-        return sequential_cases([ type_1_collision, type_2_collision ], moves)
+        return cases([ type_1_collision, type_2_collision ], moves)
 
 def type_1_collision(moves):
     if len(g.e.possible_collision_points) == 1:
@@ -411,7 +441,7 @@ def type_1_collision(moves):
         g.e.collision_point = g.e.possible_collision_points[0]
         g.e.me_heading_collision_point = get_adjacent_dir(g.s.my_head, g.e.collision_point) == get_adjacent_dir(g.s.my_neck, g.s.my_head)
         g.e.other_heading_collision_point = get_adjacent_dir(g.s.other_head, g.e.collision_point) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
-        return sequential_cases([
+        return cases([
             type_1_blocked, 
             head_to_head, 
             other_to_me, 
@@ -423,12 +453,12 @@ def type_1_collision(moves):
 def off_border_danger(moves):
     if g.s.my_length+1 < g.s.other_length:
         if off_border_1(g.s.my_head):
-            moves = prefer_by_rank(moves, rank_border)
+            moves = prefer_by_rank(rank_border, moves)
             return moves
 
 def crawling(moves):
     if on_border(g.s.my_neck):
-        return prefer_by_rank(moves, rank_border)
+        return prefer_by_rank(rank_border, moves)
 
 def heading_border(moves):
     if not on_border(g.s.my_neck):
@@ -437,13 +467,13 @@ def heading_border(moves):
 
 def on_border_danger(moves):
     if on_border(g.s.my_head):
-        return sequential_cases([
+        return cases([
             crawling,
             heading_border,
         ], moves)
 
 def killer_near(moves):
-    return sequential_cases([
+    return cases([
         off_border_danger,
         on_border_danger,
         id,
@@ -523,7 +553,7 @@ def type_2_with_1_avoid_point(moves):
 def type_2_with_2_collision_points(moves):
     if len(g.e.collision_points) == 2:
         g.e.avoid_points = [a for a in g.e.allowed_moves if a not in g.e.collision_points]
-        return sequential_cases([
+        return cases([
             type_2_with_no_avoid_points,
             type_2_with_1_avoid_point,
         ], moves)
@@ -540,7 +570,7 @@ def type_2_collision(moves):
     if len(g.e.possible_collision_points) == 2:
         g.e.decision_path.append("type_2_collision")
         g.e.collision_points = [p for p in g.e.possible_collision_points if p not in g.occupied_cells[0]]
-        return sequential_cases([
+        return cases([
             type_2_with_2_collision_points,
             type_2_with_1_collision_points,
             type_2_with_0_collision_points,
