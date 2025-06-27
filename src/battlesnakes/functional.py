@@ -3,50 +3,53 @@ import time
 #these class variables are used to trick the editor to display them in intellisense
 
 class DecisionSupport:
-    n_other = 1
-    allowed_moves = None
-    other_allowed_moves = None
-    my_snake_bigger = None
-    food_near = None
-    food_good = None
-    food_worth = None
-    food_target = None
-    head_distance = None
-    head_path_distance = None
-    collision_type = None
-    avoid_points = None
-    collision_food = None
-    situation = None
-    border_distance = None
-    collision_points = None
-    collision_point = None
-    possible_collision_points = None
-    decision_path = None
+    def __init__(self):
+        self.n_other = 1
+        self.allowed_moves = None
+        self.other_allowed_moves = None
+        self.my_snake_bigger = None
+        self.food_near = None
+        self.food_good = None
+        self.food_worth = None
+        self.food_target = None
+        self.head_distance = None
+        self.head_path_distance = None
+        self.collision_type = None
+        self.avoid_points = None
+        self.collision_food = None
+        self.situation = None
+        self.border_distance = None
+        self.collision_points = None
+        self.collision_point = None
+        self.possible_collision_points = None
+        self.decision_path = None
 
 class SnakeInfo:
-    my_head = None
-    my_neck = None
-    my_tail = None
-    my_length = None
-    other_head = None
-    other_neck = None
-    other_tail = None
-    other_length = None
+    def __init__(self):
+        self.my_head = None
+        self.my_neck = None
+        self.my_tail = None
+        self.my_length = None
+        self.other_head = None
+        self.other_neck = None
+        self.other_tail = None
+        self.other_length = None
 
 class Game:
-    state = None
-    me = None
-    other = None
-    others = None
-    snakes = None
-    food = None
-    next_coord = None
-    occupied_cells = None
-    dir_order = [(0,1), (-1,0), (0,-1), (1,0)]
-    log = {}
-    big = {}
-    e = DecisionSupport()
-    s = SnakeInfo()
+    def __init__(self):
+        self.state = None
+        self.me = None
+        self.other = None
+        self.others = None
+        self.snakes = None
+        self.food = None
+        self.next_coord = None
+        self.occupied_cells = None
+        self.dir_order = [(0,1), (-1,0), (0,-1), (1,0)]
+        self.log = {}
+        self.big = {}
+        self.e = DecisionSupport()
+        self.s = SnakeInfo()
 
 g = Game()
 
