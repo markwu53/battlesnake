@@ -574,8 +574,10 @@ def type_2_with_2_collision_points(moves):
 def type_2_with_1_collision_points(moves):
     if len(g.x.collision_points) == 1:
         g.decision_path.append("avoid collision")
-        moves = prefer_no(lambda a: a in g.x.collision_points)(moves)
-        return moves
+        return sequential([
+            prefer_no(lambda a: a in g.x.collision_points),
+            cases([ shorter_by_1, near_border, ]),
+        ])(moves)
 
 def type_2_with_0_collision_points(moves):
     if len(g.x.collision_points) == 0:
@@ -596,10 +598,12 @@ def shorter_by_1(moves):
     if g.s.my_length+1 == g.s.other_length:
         if off_border_1(g.s.my_head):
             if any([a in g.food for a in moves]):
+                g.decision_path.append("get the food and length will be equal")
                 return moves
 
 def near_border(moves):
     if off_border_1(g.s.my_head):
+        g.decision_path.appened("avoid border")
         return prefer_no(on_border)(moves)
 
 def head_distance_4(moves):
