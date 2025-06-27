@@ -608,10 +608,16 @@ def head_distance_more(moves):
         g.decision_path.append("head_distance_more")
         return moves
 
+def equal_length_danger(moves):
+    if g.e.head_distance == 2:
+        collision_points = [a for a in adj_cells(g.s.my_head) if is_adjacent(a, g.s.other_head) and a not in g.occupied_cells[0]]
+        return prefer_no(lambda a: a in collision_points)(moves)
+
 def equal_length(moves):
     if g.s.my_length == g.s.other_length:
         g.decision_path.append("equal_length")
         moves = sequential([
+            equal_length_danger,
             get_food,
             prefer_more_next_move,
             prefer_straight,
