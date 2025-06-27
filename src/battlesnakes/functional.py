@@ -286,25 +286,23 @@ def init_game(game_state):
     g.log["others"] = g.others
     g.log["food"] = g.food
 
-def cases(fs, moves=None):
-    assert(len(fs) != 0)
-    if moves is None:
-        moves = g.e.allowed_moves
-    
-    cases = fs[:-1]
-    last = fs[-1]
-    for f in cases:
-        result = f(moves)
-        if not result is None:
-            return result
-    return last(moves)
+def cases(fs):
+    def fn(moves):
+        cases = fs[:-1]
+        last = fs[-1]
+        for f in cases:
+            result = f(moves)
+            if not result is None:
+                return result
+        return last(moves)
+    return fn
 
-def sequential(fs, moves=None):
-    if moves is None:
-        moves = g.e.allowed_moves
-    for f in fs:
-        moves = f(moves)
-    return moves
+def sequential(fs):
+    def fn(moves):
+        for f in fs:
+            moves = f(moves)
+        return moves
+    return fn
 
 def take_first(moves):
     assert(len(moves) != 0)
@@ -375,7 +373,7 @@ def decision():
     moves = cases([
         battle_1_vs_1, 
         battle_1_vs_n,
-    ])
+    ])(g.e.allowed_moves)
     g.next_coord = take_first(moves)
 
 def battle_1_vs_n(moves):
@@ -386,7 +384,7 @@ def battle_1_vs_n(moves):
 def battle_1_vs_1(moves):
     if g.e.n_other == 1:
         g.e.decision_path.append("battle_1_vs_1")
-        return cases([shorter, equal_length, longer], moves)
+        return cases([shorter, equal_length, longer])(moves)
 
 def avoid_danger(moves):
     g.e.decision_path.append("avoid_danger")
@@ -396,7 +394,7 @@ def avoid_danger(moves):
         head_distance_6, 
         head_distance_more,
         id,
-    ], moves)
+    ])(moves)
 
 from functools import partial
 
@@ -419,7 +417,7 @@ def get_food(moves):
                 prefer_by_rank(lambda a: 0 if a in fmoves else 1),
                 prefer_by_score(score_more_next_move),
                 prefer_by_rank(rank_straight),
-            ], moves)
+            ])(moves)
     return moves
 
 def shorter(moves):
@@ -428,13 +426,13 @@ def shorter(moves):
         return sequential([
             avoid_danger,
             get_food,
-        ], moves)
+        ])(moves)
 
 def head_distance_2(moves):
     if g.e.head_distance == 2:
         g.e.decision_path.append("head_distance_2")
         g.e.possible_collision_points = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
-        return cases([ type_1_collision, type_2_collision ], moves)
+        return cases([ type_1_collision, type_2_collision ])(moves)
 
 def type_1_collision(moves):
     if len(g.e.possible_collision_points) == 1:
@@ -449,21 +447,21 @@ def type_1_collision(moves):
             me_to_other, 
             parallel, 
             parallel_opposite,
-        ], moves)
+        ])(moves)
 
 def off_border_danger(moves):
     if g.s.my_length+1 < g.s.other_length:
         if off_border_1(g.s.my_head):
-            moves = prefer_by_rank(rank_border, moves)
+            moves = prefer_by_rank(rank_border)(moves)
             return moves
 
 def crawling(moves):
     if on_border(g.s.my_neck):
-        return prefer_by_rank(rank_border, moves)
+        return prefer_by_rank(rank_border)(moves)
 
 def heading_border(moves):
     if not on_border(g.s.my_neck):
-        moves = prefer_by_score(moves, lambda a: distance_pq(a, g.s.other_head))
+        moves = prefer_by_score(lambda a: distance_pq(a, g.s.other_head))(moves)
         return moves
 
 def on_border_danger(moves):
@@ -471,14 +469,14 @@ def on_border_danger(moves):
         return cases([
             crawling,
             heading_border,
-        ], moves)
+        ])(moves)
 
 def killer_near(moves):
     return cases([
         off_border_danger,
         on_border_danger,
         id,
-    ], moves)
+    ])(moves)
 
 def type_1_blocked(moves):
     if g.e.collision_point in g.occupied_cells[0]:
@@ -486,7 +484,7 @@ def type_1_blocked(moves):
         return sequential([
             killer_near, 
             other_considerations,
-        ], moves)
+        ])(moves)
 
 def avoid_collision_point_1(moves):
     moves = [a for a in moves if a != g.e.collision_point]
@@ -499,7 +497,7 @@ def head_to_head(moves):
             avoid_collision_point_1, 
             killer_near, 
             other_considerations,
-        ], moves)
+        ])(moves)
 
 def other_to_me(moves):
     if g.e.other_heading_collision_point:
@@ -508,7 +506,7 @@ def other_to_me(moves):
             avoid_collision_point_1, 
             killer_near, 
             other_considerations,
-        ], moves)
+        ])(moves)
 
 def me_to_other(moves):
     if g.e.me_heading_collision_point:
@@ -517,7 +515,7 @@ def me_to_other(moves):
             avoid_collision_point_1, 
             killer_near, 
             other_considerations,
-        ], moves)
+        ])(moves)
 
 def parallel(moves):
     if get_adjacent_dir(g.s.my_neck, g.s.my_head) == get_adjacent_dir(g.s.other_neck, g.s.other_head):
@@ -526,7 +524,7 @@ def parallel(moves):
             avoid_collision_point_1, 
             killer_near, 
             other_considerations,
-        ], moves)
+        ])(moves)
 
 def parallel_opposite(moves):
     if get_adjacent_dir(g.s.my_head, g.s.my_neck) == get_adjacent_dir(g.s.other_neck, g.s.other_head):
@@ -535,7 +533,7 @@ def parallel_opposite(moves):
             avoid_collision_point_1, 
             killer_near, 
             other_considerations,
-        ], moves)
+        ])(moves)
 
 def rank_by_no_food(p):
     if not p in g.food:
@@ -557,7 +555,7 @@ def type_2_with_2_collision_points(moves):
         return cases([
             type_2_with_no_avoid_points,
             type_2_with_1_avoid_point,
-        ], moves)
+        ])(moves)
 
 def type_2_with_1_collision_points(moves):
     if len(g.e.collision_points) == 1:
@@ -575,7 +573,7 @@ def type_2_collision(moves):
             type_2_with_2_collision_points,
             type_2_with_1_collision_points,
             type_2_with_0_collision_points,
-        ])
+        ])(g.e.allowed_moves)
 
 def head_distance_4(moves):
     if g.e.head_distance == 4:
