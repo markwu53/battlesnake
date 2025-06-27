@@ -552,7 +552,17 @@ def type_2_with_no_avoid_points(moves):
 
 def type_2_with_1_avoid_point(moves):
     if len(g.e.avoid_points) == 1:
-        return prefer_yes(lambda a: a in g.e.avoid_points)(moves)
+        avoid_point = g.e.avoid_points[0]
+        avoid_point_next = [p for p in adj_cells(avoid_point) if p not in g.occupied_cells[1]]
+        if len(avoid_point_next) > 1:
+            return prefer_yes(lambda a: a == avoid_point)(moves)
+
+        g.decision_path.append("take risk - take the opposite of avoid point")
+        return sequential([
+            prefer_no(lambda a: a == avoid_point),
+            prefer_no(lambda a: a in g.food),
+            prefer_no(is_straight),
+        ])(moves)
 
 def type_2_with_2_collision_points(moves):
     if len(g.x.collision_points) == 2:
