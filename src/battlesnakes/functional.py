@@ -595,7 +595,7 @@ def head_distance_4(moves):
         g.decision_path.append("head_distance_4")
         moves = sequential([
             cases([ shorter_by_1, id, ]),
-        ])
+        ])(moves)
         return moves
 
 def head_distance_6(moves):
