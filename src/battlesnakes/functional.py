@@ -574,8 +574,10 @@ def type_2_with_2_collision_points(moves):
 def type_2_with_1_collision_points(moves):
     if len(g.x.collision_points) == 1:
         g.decision_path.append("avoid collision")
-        moves = prefer_no(lambda a: a in g.x.collision_points)(moves)
-        return moves
+        return sequential([
+            prefer_no(lambda a: a in g.x.collision_points),
+            cases([ shorter_by_1, near_border, ]),
+        ])(moves)
 
 def type_2_with_0_collision_points(moves):
     if len(g.x.collision_points) == 0:
