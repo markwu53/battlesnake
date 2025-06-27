@@ -311,15 +311,8 @@ def take_first(moves):
 def other_considerations(moves):
     return moves
 
-def rank_border(p):
-    if on_border(p):
-        return 1
-    return 0
-
-def rank_straight(p):
-    if get_adjacent_dir(g.s.my_head, p) == get_adjacent_dir(g.s.my_neck, g.s.my_head):
-        return 0
-    return 1
+def is_straight(p):
+    return get_adjacent_dir(g.s.my_head, p) == get_adjacent_dir(g.s.my_neck, g.s.my_head)
 
 def score_more_next_move(p):
     moves = [a for a in adj_cells(p) if a not in g.occupied_cells[1]]
@@ -335,6 +328,12 @@ def prefer_by_rank(rank):
         moves = first_group(moves)
         return moves
     return fn
+
+def prefer_yes(check):
+    return prefer_by_rank(lambda a: 0 if check(a) else 1)
+
+def prefer_no(check):
+    return prefer_yes(lambda a: not check(a))
 
 def prefer_by_score(score):
     def fn(moves):
@@ -403,6 +402,7 @@ def get_food(moves):
     d_food = 8
     food_near = [f for f in g.food if distance_pq(f, g.s.my_head) < d_food]
     g.e.food_near = food_near
+    print(moves)
     if len(food_near) != 0:
         food_good_d = [f for f in food_near if distance_pq(f, g.s.my_head) <= distance_pq(f, g.s.other_head)]
         food_good_dd = [(f, path_distance_pq(f, g.s.my_head), path_distance_pq(f, g.s.other_head)) for f in food_good_d]
@@ -415,10 +415,11 @@ def get_food(moves):
             g.e.food_target = food_target
             fmoves = shortest_path_move(g.s.my_head, food_target)
             moves = sequential([
-                prefer_by_rank(lambda a: 0 if a in fmoves else 1),
+                prefer_yes(lambda a: a in fmoves),
                 prefer_by_score(score_more_next_move),
-                prefer_by_rank(rank_straight),
+                prefer_yes(is_straight),
             ])(moves)
+    print(moves)
     return moves
 
 def shorter(moves):
@@ -453,12 +454,12 @@ def type_1_collision(moves):
 def off_border_danger(moves):
     if g.s.my_length+1 < g.s.other_length:
         if off_border_1(g.s.my_head):
-            moves = prefer_by_rank(rank_border)(moves)
+            moves = prefer_no(on_border)(moves)
             return moves
 
 def crawling(moves):
     if on_border(g.s.my_neck):
-        return prefer_by_rank(rank_border)(moves)
+        return prefer_no(on_border)(moves)
 
 def heading_border(moves):
     if not on_border(g.s.my_neck):
@@ -536,23 +537,18 @@ def parallel_opposite(moves):
             other_considerations,
         ])(moves)
 
-def rank_by_no_food(p):
-    if not p in g.food:
-        return 0
-    return 1
-
 def type_2_with_no_avoid_points(moves):
     if len(g.e.avoid_points) == 0:
-        moves = prefer_by_rank(moves, rank_by_no_food)
+        moves = prefer_no(lambda a: a in g.food)(moves)
+        g.e.decision_path.append("take risk at no food")
         return moves
 
 def type_2_with_1_avoid_point(moves):
     if len(g.e.avoid_points) == 1:
-        return g.e.avoid_points
+        return prefer_yes(lambda a: a in g.e.avoid_points)(moves)
 
 def type_2_with_2_collision_points(moves):
     if len(g.e.collision_points) == 2:
-        g.e.avoid_points = [a for a in g.e.allowed_moves if a not in g.e.collision_points]
         return cases([
             type_2_with_no_avoid_points,
             type_2_with_1_avoid_point,
@@ -560,16 +556,19 @@ def type_2_with_2_collision_points(moves):
 
 def type_2_with_1_collision_points(moves):
     if len(g.e.collision_points) == 1:
-        g.e.avoid_points = [a for a in g.e.allowed_moves if a not in g.e.collision_points]
+        g.e.decision_path.append("avoid collision")
+        moves = prefer_no(lambda a: a in g.e.collision_points)(moves)
+        return moves
 
 def type_2_with_0_collision_points(moves):
     if len(g.e.collision_points) == 0:
-        g.e.avoid_points = [a for a in g.e.allowed_moves if a not in g.e.collision_points]
+        return moves
 
 def type_2_collision(moves):
     if len(g.e.possible_collision_points) == 2:
         g.e.decision_path.append("type_2_collision")
         g.e.collision_points = [p for p in g.e.possible_collision_points if p not in g.occupied_cells[0]]
+        g.e.avoid_points = [p for p in g.e.allowed_moves if not p in g.e.collision_points]
         return cases([
             type_2_with_2_collision_points,
             type_2_with_1_collision_points,
@@ -698,6 +697,7 @@ def run():
     log = {'id': '84cf23e1-dfe5-448e-a294-c70678353346', 'turn': 23, 'me': {'name': 'mark_snake', 'health': 77, 'body': [(9, 10), (8, 10), (7, 10)]}, 'others': [{'name': 'Snakeformatika', 'health': 92, 'body': [(6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (1, 9)]}], 'food': [(10, 8), (5, 3), (0, 4)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 10), (9, 9)], 'other_allowed_moves': [(7, 9), (6, 10), (6, 8)], 'head_distance': 4, 'head_path_distance': 4, 'decision_path': ['battle_1_vs_1', 'shorter', 'head_distance_4'], 'possible_collision_points': [(2, 9)], 'collision_points': [(3, 9), (2, 8)], 'avoid_points': [(2, 10)], 'collision_point': (2, 9), 'me_heading_collision_point': False, 'other_heading_collision_point': False}, 'next_coord': (10, 10), 'next_move': 'right', 'time': '0.000s'}
     log = {'id': '84cf23e1-dfe5-448e-a294-c70678353346', 'turn': 34, 'me': {'name': 'mark_snake', 'health': 77, 'body': [(10,0), (10,1), (10,2), (10,3)]}, 'others': [{'name': 'Snakeformatika', 'health': 92, 'body': [(9,1), (9,2), (9,3), (9,4), (9,5), (9,6)]}], 'food': [(10, 8), (5, 3), (0, 4)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 10), (9, 9)], 'other_allowed_moves': [(7, 9), (6, 10), (6, 8)], 'head_distance': 4, 'head_path_distance': 4, 'decision_path': ['battle_1_vs_1', 'shorter', 'head_distance_4'], 'possible_collision_points': [(2, 9)], 'collision_points': [(3, 9), (2, 8)], 'avoid_points': [(2, 10)], 'collision_point': (2, 9), 'me_heading_collision_point': False, 'other_heading_collision_point': False}, 'next_coord': (10, 10), 'next_move': 'right', 'time': '0.000s'}
     log = {'id': '7c48225a-d788-4d12-8e67-4887d87c34b3', 'turn': 10, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(3, 9), (2, 9), (1, 9), (0, 9)]}, 'others': [{'name': 'Snakeformatika', 'health': 100, 'body': [(5, 5), (6, 5), (6, 6), (6, 7), (6, 7)]}], 'food': [(4, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(4, 9), (3, 10), (3, 8)], 'other_allowed_moves': [(4, 5), (5, 6), (5, 4)], 'head_distance': 6, 'head_path_distance': 6, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_6'], 'food_near': [], 'food_good': [((0, 8), 1)], 'situation': 'go to food', 'food_target': (0, 8)}, 'next_coord': (4, 9), 'next_move': 'right', 'time': '0.000s'}
+    log = {'id': '77c3316d-ce9b-4042-8fa3-ec82d4ed60d5', 'turn': 27, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(2, 7), (2, 6), (1, 6), (0, 6), (0, 5)]}, 'others': [{'name': 'Snakeformatika', 'health': 85, 'body': [(3, 6), (3, 5), (3, 4), (3, 3), (2, 3), (2, 4)]}], 'food': [(10, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 7), (1, 7), (2, 8)], 'other_allowed_moves': [(4, 6), (3, 7)], 'head_distance': 2, 'head_path_distance': 2, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_2', 'type_2_collision'], 'food_near': [], 'food_good': [((0, 4), 1)], 'food_target': (0, 4), 'possible_collision_points': [(3, 7), (2, 6)], 'collision_point': (1, 4), 'me_heading_collision_point': False, 'other_heading_collision_point': False, 'collision_points': [(3, 7)], 'avoid_points': [(1, 7), (2, 8)]}, 'next_coord': (3, 7), 'next_move': 'right', 'time': '0.000s'}
 
 
 
