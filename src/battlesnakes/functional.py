@@ -346,6 +346,9 @@ def prefer_by_score(score):
 def id(moves):
     return moves
 
+#############################################################
+#############################################################
+
 def decision():
     #estimated 5-step occupied cells
     g.occupied_cells = [
@@ -396,8 +399,6 @@ def avoid_danger(moves):
         id,
     ])(moves)
 
-from functools import partial
-
 def get_food(moves):
     d_food = 8
     food_near = [f for f in g.food if distance_pq(f, g.s.my_head) < d_food]
@@ -408,7 +409,7 @@ def get_food(moves):
         food_good = [(f, d1) for f,d1,d2 in food_good_dd if d1 <= d2 and d1 < 999]
         g.e.food_good = food_good
         if len(food_good) != 0:
-            g.e.situation = "go to food"
+            g.e.decision_path.append("go to food")
             food_targets = first_group(food_good)
             food_target = food_targets[0]
             g.e.food_target = food_target
@@ -696,6 +697,7 @@ def run():
     log = {'id': 'b3c6e93b-aa99-49d0-b17e-dee908758606', 'turn': 27, 'me': {'name': 'mark_snake', 'health': 91, 'body': [(9, 10), (8, 10), (7, 10), (6, 10)]}, 'others': [{'name': 'Snakeformatika', 'health': 100, 'body': [(1, 8), (1, 9), (2, 9), (3, 9), (3, 8), (3, 8)]}], 'food': [(9, 4), (8, 8), (1, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 10), (9, 9)], 'other_allowed_moves': [(2, 8), (0, 8), (1, 7)], 'head_distance': 10, 'head_path_distance': 12, 'possible_collision_points': [(4, 9), (5, 8)], 'collision_points': [(4, 9)], 'avoid_points': [(6, 9), (5, 10)]}, 'next_coord': (10, 10), 'next_move': 'right', 'time': '0.000s'}
     log = {'id': '84cf23e1-dfe5-448e-a294-c70678353346', 'turn': 23, 'me': {'name': 'mark_snake', 'health': 77, 'body': [(9, 10), (8, 10), (7, 10)]}, 'others': [{'name': 'Snakeformatika', 'health': 92, 'body': [(6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (1, 9)]}], 'food': [(10, 8), (5, 3), (0, 4)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 10), (9, 9)], 'other_allowed_moves': [(7, 9), (6, 10), (6, 8)], 'head_distance': 4, 'head_path_distance': 4, 'decision_path': ['battle_1_vs_1', 'shorter', 'head_distance_4'], 'possible_collision_points': [(2, 9)], 'collision_points': [(3, 9), (2, 8)], 'avoid_points': [(2, 10)], 'collision_point': (2, 9), 'me_heading_collision_point': False, 'other_heading_collision_point': False}, 'next_coord': (10, 10), 'next_move': 'right', 'time': '0.000s'}
     log = {'id': '84cf23e1-dfe5-448e-a294-c70678353346', 'turn': 34, 'me': {'name': 'mark_snake', 'health': 77, 'body': [(10,0), (10,1), (10,2), (10,3)]}, 'others': [{'name': 'Snakeformatika', 'health': 92, 'body': [(9,1), (9,2), (9,3), (9,4), (9,5), (9,6)]}], 'food': [(10, 8), (5, 3), (0, 4)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 10), (9, 9)], 'other_allowed_moves': [(7, 9), (6, 10), (6, 8)], 'head_distance': 4, 'head_path_distance': 4, 'decision_path': ['battle_1_vs_1', 'shorter', 'head_distance_4'], 'possible_collision_points': [(2, 9)], 'collision_points': [(3, 9), (2, 8)], 'avoid_points': [(2, 10)], 'collision_point': (2, 9), 'me_heading_collision_point': False, 'other_heading_collision_point': False}, 'next_coord': (10, 10), 'next_move': 'right', 'time': '0.000s'}
+    log = {'id': '7c48225a-d788-4d12-8e67-4887d87c34b3', 'turn': 10, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(3, 9), (2, 9), (1, 9), (0, 9)]}, 'others': [{'name': 'Snakeformatika', 'health': 100, 'body': [(5, 5), (6, 5), (6, 6), (6, 7), (6, 7)]}], 'food': [(4, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(4, 9), (3, 10), (3, 8)], 'other_allowed_moves': [(4, 5), (5, 6), (5, 4)], 'head_distance': 6, 'head_path_distance': 6, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_6'], 'food_near': [], 'food_good': [((0, 8), 1)], 'situation': 'go to food', 'food_target': (0, 8)}, 'next_coord': (4, 9), 'next_move': 'right', 'time': '0.000s'}
 
 
 
