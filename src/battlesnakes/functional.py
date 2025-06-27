@@ -297,13 +297,11 @@ def init_game(game_state):
 
 def cases(fs):
     def fn(moves):
-        cases = fs[:-1]
-        last = fs[-1]
-        for f in cases:
+        for f in fs:
             result = f(moves)
-            if not result is None:
+            if result is not None:
                 return result
-        return last(moves)
+        return moves
     return fn
 
 def sequential(fs):
@@ -404,7 +402,6 @@ def avoid_danger(moves):
         head_distance_4, 
         head_distance_6, 
         head_distance_more,
-        id,
     ])(moves)
 
 def prefer_straight(moves):
@@ -488,7 +485,6 @@ def killer_near(moves):
     return cases([
         off_border_danger,
         on_border_danger,
-        id,
     ])(moves)
 
 def type_1_blocked(moves):
@@ -602,7 +598,6 @@ def head_distance_4(moves):
         moves = cases([
             shorter_by_1,
             near_border,
-            id,
         ])(moves)
         return moves
 
