@@ -309,7 +309,9 @@ def cases(fs):
 def sequential(fs):
     def fn(moves):
         for f in fs:
-            moves = f(moves)
+            result = f(moves)
+            if result is not None:
+                moves = result
         return moves
     return fn
 
@@ -612,7 +614,6 @@ def equal_length_danger(moves):
     if g.e.head_distance == 2:
         collision_points = [a for a in adj_cells(g.s.my_head) if is_adjacent(a, g.s.other_head) and a not in g.occupied_cells[0]]
         return prefer_no(lambda a: a in collision_points)(moves)
-    return moves
 
 def equal_length(moves):
     if g.s.my_length == g.s.other_length:
