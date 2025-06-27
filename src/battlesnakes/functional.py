@@ -253,6 +253,8 @@ def special_experimenting_code(game_state):
     return True
 
 def init_game(game_state):
+    global g
+    g = Game()
     g.state = game_state
     g.snakes = [ {
             "name": snake["name"],
