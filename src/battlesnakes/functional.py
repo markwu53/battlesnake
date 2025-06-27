@@ -420,6 +420,7 @@ def get_food(moves):
                 prefer_by_score(score_more_next_move),
                 prefer_by_rank(rank_straight),
             ], moves)
+    return moves
 
 def shorter(moves):
     if g.s.my_length < g.s.other_length:
