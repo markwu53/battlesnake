@@ -6,7 +6,6 @@ class DecisionSupport:
     def __init__(self):
         self.n_other = 1
         self.allowed_moves = None
-        self.my_snake_bigger = None
         self.food_good = None
         self.food_target = None
         self.head_distance = None
