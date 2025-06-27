@@ -603,7 +603,7 @@ def shorter_by_1(moves):
 
 def near_border(moves):
     if off_border_1(g.s.my_head):
-        g.decision_path.appened("avoid border")
+        g.decision_path.append("avoid border")
         return prefer_no(on_border)(moves)
 
 def head_distance_4(moves):
