@@ -1,7 +1,17 @@
-from functools import partial
+class A:
+    x = None
+    y = None
 
-def add(a, b):
-    return a+b
+class B:
+    a = A()
 
-x = partial(add, 5)(6)
-print(x)
+b = B()
+
+#call 1
+b.a.x = (1,2)
+b.a.y = (3,4)
+print(b.a.__dict__)
+
+#call 2
+b.a.y = (5,6)
+print(b.a.__dict__)
