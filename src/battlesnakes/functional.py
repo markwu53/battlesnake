@@ -469,9 +469,16 @@ def crawling(moves):
     if on_border(g.s.my_neck):
         return prefer_no(on_border)(moves)
 
+def danger_distance_average(a):
+    d1 = distance_pq(a, g.s.other_head)
+    d2 = path_distance_pq(a, g.s.other_head)
+    if d2 >= 100:
+        d2 = min([(g.s.my_length+1)//2, (g.s.other_length+1)//2])
+    return (d1+d2+1)//2
+
 def heading_border(moves):
     if not on_border(g.s.my_neck):
-        moves = prefer_by_score(lambda a: distance_pq(a, g.s.other_head))(moves)
+        moves = prefer_by_score(danger_distance_average)(moves)
         return moves
 
 def on_border_danger(moves):
