@@ -226,7 +226,7 @@ def experiment_condition():
     if not 11 <= time.localtime().tm_hour <= 23: return False
     if g.other["name"] not in (
         "Snakeformatika", #inform
-        "Kakemonsteret-v2", #pettso
+        #"Kakemonsteret-v2", #pettso
         #"Wim HU [dev]", #wim
         #"Frank The Tank", #djnuller
 
