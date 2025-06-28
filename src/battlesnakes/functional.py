@@ -611,7 +611,7 @@ def head_distance_4(moves):
         g.decision_path.append("head_distance_4")
         moves = cases([
             shorter_by_1,
-            near_border,
+            killer_near,
         ])(moves)
         return moves
 
