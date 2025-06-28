@@ -618,7 +618,10 @@ def head_distance_4(moves):
 def head_distance_6(moves):
     if g.e.head_distance == 6:
         g.decision_path.append("head_distance_6")
-        return moves
+        if g.e.head_path_distance == 6:
+            if distance_to_border(g.s.my_head) in [(1,1), (1,2), (2,1)]:
+                g.decision_path.append("near corner")
+                return killer_near(moves)
 
 def head_distance_more(moves):
     if g.e.head_distance > 6:
