@@ -697,7 +697,8 @@ def kill_opportunity(moves):
                     if len(target) != 0:
                         target = take_first(target)
                         moves = shortest_path_move(g.s.my_head, target)
-                        return moves
+                        if len(moves) != 0:
+                            return moves
 
 def longer(moves):
     if g.s.my_length > g.s.other_length:
