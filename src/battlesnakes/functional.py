@@ -410,6 +410,9 @@ def prefer_straight(moves):
 def prefer_more_next_move(moves):
     return prefer_by_score(score_more_next_move)(moves)
 
+def prefer_middle_by_3(moves):
+    return prefer_yes(lambda a: all([d>=2 for d in distance_to_border(a)]))(moves)
+
 def get_food(moves):
     d_food = 8
     food_near = [f for f in g.food if distance_pq(f, g.s.my_head) < d_food]
@@ -434,7 +437,7 @@ def shorter(moves):
         return sequential([
             avoid_danger,
             get_food,
-            prefer_more_next_move,
+            prefer_middle_by_3,
             prefer_straight,
         ])(moves)
 
@@ -649,7 +652,7 @@ def equal_length(moves):
         moves = sequential([
             equal_length_danger,
             get_food,
-            prefer_more_next_move,
+            prefer_middle_by_3,
             prefer_straight,
         ])(moves)
         return moves
@@ -735,6 +738,7 @@ def run():
     log = {'id': '172066ab-8202-4f36-a347-ddfc6ba27539', 'turn': 130, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 2), (9, 2), (8, 2), (7, 2), (6, 2), (6, 3), (5, 3), (5, 2), (5, 1), (4, 1), (3, 1), (2, 1), (2, 0), (2, 0)]}, 'others': [{'name': 'Snakeformatika', 'health': 95, 'body': [(7, 3), (7, 4), (6, 4), (5, 4), (4, 4), (4, 5), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (6, 7), (6, 6), (6, 5)]}], 'food': [(8, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 3), (10, 1)], 'food_good': [], 'head_distance': 4, 'head_path_distance': 4}, 'decision_path': ['battle_1_vs_1', 'equal_length'], 'next_coord': (10, 3), 'next_move': 'up', 'time': '0.001s'}
     log = {'id': '172066ab-8202-4f36-a347-ddfc6ba27539', 'turn': 129, 'me': {'name': 'mark_snake', 'health': 93, 'body': [(9, 2), (8, 2), (7, 2), (6, 2), (6, 3), (5, 3), (5, 2), (5, 1), (4, 1), (3, 1), (2, 1), (2, 0), (3, 0)]}, 'others': [{'name': 'Snakeformatika', 'health': 96, 'body': [(7, 4), (6, 4), (5, 4), (4, 4), (4, 5), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (6, 7), (6, 6), (6, 5), (7, 5)]}], 'food': [(10, 2), (8, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 2), (9, 3), (9, 1)], 'food_good': [((10, 2), 1)], 'food_target': (10, 2), 'head_distance': 4, 'head_path_distance': 4}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_4', 'go to food'], 'next_coord': (10, 2), 'next_move': 'right', 'time': '0.001s'}
     log = {'id': '3e709a1a-b948-412c-8b13-e07222388dd5', 'turn': 21, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(2, 1), (2, 2), (3, 2), (4, 2), (5, 2)]}, 'others': [{'name': 'Snakeformatika', 'health': 95, 'body': [(4, 3), (4, 4), (5, 4), (6, 4), (6, 5), (6, 6), (5, 6)]}], 'food': [(2, 0), (0, 9), (6, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 1), (1, 1), (2, 0)], 'food_good': [((2, 0), 1)], 'food_target': (2, 0), 'head_distance': 4, 'head_path_distance': 6}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_4', 'go to food'], 'next_coord': (2, 0), 'next_move': 'down', 'time': '0.001s'}
+    log = {'id': '5cccae4a-72ae-4d1f-a915-8584abd5d06e', 'turn': 172, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 6), (9, 6), (9, 5), (9, 4), (9, 3), (9, 2), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (4, 1), (4, 0), (5, 0), (6, 0), (7, 0), (7, 0)]}, 'others': [{'name': 'Snakeformatika', 'health': 93, 'body': [(4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (1, 7), (2, 7), (2, 8), (1, 8), (1, 9), (2, 9), (3, 9), (3, 8), (3, 7), (4, 7)]}], 'food': [(1, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 7), (10, 5)], 'head_distance': 10, 'head_path_distance': 10}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_more'], 'next_coord': (10, 7), 'next_move': 'up', 'time': '0.000s'}
 
 
 
