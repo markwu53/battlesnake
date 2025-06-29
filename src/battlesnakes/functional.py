@@ -687,6 +687,8 @@ def split_branches(moves):
             return sequential([
                 prefer_no(not_enough_space),
                 cut_danger,
+                prefer_yes(lambda a: path_connected(a, g.s.my_tail)),
+                prefer_yes(lambda a: path_connected(a, g.s.other_tail)),
             ])(moves)
 
 def room_danger(moves):
