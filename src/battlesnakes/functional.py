@@ -666,7 +666,7 @@ def not_enough_space(a):
 def cut_danger(moves):
     equal_line()
     occupied_cells = g.occupied_cells[0]+g.x.other_territory
-    moves = prefer_no(lambda a: len(path_connected_set(a)) <= g.s.my_length //2)(moves)
+    moves = prefer_no(lambda a: len(path_connected_set(a, occupied_cells)) <= g.s.my_length //2)(moves)
     return moves
 
 def split_branches(moves):
