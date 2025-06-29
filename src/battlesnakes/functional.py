@@ -673,11 +673,31 @@ def longer_danger(moves):
         split_branches,
     ])(moves)
 
+def equal_line():
+    distance_map = [(p, distance_pq(p, g.s.my_head), distance_pq(p, g.s.other_head))
+        for x in g.state["board"]["width"]
+        for y in g.state["board"]["height"]
+        for p in [(x,y)] ]
+    my_territory = [p for p,d1,d2 in distance_map if d1 < d2]
+    other_territory = [p for p,d1,d2 in distance_map if d1 > d2]
+    equal_territory = [p for p,d1,d2 in distance_map if d1 == d2]
+    equal_border = [p for p in equal_territory if any([q in other_territory for q in adj_cells(p)])]
+
+def kill_opportunity(moves):
+    if g.e.head_distance <= 4:
+        if g.e.head_distance == g.e.head_path_distance:
+            if g.s.my_length >= 20:
+                if int(g.s.my_length/1.5) >= g.s.other_length:
+                    equal_line()
+
+    return moves
+
 def longer(moves):
     if g.s.my_length > g.s.other_length:
         g.decision_path.append("longer")
         moves = sequential([
             longer_danger,
+            kill_opportunity,
             get_food,
             #prefer_more_next_move,
             prefer_straight,
