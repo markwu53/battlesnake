@@ -675,8 +675,8 @@ def longer_danger(moves):
 
 def equal_line():
     g.x.distance_map = [(p, distance_pq(p, g.s.my_head), distance_pq(p, g.s.other_head))
-        for x in g.state["board"]["width"]
-        for y in g.state["board"]["height"]
+        for x in range(g.state["board"]["width"])
+        for y in range(g.state["board"]["height"])
         for p in [(x,y)] ]
     g.x.my_territory = [p for p,d1,d2 in g.x.distance_map if d1 < d2]
     g.x.other_territory = [p for p,d1,d2 in g.x.distance_map if d1 > d2]
@@ -688,8 +688,9 @@ def kill_opportunity(moves):
         if g.e.head_distance == g.e.head_path_distance:
             if g.s.my_length >= 20:
                 if int(g.s.my_length/1.5) >= g.s.other_length:
+                    g.decision_path.append("kill opportunity")
                     equal_line()
-                    occupied_cells = g.occupied_cells[0]+g.x.my_territory
+                    occupied_cells = g.occupied_cells[0]+g.x.my_territory+g.x.equal_territory
                     orig_room = {a: len(path_connected_set(a)) for a in g.x.other_allowed_moves}
                     cut_room = {a: len(path_connected_set(a, occupied_cells)) for a in g.x.other_allowed_moves}
                     target = prefer_yes(lambda a: orig_room[a] >= g.s.other_length and cut_room[a] <= 5)(g.x.other_allowed_moves)
