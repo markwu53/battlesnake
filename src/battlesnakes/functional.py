@@ -24,6 +24,11 @@ class DecisionAux:
         self.collision_points = None
         self.collision_point = None
         self.possible_collision_points = None
+        self.distance_map = None
+        self.my_territory = None
+        self.other_territory = None
+        self.equal_territory = None
+        self.equal_border = None
 
 class SnakeInfo:
     def __init__(self):
@@ -393,6 +398,7 @@ def battle_1_vs_n(moves):
 def battle_1_vs_1(moves):
     if g.e.n_other == 1:
         g.decision_path.append("battle_1_vs_1")
+        equal_line()
         return cases([shorter, equal_length, longer])(moves)
 
 def avoid_danger(moves):
@@ -666,7 +672,6 @@ def not_enough_space(a):
     return room <= g.s.my_length //2
 
 def cut_danger(moves):
-    equal_line()
     other_territory = [a for a in g.x.other_territory if a not in g.occupied_cells[0]]
     other_territory = [a for a in other_territory if path_distance_pq(a, g.s.other_head) == distance_pq(a, g.s.other_head)]
     occupied_cells = g.occupied_cells[0]+other_territory
@@ -712,7 +717,6 @@ def kill_opportunity(moves):
             if g.s.my_length >= 20:
                 if int(g.s.my_length/1.5) >= g.s.other_length:
                     g.decision_path.append("kill opportunity")
-                    equal_line()
                     occupied_cells = g.occupied_cells[0]+g.x.my_territory+g.x.equal_territory
                     orig_room = {a: len(path_connected_set(a)) for a in g.x.other_allowed_moves}
                     cut_room = {a: len(path_connected_set(a, occupied_cells)) for a in g.x.other_allowed_moves}
@@ -724,13 +728,32 @@ def kill_opportunity(moves):
                         if len(moves) != 0:
                             return moves
 
+def chase_tail(moves):
+    if g.s.my_tail in g.x.my_territory:
+        tmoves = shortest_path_move(g.s.my_head, g.s.my_tail)
+        tmoves = [a for a in tmoves if a in moves]
+        if len(tmoves) != 0:
+            return tmoves
+    else:
+        tmoves = shortest_path_move(g.s.my_head, g.s.other_tail)
+        tmoves = [a for a in tmoves if a in moves]
+        if len(tmoves) != 0:
+            return tmoves
+
+def get_food_or_chase_tail(moves):
+    if g.s.my_length < 20:
+        return get_food(moves)
+    else:
+        return chase_tail(moves)
+
 def longer(moves):
     if g.s.my_length > g.s.other_length:
         g.decision_path.append("longer")
         moves = sequential([
             room_danger,
             kill_opportunity,
-            get_food,
+            #get_food,
+            get_food_or_chase_tail,
             #prefer_more_next_move,
             prefer_straight,
         ])(moves)
