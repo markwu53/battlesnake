@@ -698,8 +698,6 @@ def kill_opportunity(moves):
                         moves = shortest_path_move(g.s.my_head, target)
                         return moves
 
-    return moves
-
 def longer(moves):
     if g.s.my_length > g.s.other_length:
         g.decision_path.append("longer")
