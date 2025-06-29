@@ -657,10 +657,27 @@ def equal_length(moves):
         ])(moves)
         return moves
 
+def not_enough_space(a):
+    room = len(path_connected_set(a))
+    return room <= g.s.my_length //2
+
+def split_branches(moves):
+    if len(g.e.allowed_moves) == 2:
+        a,b = g.e.allowed_moves
+        if path_distance_pq(a, b) > 4:
+            g.decision_path.append("2 split branches")
+            return prefer_no(not_enough_space)(moves)
+
+def longer_danger(moves):
+    return cases([
+        split_branches,
+    ])(moves)
+
 def longer(moves):
     if g.s.my_length > g.s.other_length:
         g.decision_path.append("longer")
         moves = sequential([
+            longer_danger,
             get_food,
             #prefer_more_next_move,
             prefer_straight,
