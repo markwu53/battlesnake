@@ -436,6 +436,7 @@ def shorter(moves):
         g.decision_path.append("shorter")
         return sequential([
             avoid_danger,
+            room_danger,
             get_food,
             prefer_middle_by_3,
             prefer_straight,
@@ -651,6 +652,7 @@ def equal_length(moves):
         g.decision_path.append("equal_length")
         moves = sequential([
             equal_length_danger,
+            room_danger,
             get_food,
             prefer_middle_by_3,
             prefer_straight,
@@ -677,7 +679,7 @@ def split_branches(moves):
                 cut_danger,
             ])(moves)
 
-def longer_danger(moves):
+def room_danger(moves):
     return cases([
         split_branches,
     ])(moves)
@@ -714,7 +716,7 @@ def longer(moves):
     if g.s.my_length > g.s.other_length:
         g.decision_path.append("longer")
         moves = sequential([
-            longer_danger,
+            room_danger,
             kill_opportunity,
             get_food,
             #prefer_more_next_move,
