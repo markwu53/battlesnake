@@ -676,7 +676,7 @@ def cut_danger(moves):
     other_territory = [a for a in other_territory if path_distance_pq(a, g.s.other_head) == distance_pq(a, g.s.other_head)]
     occupied_cells = g.occupied_cells[0]+other_territory
     cut = [(a, room) for a in moves for room in [len(path_connected_set(a, occupied_cells))]]
-    cut_moves = [a for a, room in cut if room <= g.s.my_length //2]
+    cut_moves = [a for a, room in cut if room <= g.s.my_length-2]
     if len(cut_moves) != 0:
         g.decision_path.append("has cut danger")
         g.e.cut = cut_moves
