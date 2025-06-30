@@ -693,6 +693,7 @@ def split_branches(moves):
                 chase_my_tail,
                 chase_other_tail,
                 prefer_no(not_enough_space),
+                prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head)),
                 #cut_danger,
             ])(moves)
 
