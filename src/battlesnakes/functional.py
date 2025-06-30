@@ -773,6 +773,7 @@ def too_long(moves):
             food1,
             #kill_opportunity,
             chase_tail,
+            prefer_middle_by_3,
             prefer_straight,
         ])(moves)
         return moves
