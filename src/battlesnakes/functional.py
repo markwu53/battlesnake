@@ -764,6 +764,7 @@ def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
             #cut_danger,
+            no_room_danger,
             food1,
             #kill_opportunity,
             chase_tail,
