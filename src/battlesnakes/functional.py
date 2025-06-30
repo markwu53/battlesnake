@@ -444,7 +444,7 @@ def shorter(moves):
         g.decision_path.append("shorter")
         return sequential([
             avoid_danger,
-            room_danger,
+            no_room_danger,
             get_food,
             prefer_middle_by_3,
             prefer_straight,
@@ -660,7 +660,7 @@ def equal_length(moves):
         g.decision_path.append("equal_length")
         moves = sequential([
             equal_length_danger,
-            room_danger,
+            no_room_danger,
             get_food,
             prefer_middle_by_3,
             prefer_straight,
@@ -696,7 +696,7 @@ def split_branches(moves):
                 prefer_yes(lambda a: path_connected(a, g.s.other_tail)),
             ])(moves)
 
-def room_danger(moves):
+def no_room_danger(moves):
     return cases([
         split_branches,
     ])(moves)
@@ -728,37 +728,51 @@ def kill_opportunity(moves):
                         if len(moves) != 0:
                             return moves
 
-def chase_tail(moves):
-    if g.s.my_tail in g.x.my_territory:
-        tmoves = shortest_path_move(g.s.my_head, g.s.my_tail)
-        tmoves = [a for a in tmoves if a in moves]
-        if len(tmoves) != 0:
-            return tmoves
-    else:
-        tmoves = shortest_path_move(g.s.my_head, g.s.other_tail)
-        tmoves = [a for a in tmoves if a in moves]
-        if len(tmoves) != 0:
-            return tmoves
+def chase_other_tail(moves):
+    #chase enemy tail
+    if path_connected(g.s.my_head, g.s.other_tail):
+        if g.s.other_tail in g.x.my_territory:
+            tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
+            return prefer_yes(lambda a: a in tail_moves)(moves)
 
-def get_food_or_chase_tail(moves):
+def chase_my_tail(moves):
+    if path_connected(g.s.my_head, g.s.my_tail):
+        if g.s.my_tail in g.x.my_territory:
+            tail_moves = shortest_path_move(g.s.my_head, g.s.my_tail)
+            return prefer_yes(lambda a: a in tail_moves)(moves)
+
+def chase_tail(moves):
+    return cases([
+        chase_other_tail,
+        chase_my_tail,
+    ])(moves)
+
+def not_too_long(moves):
     if g.s.my_length < 20:
-        return get_food(moves)
-    else:
-        return chase_tail(moves)
+        return sequential([
+            no_room_danger,
+            get_food,
+            prefer_straight,
+        ])(moves)
+
+def get_food_while_chasing_tail(moves):
+    return prefer_yes(lambda a: a in g.food)(moves)
+
+def too_long(moves):
+    if g.s.my_length >= 20:
+        return sequential([
+            get_food_while_chasing_tail,
+            #kill_opportunity,
+            chase_tail,
+            prefer_straight,
+        ])(moves)
 
 def longer(moves):
     if g.s.my_length > g.s.other_length:
-        g.decision_path.append("longer")
-        moves = sequential([
-            room_danger,
-            kill_opportunity,
-            #get_food,
-            get_food_or_chase_tail,
-            #prefer_more_next_move,
-            prefer_straight,
+        cases([
+            not_too_long,
+            too_long,
         ])(moves)
-        return moves
-
 
 ######################################################
 
