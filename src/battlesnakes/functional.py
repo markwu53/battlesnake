@@ -756,15 +756,15 @@ def not_too_long(moves):
         ])(moves)
         return moves
 
-def get_food_while_chasing_tail(moves):
+def food1(moves):
     moves = prefer_yes(lambda a: a in g.food)(moves)
     return moves
 
 def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
-            cut_danger,
-            get_food_while_chasing_tail,
+            #cut_danger,
+            food1,
             #kill_opportunity,
             chase_tail,
             prefer_straight,
@@ -857,6 +857,8 @@ def run():
     log = {'id': '6e27e442-d9d0-453b-851f-4f4206bb22d7', 'turn': 16, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 4)]}, 'others': [{'name': 'ich heisse marvin', 'health': 95, 'body': [(6, 8), (6, 7), (5, 7), (4, 7), (3, 7)]}], 'food': [(9, 9), (8, 5), (7, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(9, 4), (8, 5), (8, 3)], 'food_good': [((8, 5), 1), ((7, 1), 4)], 'food_target': (8, 5), 'head_distance': 6, 'head_path_distance': 6}, 'decision_path': ['battle_1_vs_1', 'food opportunity', 'go to food'], 'next_coord': (9, 4), 'next_move': 'right', 'time': '0.002s'}
     log = {'id': '1901b242-962a-4f2e-8baf-d39056bc45e8', 'turn': 174, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (9, 2), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (0, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 90, 'body': [(5, 9), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (8, 5), (7, 5), (6, 5), (6, 6), (6, 7), (5, 7), (4, 7), (3, 7)]}], 'food': [(4, 5), (9, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(9, 8), (9, 6)], 'head_distance': 6, 'head_path_distance': 6}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (9, 8), 'next_move': 'up', 'time': '0.001s'}
     log = {'id': '1fa01b8f-f774-4323-9bd6-42adc1d5a43f', 'turn': 199, 'me': {'name': 'mark_snake', 'health': 75, 'body': [(5, 4), (4, 4), (3, 4), (2, 4), (2, 3), (3, 3), (3, 2), (2, 2), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (3, 1), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (7, 1), (7, 2)]}, 'others': [{'name': 'ich heisse marvin', 'health': 57, 'body': [(6, 3), (7, 3), (7, 4), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (5, 6), (5, 5)]}], 'food': [(1, 6), (2, 10), (0, 7), (1, 10), (0, 5), (10, 7), (10, 9), (5, 3), (9, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 4), (5, 5), (5, 3)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (5, 3), 'next_move': 'down', 'time': '0.001s'}
+    log = {'id': 'a35321ef-1b87-44ba-8593-20113f0c5cb5', 'turn': 136, 'me': {'name': 'mark_snake', 'health': 97, 'body': [(4, 0), (4, 1), (4, 2), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (1, 9), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0)]}, 'others': [{'name': 'ich heisse marvin', 'health': 62, 'body': [(7, 1), (7, 2), (7, 3), (6, 3), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8)]}], 'food': [(9, 7), (8, 1), (10, 6), (5, 0), (6, 0), (10, 7), (5, 9), (1, 4), (7, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 0), (3, 0)], 'head_distance': 4, 'head_path_distance': 4, 'cut': [(5, 0), (3, 0)]}, 'decision_path': ['battle_1_vs_1', 'has cut danger'], 'next_coord': (5, 0), 'next_move': 'right', 'time': '0.017s'}
+    log = {'id': '3e5faac2-5b9e-48aa-a6ba-ef8f6020548e', 'turn': 150, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 8), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (4, 9), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 69, 'body': [(6, 6), (6, 5), (6, 4), (5, 4), (5, 5), (4, 5), (3, 5), (2, 5), (2, 6), (2, 7)]}], 'food': [(9, 7), (3, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 9), (10, 7)], 'head_distance': 6, 'head_path_distance': 6, 'cut': [(10, 9), (10, 7)]}, 'decision_path': ['battle_1_vs_1', 'has cut danger'], 'next_coord': (10, 9), 'next_move': 'up', 'time': '0.023s'}
 
 
     game_state = init_from_log(log)
