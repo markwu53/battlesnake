@@ -690,10 +690,10 @@ def split_branches(moves):
         if path_distance_pq(a, b) > 4:
             g.decision_path.append("2 split branches")
             return sequential([
+                chase_my_tail,
+                chase_other_tail,
                 prefer_no(not_enough_space),
-                cut_danger,
-                prefer_yes(lambda a: path_connected(a, g.s.my_tail)),
-                prefer_yes(lambda a: path_connected(a, g.s.other_tail)),
+                #cut_danger,
             ])(moves)
 
 def no_room_danger(moves):
