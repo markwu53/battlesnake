@@ -732,7 +732,7 @@ def kill_opportunity(moves):
 def chase_other_tail(moves):
     #chase enemy tail
     if path_connected(g.s.my_head, g.s.other_tail):
-        if g.s.other_tail in g.x.my_territory:
+        if g.s.other_tail in g.x.my_territory or g.s.other_tail in g.x.equal_territory:
             if distance_pq(g.s.my_head, g.s.other_tail) > 1:
                 tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
                 return prefer_yes(lambda a: a in tail_moves)(moves)
