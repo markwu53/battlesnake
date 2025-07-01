@@ -794,11 +794,11 @@ def chase_other_tail(moves):
 def chase_my_tail(moves):
     if path_connected(g.s.my_head, g.s.my_tail):
         if g.s.my_tail in g.x.my_territory:
-            tail_moves = shortest_path_move(g.s.my_head, g.s.my_tail)
-            return prefer_yes(lambda a: a in tail_moves)(moves)
+            moves = [a for a in moves if path_connected(a, g.s.my_tail)]
+            return moves
         if path_distance_pq(g.s.my_head, g.s.my_tail) <= path_distance_pq(g.s.my_head, g.s.other_head):
-            tail_moves = shortest_path_move(g.s.my_head, g.s.my_tail)
-            return prefer_yes(lambda a: a in tail_moves)(moves)
+            moves = [a for a in moves if path_distance_pq(a, g.s.my_tail) <= path_distance_pq(a, g.s.other_head)]
+            return moves
 
 def chase_tail(moves):
     return cases([
