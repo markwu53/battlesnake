@@ -796,6 +796,9 @@ def chase_my_tail(moves):
         if g.s.my_tail in g.x.my_territory:
             tail_moves = shortest_path_move(g.s.my_head, g.s.my_tail)
             return prefer_yes(lambda a: a in tail_moves)(moves)
+        if path_distance_pq(g.s.my_head, g.s.my_tail) <= path_distance_pq(g.s.my_head, g.s.other_head):
+            tail_moves = shortest_path_move(g.s.my_head, g.s.my_tail)
+            return prefer_yes(lambda a: a in tail_moves)(moves)
 
 def chase_tail(moves):
     return cases([
