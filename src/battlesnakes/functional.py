@@ -699,6 +699,18 @@ def split_branches(moves):
                 prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head)),
                 #cut_danger,
             ])(moves)
+    if len(g.e.allowed_moves) == 3:
+        straight = [a for a in g.e.allowed_moves if is_straight(a)][0]
+        others = [a for a in g.e.allowed_moves if a != straight]
+        if any([path_distance_pq(a, straight) > 2 for a in others]):
+            g.decision_path.append("3 allowed divide into 2 split branches")
+            return sequential([
+                chase_my_tail,
+                chase_other_tail,
+                prefer_no(not_enough_space),
+                prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head)),
+                #cut_danger,
+            ])(moves)
 
 def no_room_danger(moves):
     return cases([
