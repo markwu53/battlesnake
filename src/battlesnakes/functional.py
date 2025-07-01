@@ -472,6 +472,9 @@ def type_1_collision(moves):
         ])(moves)
 
 def off_border_danger(moves):
+    if path_distance_pq(g.s.other_head, g.s.my_head) >= 16:
+        return moves
+
     if g.s.my_length+1 < g.s.other_length:
         if off_border_1(g.s.my_head):
             moves = prefer_no(on_border)(moves)
