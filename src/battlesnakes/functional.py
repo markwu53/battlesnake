@@ -793,9 +793,14 @@ def chase_other_tail(moves):
 
 def chase_my_tail(moves):
     if path_connected(g.s.my_head, g.s.my_tail):
-        if g.s.my_tail in g.x.my_territory:
-            moves = [a for a in moves if path_connected(a, g.s.my_tail)]
-            return moves
+        if g.s.my_length <= g.s.other_length:
+            if g.s.my_tail in g.x.my_territory:
+                moves = [a for a in moves if path_connected(a, g.s.my_tail)]
+                return moves
+        else:
+            if g.s.my_tail not in g.x.other_territory:
+                moves = [a for a in moves if path_connected(a, g.s.my_tail)]
+                return moves
         if path_distance_pq(g.s.my_head, g.s.my_tail) <= path_distance_pq(g.s.my_head, g.s.other_head):
             moves = [a for a in moves if path_connected(a, g.s.my_tail) and path_distance_pq(a, g.s.my_tail) <= path_distance_pq(a, g.s.other_head)]
             return moves
@@ -923,6 +928,7 @@ def run():
     log = {'id': '3e5faac2-5b9e-48aa-a6ba-ef8f6020548e', 'turn': 150, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 8), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (4, 9), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 69, 'body': [(6, 6), (6, 5), (6, 4), (5, 4), (5, 5), (4, 5), (3, 5), (2, 5), (2, 6), (2, 7)]}], 'food': [(9, 7), (3, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 9), (10, 7)], 'head_distance': 6, 'head_path_distance': 6, 'cut': [(10, 9), (10, 7)]}, 'decision_path': ['battle_1_vs_1', 'has cut danger'], 'next_coord': (10, 9), 'next_move': 'up', 'time': '0.023s'}
     log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 193, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(7, 2), (7, 3), (7, 4), (6, 4), (5, 4), (5, 3), (4, 3), (3, 3), (2, 3), (2, 4), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (7, 6), (7, 7), (6, 7), (6, 6), (5, 6), (4, 6), (4, 7), (4, 8), (5, 8), (5, 9), (5, 10)]}, 'others': [{'name': 'ich heisse marvin', 'health': 74, 'body': [(8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]}], 'food': [(9, 3), (0, 7), (3, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
     log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 297, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(7, 10), (8, 10), (8, 9), (8, 8), (9, 8), (9, 7), (10, 7), (10, 6), (10, 5), (9, 5), (8, 5), (8, 4), (8, 3), (8, 2), (9, 2), (9, 1), (9, 0), (8, 0), (8, 1), (7, 1), (7, 2), (6, 2), (6, 3), (6, 4), (5, 4), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6)]}, 'others': [{'name': 'ich heisse marvin', 'health': 87, 'body': [(0, 5), (1, 5), (2, 5), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (5, 8), (6, 8), (6, 9), (5, 9), (4, 9), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (1, 9), (1, 8)]}], 'food': [(1, 2), (0, 7), (3, 2), (6,0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
+    log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 133, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(7, 2), (8, 2), (9, 2), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (1, 2), (2, 2)]}, 'others': [{'name': 'ich heisse marvin', 'health': 49, 'body': [(6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (5, 7), (4, 7), (4, 6), (5, 6), (5, 5)]}], 'food': [(8, 4), (9, 4), (9, 8), (8,10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
 
 
     game_state = init_from_log(log)
