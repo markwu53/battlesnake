@@ -816,7 +816,8 @@ def chase_my_tail(moves):
                             and len(adj) != 0
                             and d >= g.s.my_length-max(adj)-1
                         ]) != 0]
-            return moves
+            if len(moves) != 0:
+                return moves
 
 def chase_tail(moves):
     return cases([
@@ -943,6 +944,7 @@ def run():
     log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 297, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(7, 10), (8, 10), (8, 9), (8, 8), (9, 8), (9, 7), (10, 7), (10, 6), (10, 5), (9, 5), (8, 5), (8, 4), (8, 3), (8, 2), (9, 2), (9, 1), (9, 0), (8, 0), (8, 1), (7, 1), (7, 2), (6, 2), (6, 3), (6, 4), (5, 4), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6)]}, 'others': [{'name': 'ich heisse marvin', 'health': 87, 'body': [(0, 5), (1, 5), (2, 5), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (5, 8), (6, 8), (6, 9), (5, 9), (4, 9), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (1, 9), (1, 8)]}], 'food': [(1, 2), (0, 7), (3, 2), (6,0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
     log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 133, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(7, 2), (8, 2), (9, 2), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (1, 2), (2, 2)]}, 'others': [{'name': 'ich heisse marvin', 'health': 49, 'body': [(6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (5, 7), (4, 7), (4, 6), (5, 6), (5, 5)]}], 'food': [(8, 4), (9, 4), (9, 8), (8,10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
     log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 155, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(1, 8), (2, 8), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (1, 4), (2, 4), (3, 4), (4, 4)]}, 'others': [{'name': 'ich heisse marvin', 'health': 99, 'body': [(5, 6), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5), (10, 5), (10, 4), (9, 4), (9, 3), (8, 3)]}], 'food': [(4, 2), (4, 6), (8, 4), (10,2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
+    log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 76, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(7, 5), (8, 5), (9, 5), (10, 5), (10, 6), (10, 7), (9, 7), (8, 7), (7, 7), (7, 8), (7, 9)]}, 'others': [{'name': 'ich heisse marvin', 'health': 86, 'body': [(6, 4), (6, 5), (6, 6), (5, 6), (4, 6), (3, 6), (3, 5), (3, 4), (4, 4)]}], 'food': [(2,2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
 
 
     game_state = init_from_log(log)
