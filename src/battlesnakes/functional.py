@@ -674,6 +674,25 @@ def not_enough_space(a):
     room = len(path_connected_set(a))
     return room <= g.s.my_length //2
 
+def enough_room(moves):
+    #gradually more and more intensive calculation
+    #1. room is enough in my territory
+    #2. room is not enough, need find wayout
+    move_room = [(a, myset, myset2)
+                 for a in moves
+                 for aset in [path_connected_set(a)]
+                 for myset in [[p for p in aset if p in g.x.my_territory]]
+                 for myset2 in [[p for p in aset if p not in g.x.other_territory]]
+                 for cut in [any([is_adjacent(p, g.s.other_head) for p in aset])]
+                 ]
+    good_moves = [a for a, myset, myset2 in move_room if len(myset) >= g.s.my_length-2]
+    if g.s.my_length >= g.s.other_length:
+        good_moves = [a for a, myset, myset2 in move_room if len(myset2) >= g.s.my_length-2]
+    if len(good_moves) != 0:
+        return good_moves
+    
+
+
 def cut_danger(moves):
     other_territory = [a for a in g.x.other_territory if a not in g.occupied_cells[0]]
     other_territory = [a for a in other_territory if path_distance_pq(a, g.s.other_head) == distance_pq(a, g.s.other_head)]
@@ -687,45 +706,62 @@ def cut_danger(moves):
         if len(good_moves) != 0:
             return good_moves
 
+def split_move(moves):    
+    return sequential([
+        chase_my_tail,
+        chase_other_tail,
+        #prefer_no(not_enough_space),
+        enough_room,
+        prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head)),
+        #cut_danger,
+    ])(moves)
+
 def split_branches(moves):
     if len(g.e.allowed_moves) == 2:
         a,b = g.e.allowed_moves
         if path_distance_pq(a, b) > 4:
             g.decision_path.append("2 split branches")
-            return sequential([
-                chase_my_tail,
-                chase_other_tail,
-                prefer_no(not_enough_space),
-                prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head)),
-                #cut_danger,
-            ])(moves)
+            return split_move(moves)
     if len(g.e.allowed_moves) == 3:
         straight = [a for a in g.e.allowed_moves if is_straight(a)][0]
         others = [a for a in g.e.allowed_moves if a != straight]
         if any([path_distance_pq(a, straight) > 2 for a in others]):
             g.decision_path.append("3 allowed divide into 2 split branches")
-            return sequential([
-                chase_my_tail,
-                chase_other_tail,
-                prefer_no(not_enough_space),
-                prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head)),
-                #cut_danger,
-            ])(moves)
+            return split_move(moves)
 
 def no_room_danger(moves):
     return cases([
         split_branches,
     ])(moves)
 
-def equal_line():
-    g.x.distance_map = [(p, distance_pq(p, g.s.my_head), distance_pq(p, g.s.other_head))
+def equal_line2():
+    distance_map = [(p, distance_pq(p, g.s.my_head), distance_pq(p, g.s.other_head))
         for x in range(g.state["board"]["width"])
         for y in range(g.state["board"]["height"])
         for p in [(x,y)] ]
-    g.x.my_territory = [p for p,d1,d2 in g.x.distance_map if d1 < d2]
-    g.x.other_territory = [p for p,d1,d2 in g.x.distance_map if d1 > d2]
-    g.x.equal_territory = [p for p,d1,d2 in g.x.distance_map if d1 == d2]
-    g.x.equal_border = [p for p in g.x.equal_territory if any([q in g.x.other_territory for q in adj_cells(p)])]
+    my_territory = [p for p,d1,d2 in distance_map if d1 < d2]
+    other_territory = [p for p,d1,d2 in distance_map if d1 > d2]
+    equal_territory = [p for p,d1,d2 in distance_map if d1 == d2]
+    equal_border = [p for p in equal_territory if any([q in other_territory for q in adj_cells(p)])]
+    g.x.distance_map = distance_map
+    g.x.my_territory = my_territory
+    g.x.other_territory = other_territory
+    g.x.equal_territory = equal_territory
+    g.x.equal_border = equal_border
+
+def equal_line():
+    my_connected_set = path_connected_layers(g.s.my_head)
+    other_connected_set = path_connected_layers(g.s.other_head)
+    my_connected_dict = {p:i for i,layer in enumerate(my_connected_set) for p in layer}
+    other_connected_dict = {p:i for i,layer in enumerate(other_connected_set) for p in layer}
+    my_territory = [p for p in my_connected_dict if my_connected_dict[p] < other_connected_dict.get(p, 999)]
+    other_territory = [p for p in other_connected_dict if other_connected_dict[p] < my_connected_dict.get(p, 999)]
+    equal_territory = [p for p in my_connected_dict if p in other_connected_dict and my_connected_dict[p] == other_connected_dict[p]]
+    equal_border = [p for p in equal_territory if any([q in other_territory for q in adj_cells(p)])]
+    g.x.my_territory = my_territory
+    g.x.other_territory = other_territory
+    g.x.equal_territory = equal_territory
+    g.x.equal_border = equal_border
 
 def kill_opportunity(moves):
     if g.e.head_distance <= 4:
@@ -882,6 +918,7 @@ def run():
     log = {'id': '1fa01b8f-f774-4323-9bd6-42adc1d5a43f', 'turn': 199, 'me': {'name': 'mark_snake', 'health': 75, 'body': [(5, 4), (4, 4), (3, 4), (2, 4), (2, 3), (3, 3), (3, 2), (2, 2), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (3, 1), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (7, 1), (7, 2)]}, 'others': [{'name': 'ich heisse marvin', 'health': 57, 'body': [(6, 3), (7, 3), (7, 4), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (5, 6), (5, 5)]}], 'food': [(1, 6), (2, 10), (0, 7), (1, 10), (0, 5), (10, 7), (10, 9), (5, 3), (9, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 4), (5, 5), (5, 3)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (5, 3), 'next_move': 'down', 'time': '0.001s'}
     log = {'id': 'a35321ef-1b87-44ba-8593-20113f0c5cb5', 'turn': 136, 'me': {'name': 'mark_snake', 'health': 97, 'body': [(4, 0), (4, 1), (4, 2), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (1, 9), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0)]}, 'others': [{'name': 'ich heisse marvin', 'health': 62, 'body': [(7, 1), (7, 2), (7, 3), (6, 3), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8)]}], 'food': [(9, 7), (8, 1), (10, 6), (5, 0), (6, 0), (10, 7), (5, 9), (1, 4), (7, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 0), (3, 0)], 'head_distance': 4, 'head_path_distance': 4, 'cut': [(5, 0), (3, 0)]}, 'decision_path': ['battle_1_vs_1', 'has cut danger'], 'next_coord': (5, 0), 'next_move': 'right', 'time': '0.017s'}
     log = {'id': '3e5faac2-5b9e-48aa-a6ba-ef8f6020548e', 'turn': 150, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 8), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (4, 9), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 69, 'body': [(6, 6), (6, 5), (6, 4), (5, 4), (5, 5), (4, 5), (3, 5), (2, 5), (2, 6), (2, 7)]}], 'food': [(9, 7), (3, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 9), (10, 7)], 'head_distance': 6, 'head_path_distance': 6, 'cut': [(10, 9), (10, 7)]}, 'decision_path': ['battle_1_vs_1', 'has cut danger'], 'next_coord': (10, 9), 'next_move': 'up', 'time': '0.023s'}
+    log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 193, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(7, 2), (7, 3), (7, 4), (6, 4), (5, 4), (5, 3), (4, 3), (3, 3), (2, 3), (2, 4), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (7, 6), (7, 7), (6, 7), (6, 6), (5, 6), (4, 6), (4, 7), (4, 8), (5, 8), (5, 9), (5, 10)]}, 'others': [{'name': 'ich heisse marvin', 'health': 74, 'body': [(8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]}], 'food': [(9, 3), (0, 7), (3, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
 
 
     game_state = init_from_log(log)
