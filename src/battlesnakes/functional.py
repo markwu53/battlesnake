@@ -244,7 +244,7 @@ def special_experimenting_code(game_state):
     if not experiment_condition(): return False
 
     g.log["experiment"] = True
-    g.start_time = time.time()
+    start_time = time.time()
     #g.e.localtime = time.localtime()
 
     decision()
@@ -255,8 +255,8 @@ def special_experimenting_code(game_state):
     g.log["next_coord"] = g.next_coord
     g.log["next_move"] = g.state["next_move"]
 
-    g.end_time = time.time()
-    g.log["time"] = f"{g.end_time-g.start_time:.3f}s"
+    end_time = time.time()
+    g.log["time"] = f"{end_time-start_time:.3f}s"
 
     print(g.log)
     return True
