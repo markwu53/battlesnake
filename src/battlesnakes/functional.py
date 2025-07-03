@@ -720,10 +720,8 @@ def too_long(moves):
             no_room_danger,
             food1,
             #kill_opportunity,
-            cases([
-                chase_other_tail,
-                chase_my_tail,
-            ]),
+            chase_other_tail,
+            chase_my_tail,
             prefer_more_next_move,
             prefer_middle_by_3,
             prefer_straight,
