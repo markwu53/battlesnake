@@ -575,10 +575,8 @@ def cut_danger(moves):
 
 def split_move(moves):
     moves = sequential([
-        cases([
-            chase_my_tail,
-            chase_other_tail,
-        ]),
+        chase_my_tail,
+        chase_other_tail,
         #prefer_no(not_enough_space),
         enough_room,
         prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head)),
