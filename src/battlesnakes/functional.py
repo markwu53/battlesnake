@@ -460,8 +460,8 @@ def my_snake_is_shorter(moves):
             near_border_danger,
             no_room_danger,
             get_food,
-            #prefer_middle_by_3,
-            prefer_more_next_move,
+            prefer_middle_by_3,
+            #prefer_more_next_move,
             prefer_straight,
         ])(moves)
 
