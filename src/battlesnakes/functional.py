@@ -458,7 +458,7 @@ def my_snake_is_shorter(moves):
         return sequential([
             avoid_collision,
             near_border_danger,
-            no_room_danger,
+            split_check_room,
             get_food,
             prefer_middle_by_3,
             #prefer_more_next_move,
@@ -530,7 +530,7 @@ def snake_equal_length(moves):
         g.decision_path.append("equal_length")
         moves = sequential([
             equal_length_danger,
-            no_room_danger,
+            split_check_room,
             get_food,
             prefer_middle_by_3,
             prefer_straight,
@@ -584,12 +584,88 @@ def split_move(moves):
     ])(moves)
     return moves
 
+def static_room(a):
+    aset = path_connected_set(a)
+    if any([p in aset for p in adj_cells(g.s.other_head)]):
+        #the other snake can cut in - not static
+        return 999
+    
+    nset = len(aset)
+    if nset >= g.s.my_length:
+        #static, but room is big enough
+        return 999
+
+    #check if the space is big enough for my snake to wiggle 
+    # until tails appear, so we have a wayout
+
+    wayout_steps_required_me = g.s.my_length - 1 - max([
+        i for i,c in enumerate(g.me["body"])
+        if any([cx in aset for cx in adj_cells(c)])
+    ])
+    if nset >= wayout_steps_required_me:
+        return 999
+
+    connected_to_other_snake = [
+        i for i,c in enumerate(g.other["body"])
+        if any([cx in aset for cx in adj_cells(c)])
+    ]
+    if len(connected_to_other_snake) != 0:
+        wayout_steps_required_other = g.s.other_length - 1 - max(connected_to_other_snake)
+        if nset >= wayout_steps_required_other:
+            return 999
+
+    return nset
+
+def cut_room(a):
+    #assuming I'm longer than the enemy
+    if g.s.my_length <= g.s.other_length:
+        return 999
+
+    aset = path_connected_set(a)
+    if not any([p in aset for p in adj_cells(g.s.other_head)]):
+        #the other snake can cut in - not static
+        return 999
+
+    cut_set = [p for p in aset if p not in g.x.other_territory]
+    nset = len(cut_set)
+    if len(cut_set) >= g.s.my_length:
+        return 999
+
+    wayout_steps_required_me = g.s.my_length - 1 - max([
+        i for i,c in enumerate(g.me["body"])
+        if any([cx in cut_set for cx in adj_cells(c)])
+    ])
+    if nset >= wayout_steps_required_me:
+        return 999
+
+    #cut length
+    lost_set = [p for p in aset if p not in cut_set]
+    cut_path = [p for p in lost_set if any([q in cut_set for q in adj_cells(p)])]
+    if len(cut_path) == 0:
+        return 999
+    
+    wayout_steps_required_other = g.s.other_length - 1 - len(cut_path) - max([
+        i for i,c in enumerate(g.other["body"])
+        if any([cx in cut_set for cx in adj_cells(c)])
+    ])
+    if nset >= wayout_steps_required_other:
+        return 999
+
+    return nset
+
+def best_wiggle_room(moves):
+    moves = sequential([
+        prefer_by_score(static_room),
+        prefer_by_score(cut_room),
+    ])(moves)
+    return moves
+
 def split_2_2(moves):
     if len(moves) == 2:
         a,b = moves
         if path_distance_pq(a, b) >= 4:
             g.decision_path.append("2 split 2")
-            return split_move(moves)
+            return best_wiggle_room(moves)
 
 def split_3_2(moves):
     if len(moves) == 3:
@@ -597,18 +673,12 @@ def split_3_2(moves):
         others = [a for a in moves if a != straight]
         if any([path_distance_pq(a, straight) > 2 for a in others]):
             g.decision_path.append("3 split 2")
-            return split_move(moves)
+            return best_wiggle_room(moves)
 
-def split_branches(moves):
-    moves = cases([
+def split_check_room(moves):
+    return cases([
         split_2_2,
         split_3_2,
-    ])(moves)
-    return moves
-
-def no_room_danger(moves):
-    return cases([
-        split_branches,
     ])(moves)
 
 def equal_line():
@@ -703,7 +773,7 @@ def chase_my_tail(moves):
 def not_too_long(moves):
     if g.s.my_length < 20:
         moves = sequential([
-            no_room_danger,
+            split_check_room,
             get_food,
             prefer_straight,
         ])(moves)
@@ -717,7 +787,7 @@ def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
             #cut_danger,
-            no_room_danger,
+            split_check_room,
             food1,
             #kill_opportunity,
             chase_other_tail,
