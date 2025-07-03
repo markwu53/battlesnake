@@ -302,6 +302,8 @@ def init_game(game_state):
 
 def cases(fs):
     def fn(moves):
+        if len(moves) <= 1:
+            return moves
         for f in fs:
             result = f(moves)
             if result is not None:
@@ -312,10 +314,19 @@ def cases(fs):
 def sequential(fs):
     def fn(moves):
         for f in fs:
+            if len(moves) <= 1:
+                return moves
             result = f(moves)
             if result is not None:
                 moves = result
         return moves
+    return fn
+
+def direct_finish(f):
+    def fn(moves):
+        if len(moves) == 1:
+            return moves
+        return f(moves)
     return fn
 
 def take_first(moves):
@@ -399,16 +410,18 @@ def battle_1_vs_1(moves):
     if g.e.n_other == 1:
         g.decision_path.append("battle_1_vs_1")
         equal_line()
-        return cases([shorter, equal_length, longer])(moves)
+        return cases([
+            my_snake_is_shorter, 
+            snake_equal_length, 
+            my_snake_is_longer,
+        ])(moves)
 
-def avoid_danger(moves):
-    g.decision_path.append("avoid_danger")
-    return cases([
-        head_distance_2, 
-        head_distance_4, 
-        head_distance_6, 
-        head_distance_more,
+def avoid_collision(moves):
+    moves = cases([
+        single_collision_point,
+        two_collision_points,
     ])(moves)
+    return moves
 
 def prefer_straight(moves):
     return prefer_yes(is_straight)(moves)
@@ -434,55 +447,54 @@ def get_food(moves):
             food_target = food_targets[0]
             g.e.food_target = food_target
             fmoves = shortest_path_move(g.s.my_head, food_target)
-            fmoves = [a for a in fmoves if a in moves]
-            if len(fmoves) != 0:
+            moves = [a for a in moves if a in fmoves]
+            if len(moves) != 0:
                 g.decision_path.append("go to food")
-                return fmoves
+                return moves
 
-def shorter(moves):
+def my_snake_is_shorter(moves):
     if g.s.my_length < g.s.other_length:
         g.decision_path.append("shorter")
         return sequential([
-            avoid_danger,
+            avoid_collision,
+            near_border_danger,
             no_room_danger,
             get_food,
-            prefer_middle_by_3,
+            #prefer_middle_by_3,
+            prefer_more_next_move,
             prefer_straight,
         ])(moves)
 
-def head_distance_2(moves):
+def single_collision_point(moves):
     if g.e.head_distance == 2:
-        g.decision_path.append("head_distance_2")
-        g.x.possible_collision_points = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
-        return cases([ type_1_collision, type_2_collision ])(moves)
-
-def type_1_collision(moves):
-    if len(g.x.possible_collision_points) == 1:
-        g.decision_path.append("type_1_collision")
-        g.x.collision_point = g.x.possible_collision_points[0]
-        g.e.me_heading_collision_point = get_adjacent_dir(g.s.my_head, g.x.collision_point) == get_adjacent_dir(g.s.my_neck, g.s.my_head)
-        g.e.other_heading_collision_point = get_adjacent_dir(g.s.other_head, g.x.collision_point) == get_adjacent_dir(g.s.other_neck, g.s.other_head)
-        return cases([
-            type_1_blocked, 
-            head_to_head, 
-            other_to_me, 
-            me_to_other, 
-            parallel, 
-            parallel_opposite,
-        ])(moves)
-
-def off_border_danger(moves):
-    if path_distance_pq(g.s.other_head, g.s.my_head) >= 16:
-        return moves
-
-    if g.s.my_length+1 < g.s.other_length:
-        if off_border_1(g.s.my_head):
-            moves = prefer_no(on_border)(moves)
+        collision_points = [p for p in moves if p in adj_cells(g.s.other_head)]
+        if len(collision_points) == 1:
+            g.decision_path.append("avoid single collision point")
+            moves = prefer_no(lambda a: a not in collision_points)(moves)
             return moves
 
-def crawling(moves):
-    if on_border(g.s.my_neck):
-        return prefer_no(on_border)(moves)
+def two_collision_points(moves):
+    if g.e.head_distance == 2:
+        collision_points = [p for p in moves if p in adj_cells(g.s.other_head)]
+        if len(collision_points) == 2:
+            avoid_point = [p for p in moves if p not in collision_points]
+            if len(avoid_point) == 1:
+                avoid_point = take_first(avoid_point)
+                if not on_border(avoid_point):
+                    g.decision_path.append("avoid point is safe")
+                    return [avoid_point]
+                pos = max(distance_to_border(avoid_point))
+                if pos > 2:
+                    return [avoid_point]
+
+def off_border_danger(moves):
+    if off_border_1(g.s.my_head):
+        if path_distance_pq(g.s.other_head, g.s.my_head) < 16:
+            if any([a in g.food for a in moves]) and g.s.my_length+1 == g.s.other_length:
+                g.decision_path.append("get the food and equal")
+                return moves
+            moves = prefer_no(on_border)(moves)
+            return moves
 
 def danger_distance_average(a):
     d1 = distance_pq(a, g.s.other_head)
@@ -491,174 +503,29 @@ def danger_distance_average(a):
         d2 = min([(g.s.my_length+1)//2, (g.s.other_length+1)//2])
     return (d1+d2+1)//2
 
-def heading_border(moves):
-    if not on_border(g.s.my_neck):
-        moves = prefer_by_score(danger_distance_average)(moves)
-        return moves
-
 def on_border_danger(moves):
     if on_border(g.s.my_head):
-        return cases([
-            crawling,
-            heading_border,
-        ])(moves)
+        if path_distance_pq(g.s.other_head, g.s.my_head) < 16:
+            if on_border(g.s.my_neck):
+                return prefer_no(on_border)(moves)
+            moves = prefer_by_score(danger_distance_average)(moves)
+            return moves
 
-def killer_near(moves):
+def near_border_danger(moves):
+    if distance_pq(g.s.my_head, g.s.other_head) > 6:
+        return moves
+
     return cases([
         off_border_danger,
         on_border_danger,
     ])(moves)
-
-def type_1_blocked(moves):
-    if g.x.collision_point in g.occupied_cells[0]:
-        g.decision_path.append("type_1_blocked")
-        return sequential([
-            killer_near, 
-            other_considerations,
-        ])(moves)
-
-def avoid_collision_point_1(moves):
-    moves = [a for a in moves if a != g.x.collision_point]
-    return moves
-
-def head_to_head(moves):
-    if g.e.me_heading_collision_point and g.e.other_heading_collision_point:
-        g.decision_path.append("head_to_head")
-        return sequential([
-            avoid_collision_point_1, 
-            killer_near, 
-            other_considerations,
-        ])(moves)
-
-def other_to_me(moves):
-    if g.e.other_heading_collision_point:
-        g.decision_path.append("other_to_me")
-        return sequential([
-            avoid_collision_point_1, 
-            killer_near, 
-            other_considerations,
-        ])(moves)
-
-def me_to_other(moves):
-    if g.e.me_heading_collision_point:
-        g.decision_path.append("me_to_other")
-        return sequential([
-            avoid_collision_point_1, 
-            killer_near, 
-            other_considerations,
-        ])(moves)
-
-def parallel(moves):
-    if get_adjacent_dir(g.s.my_neck, g.s.my_head) == get_adjacent_dir(g.s.other_neck, g.s.other_head):
-        g.decision_path.append("parallel")
-        return sequential([
-            avoid_collision_point_1, 
-            killer_near, 
-            other_considerations,
-        ])(moves)
-
-def parallel_opposite(moves):
-    if get_adjacent_dir(g.s.my_head, g.s.my_neck) == get_adjacent_dir(g.s.other_neck, g.s.other_head):
-        g.decision_path.append("parallel_opposite")
-        return sequential([
-            avoid_collision_point_1, 
-            killer_near, 
-            other_considerations,
-        ])(moves)
-
-def type_2_with_no_avoid_points(moves):
-    if len(g.e.avoid_points) == 0:
-        moves = prefer_no(lambda a: a in g.food)(moves)
-        g.decision_path.append("take risk at no food")
-        return moves
-
-def type_2_with_1_avoid_point(moves):
-    if len(g.e.avoid_points) == 1:
-        avoid_point = g.e.avoid_points[0]
-        avoid_point_next = [p for p in adj_cells(avoid_point) if p not in g.occupied_cells[1]]
-        if len(avoid_point_next) > 1:
-            return prefer_yes(lambda a: a == avoid_point)(moves)
-
-        g.decision_path.append("take risk - take the opposite of avoid point")
-        return sequential([
-            prefer_no(lambda a: a == avoid_point),
-            prefer_no(lambda a: a in g.food),
-            prefer_no(is_straight),
-        ])(moves)
-
-def type_2_with_2_collision_points(moves):
-    if len(g.x.collision_points) == 2:
-        return cases([
-            type_2_with_no_avoid_points,
-            type_2_with_1_avoid_point,
-        ])(moves)
-
-def type_2_with_1_collision_points(moves):
-    if len(g.x.collision_points) == 1:
-        g.decision_path.append("avoid collision")
-        return sequential([
-            prefer_no(lambda a: a in g.x.collision_points),
-            cases([ shorter_by_1, near_border, ]),
-        ])(moves)
-
-def type_2_with_0_collision_points(moves):
-    if len(g.x.collision_points) == 0:
-        return moves
-
-def type_2_collision(moves):
-    if len(g.x.possible_collision_points) == 2:
-        g.decision_path.append("type_2_collision")
-        g.x.collision_points = [p for p in g.x.possible_collision_points if p not in g.occupied_cells[0]]
-        g.e.avoid_points = [p for p in g.e.allowed_moves if not p in g.x.collision_points]
-        return cases([
-            type_2_with_2_collision_points,
-            type_2_with_1_collision_points,
-            type_2_with_0_collision_points,
-        ])(g.e.allowed_moves)
-
-def shorter_by_1(moves):
-    if g.s.my_length+1 == g.s.other_length:
-        if off_border_1(g.s.my_head):
-            if any([a in g.food for a in moves]):
-                g.decision_path.append("get the food and length will be equal")
-                return moves
-
-def near_border(moves):
-    if off_border_1(g.s.my_head):
-        g.decision_path.append("avoid border")
-        return prefer_no(on_border)(moves)
-
-def head_distance_4(moves):
-    if g.e.head_distance == 4:
-        g.decision_path.append("head_distance_4")
-        moves = cases([
-            shorter_by_1,
-            killer_near,
-        ])(moves)
-        return moves
-
-def head_distance_6(moves):
-    if g.e.head_distance == 6:
-        g.decision_path.append("head_distance_6")
-        if g.e.head_path_distance == 6:
-            if distance_to_border(g.s.my_head) in [(1,1), (1,2), (2,1)]:
-                g.decision_path.append("near corner")
-                return killer_near(moves)
-            if on_border(g.s.my_head):
-                g.decision_path.append("on border")
-                return killer_near(moves)
-
-def head_distance_more(moves):
-    if g.e.head_distance > 6:
-        g.decision_path.append("head_distance_more")
-        return moves
 
 def equal_length_danger(moves):
     if g.e.head_distance == 2:
         collision_points = [a for a in adj_cells(g.s.my_head) if is_adjacent(a, g.s.other_head) and a not in g.occupied_cells[0]]
         return prefer_no(lambda a: a in collision_points)(moves)
 
-def equal_length(moves):
+def snake_equal_length(moves):
     if g.s.my_length == g.s.other_length:
         g.decision_path.append("equal_length")
         moves = sequential([
@@ -708,8 +575,10 @@ def cut_danger(moves):
 
 def split_move(moves):
     moves = sequential([
-        chase_my_tail,
-        chase_other_tail,
+        cases([
+            chase_my_tail,
+            chase_other_tail,
+        ]),
         #prefer_no(not_enough_space),
         enough_room,
         prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head)),
@@ -717,38 +586,32 @@ def split_move(moves):
     ])(moves)
     return moves
 
-def split_branches(moves):
+def split_2_2(moves):
     if len(moves) == 2:
         a,b = moves
-        if path_distance_pq(a, b) > 4:
-            g.decision_path.append("2 split branches")
+        if path_distance_pq(a, b) >= 4:
+            g.decision_path.append("2 split 2")
             return split_move(moves)
+
+def split_3_2(moves):
     if len(moves) == 3:
         straight = [a for a in moves if is_straight(a)][0]
         others = [a for a in moves if a != straight]
         if any([path_distance_pq(a, straight) > 2 for a in others]):
-            g.decision_path.append("3 allowed divide into 2 split branches")
+            g.decision_path.append("3 split 2")
             return split_move(moves)
+
+def split_branches(moves):
+    moves = cases([
+        split_2_2,
+        split_3_2,
+    ])(moves)
+    return moves
 
 def no_room_danger(moves):
     return cases([
         split_branches,
     ])(moves)
-
-def equal_line2():
-    distance_map = [(p, distance_pq(p, g.s.my_head), distance_pq(p, g.s.other_head))
-        for x in range(g.state["board"]["width"])
-        for y in range(g.state["board"]["height"])
-        for p in [(x,y)] ]
-    my_territory = [p for p,d1,d2 in distance_map if d1 < d2]
-    other_territory = [p for p,d1,d2 in distance_map if d1 > d2]
-    equal_territory = [p for p,d1,d2 in distance_map if d1 == d2]
-    equal_border = [p for p in equal_territory if any([q in other_territory for q in adj_cells(p)])]
-    g.x.distance_map = distance_map
-    g.x.my_territory = my_territory
-    g.x.other_territory = other_territory
-    g.x.equal_territory = equal_territory
-    g.x.equal_border = equal_border
 
 def equal_line():
     my_connected_set = path_connected_layers(g.s.my_head)
@@ -764,34 +627,18 @@ def equal_line():
     g.x.equal_territory = equal_territory
     g.x.equal_border = equal_border
 
-def kill_opportunity(moves):
-    if g.e.head_distance <= 4:
-        if g.e.head_distance == g.e.head_path_distance:
-            if g.s.my_length >= 20:
-                if int(g.s.my_length/1.5) >= g.s.other_length:
-                    g.decision_path.append("kill opportunity")
-                    occupied_cells = g.occupied_cells[0]+g.x.my_territory+g.x.equal_territory
-                    orig_room = {a: len(path_connected_set(a)) for a in g.x.other_allowed_moves}
-                    cut_room = {a: len(path_connected_set(a, occupied_cells)) for a in g.x.other_allowed_moves}
-                    target = [a for a in g.x.other_allowed_moves if orig_room[a] >= g.s.other_length and 1 < cut_room[a] <= 5]
-                    if len(target) != 0:
-                        g.decision_path.append("kill target")
-                        target = take_first(target)
-                        moves = shortest_path_move(g.s.my_head, target)
-                        if len(moves) != 0:
-                            return moves
+def chase_other_tail_has_distance(moves):
+    if distance_pq(g.s.my_head, g.s.other_tail) > 1:
+        tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
+        moves = prefer_yes(lambda a: a in tail_moves)(moves)
+        return moves
 
-def chase_other_tail(moves):
-    #chase enemy tail
-    if path_connected(g.s.my_head, g.s.other_tail):
-        if g.s.other_tail in g.x.my_territory or g.s.other_tail in g.x.equal_territory:
-            if distance_pq(g.s.my_head, g.s.other_tail) > 1:
-                tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
-                moves = prefer_yes(lambda a: a in tail_moves)(moves)
-                return moves
-            else:
-                g.decision_path.append("don't follow too close")
-                return prefer_no(lambda a: a != g.s.other_tail)(moves)
+def chase_other_tail_too_close(moves):
+    if distance_pq(g.s.my_head, g.s.other_tail) <= 1:
+        g.decision_path.append("don't follow too close")
+        return prefer_no(lambda a: a != g.s.other_tail)(moves)
+
+def wayout_from_other(moves):
     if g.s.my_length >= g.s.other_length:
         moves = [a for a in moves if len([p 
                     for p in g.x.my_territory+g.x.equal_territory
@@ -805,20 +652,34 @@ def chase_other_tail(moves):
         if len(moves) != 0:
             return moves
 
-
-def chase_my_tail(moves):
-    if path_connected(g.s.my_head, g.s.my_tail):
-        if g.s.my_length <= g.s.other_length:
-            if g.s.my_tail in g.x.my_territory:
-                moves = [a for a in moves if path_connected(a, g.s.my_tail)]
-                return moves
-        else:
-            if g.s.my_tail not in g.x.other_territory:
-                moves = [a for a in moves if path_connected(a, g.s.my_tail)]
-                return moves
-        if path_distance_pq(g.s.my_head, g.s.my_tail) <= path_distance_pq(g.s.my_head, g.s.other_head):
-            moves = [a for a in moves if path_connected(a, g.s.my_tail) and path_distance_pq(a, g.s.my_tail) <= path_distance_pq(a, g.s.other_head)]
+def chase_other_tail(moves):
+    #chase enemy tail
+    if path_connected(g.s.my_head, g.s.other_tail):
+        if g.s.other_tail in g.x.my_territory or g.s.other_tail in g.x.equal_territory:
+            moves = cases([
+                chase_other_tail_has_distance,
+                chase_other_tail_too_close,
+            ])(moves)
             return moves
+
+def chase_my_tail_my_snake_not_longer(moves):
+    if g.s.my_length <= g.s.other_length:
+        if g.s.my_tail in g.x.my_territory:
+            moves = [a for a in moves if path_connected(a, g.s.my_tail)]
+            return moves
+
+def chase_my_tail_my_snake_longer(moves):
+    if g.s.my_length > g.s.other_length:
+        if g.s.my_tail not in g.x.other_territory:
+            moves = [a for a in moves if path_connected(a, g.s.my_tail)]
+            return moves
+
+def chase_my_tail_other_not_in_the_way(moves):
+    if path_distance_pq(g.s.my_head, g.s.my_tail) <= path_distance_pq(g.s.my_head, g.s.other_head):
+        moves = [a for a in moves if path_connected(a, g.s.my_tail) and path_distance_pq(a, g.s.my_tail) <= path_distance_pq(a, g.s.other_head)]
+        return moves
+
+def wayout_from_myself(moves):
     if g.s.my_length >= g.s.other_length:
         moves = [a for a in moves if len([p 
                     for p in g.x.my_territory+g.x.equal_territory
@@ -832,11 +693,14 @@ def chase_my_tail(moves):
         if len(moves) != 0:
             return moves
 
-def chase_tail(moves):
-    return cases([
-        chase_other_tail,
-        chase_my_tail,
-    ])(moves)
+def chase_my_tail(moves):
+    if path_connected(g.s.my_head, g.s.my_tail):
+        moves = cases([
+            chase_my_tail_my_snake_not_longer,
+            chase_my_tail_my_snake_longer,
+            chase_my_tail_other_not_in_the_way,
+        ])(moves)
+        return moves
 
 def not_too_long(moves):
     if g.s.my_length < 20:
@@ -858,14 +722,17 @@ def too_long(moves):
             no_room_danger,
             food1,
             #kill_opportunity,
-            chase_tail,
+            cases([
+                chase_other_tail,
+                chase_my_tail,
+            ]),
             prefer_more_next_move,
             prefer_middle_by_3,
             prefer_straight,
         ])(moves)
         return moves
 
-def longer(moves):
+def my_snake_is_longer(moves):
     if g.s.my_length > g.s.other_length:
         return cases([
             not_too_long,
@@ -934,35 +801,12 @@ def init_from_log(log):
     return game_state
 
 def run():
-    log = {'id': '84cf23e1-dfe5-448e-a294-c70678353346', 'turn': 34, 'me': {'name': 'mark_snake', 'health': 77, 'body': [(10,0), (10,1), (10,2), (10,3)]}, 'others': [{'name': 'Snakeformatika', 'health': 92, 'body': [(9,1), (9,2), (9,3), (9,4), (9,5), (9,6)]}], 'food': [(10, 8), (5, 3), (0, 4)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 10), (9, 9)], 'other_allowed_moves': [(7, 9), (6, 10), (6, 8)], 'head_distance': 4, 'head_path_distance': 4, 'decision_path': ['battle_1_vs_1', 'shorter', 'head_distance_4'], 'possible_collision_points': [(2, 9)], 'collision_points': [(3, 9), (2, 8)], 'avoid_points': [(2, 10)], 'collision_point': (2, 9), 'me_heading_collision_point': False, 'other_heading_collision_point': False}, 'next_coord': (10, 10), 'next_move': 'right', 'time': '0.000s'}
-    log = {'id': '7c48225a-d788-4d12-8e67-4887d87c34b3', 'turn': 10, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(3, 9), (2, 9), (1, 9), (0, 9)]}, 'others': [{'name': 'Snakeformatika', 'health': 100, 'body': [(5, 5), (6, 5), (6, 6), (6, 7), (6, 7)]}], 'food': [(4, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(4, 9), (3, 10), (3, 8)], 'other_allowed_moves': [(4, 5), (5, 6), (5, 4)], 'head_distance': 6, 'head_path_distance': 6, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_6'], 'food_near': [], 'food_good': [((0, 8), 1)], 'situation': 'go to food', 'food_target': (0, 8)}, 'next_coord': (4, 9), 'next_move': 'right', 'time': '0.000s'}
-    log = {'id': '77c3316d-ce9b-4042-8fa3-ec82d4ed60d5', 'turn': 27, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(2, 7), (2, 6), (1, 6), (0, 6), (0, 5)]}, 'others': [{'name': 'Snakeformatika', 'health': 85, 'body': [(3, 6), (3, 5), (3, 4), (3, 3), (2, 3), (2, 4)]}], 'food': [(10, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 7), (1, 7), (2, 8)], 'other_allowed_moves': [(4, 6), (3, 7)], 'head_distance': 2, 'head_path_distance': 2, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_2', 'type_2_collision'], 'food_near': [], 'food_good': [((0, 4), 1)], 'food_target': (0, 4), 'possible_collision_points': [(3, 7), (2, 6)], 'collision_point': (1, 4), 'me_heading_collision_point': False, 'other_heading_collision_point': False, 'collision_points': [(3, 7)], 'avoid_points': [(1, 7), (2, 8)]}, 'next_coord': (3, 7), 'next_move': 'right', 'time': '0.000s'}
-    log = {'id': '7fff092c-92ae-4e1e-8169-e4500fef2ef3', 'turn': 0, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(1, 5), (1, 5), (1, 5)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 100, 'body': [(5, 9), (5, 9), (5, 9)]}], 'food': [(0, 4), (4, 10), (5, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(2, 5), (0, 5), (1, 6), (1, 4)], 'head_distance': 8, 'head_path_distance': 8, 'other_allowed_moves': [(6, 9), (4, 9), (5, 10), (5, 8)]}, 'decision_path': ['battle_1_vs_1', 'equal_length'], 'next_coord': (2, 5), 'next_move': 'right', 'time': '0.000s'}
-    log = {'id': '5f648fc4-9adf-455e-bb63-9abfa80687f1', 'turn': 53, 'me': {'name': 'mark_snake', 'health': 77, 'body': [(1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2)]}, 'others': [{'name': 'Snakeformatika', 'health': 90, 'body': [(5, 4), (5, 5), (6, 5), (7, 5), (8, 5), (8, 6), (9, 6), (9, 7)]}], 'food': [(10, 9), (9, 3), (4, 6)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(0, 2), (1, 3), (1, 1)], 'food_good': [], 'head_distance': 6, 'head_path_distance': 6, 'other_allowed_moves': [(6, 4), (4, 4), (5, 3)]}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_6'], 'next_coord': (0, 2), 'next_move': 'left', 'time': '0.000s'}
-    log = {'id': '172066ab-8202-4f36-a347-ddfc6ba27539', 'turn': 130, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 2), (9, 2), (8, 2), (7, 2), (6, 2), (6, 3), (5, 3), (5, 2), (5, 1), (4, 1), (3, 1), (2, 1), (2, 0), (2, 0)]}, 'others': [{'name': 'Snakeformatika', 'health': 95, 'body': [(7, 3), (7, 4), (6, 4), (5, 4), (4, 4), (4, 5), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (6, 7), (6, 6), (6, 5)]}], 'food': [(8, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 3), (10, 1)], 'food_good': [], 'head_distance': 4, 'head_path_distance': 4}, 'decision_path': ['battle_1_vs_1', 'equal_length'], 'next_coord': (10, 3), 'next_move': 'up', 'time': '0.001s'}
-    log = {'id': '172066ab-8202-4f36-a347-ddfc6ba27539', 'turn': 129, 'me': {'name': 'mark_snake', 'health': 93, 'body': [(9, 2), (8, 2), (7, 2), (6, 2), (6, 3), (5, 3), (5, 2), (5, 1), (4, 1), (3, 1), (2, 1), (2, 0), (3, 0)]}, 'others': [{'name': 'Snakeformatika', 'health': 96, 'body': [(7, 4), (6, 4), (5, 4), (4, 4), (4, 5), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (6, 7), (6, 6), (6, 5), (7, 5)]}], 'food': [(10, 2), (8, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 2), (9, 3), (9, 1)], 'food_good': [((10, 2), 1)], 'food_target': (10, 2), 'head_distance': 4, 'head_path_distance': 4}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_4', 'go to food'], 'next_coord': (10, 2), 'next_move': 'right', 'time': '0.001s'}
-    log = {'id': '3e709a1a-b948-412c-8b13-e07222388dd5', 'turn': 21, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(2, 1), (2, 2), (3, 2), (4, 2), (5, 2)]}, 'others': [{'name': 'Snakeformatika', 'health': 95, 'body': [(4, 3), (4, 4), (5, 4), (6, 4), (6, 5), (6, 6), (5, 6)]}], 'food': [(2, 0), (0, 9), (6, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 1), (1, 1), (2, 0)], 'food_good': [((2, 0), 1)], 'food_target': (2, 0), 'head_distance': 4, 'head_path_distance': 6}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_4', 'go to food'], 'next_coord': (2, 0), 'next_move': 'down', 'time': '0.001s'}
-    log = {'id': '5cccae4a-72ae-4d1f-a915-8584abd5d06e', 'turn': 172, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 6), (9, 6), (9, 5), (9, 4), (9, 3), (9, 2), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (4, 1), (4, 0), (5, 0), (6, 0), (7, 0), (7, 0)]}, 'others': [{'name': 'Snakeformatika', 'health': 93, 'body': [(4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (1, 7), (2, 7), (2, 8), (1, 8), (1, 9), (2, 9), (3, 9), (3, 8), (3, 7), (4, 7)]}], 'food': [(1, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 7), (10, 5)], 'head_distance': 10, 'head_path_distance': 10}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_more'], 'next_coord': (10, 7), 'next_move': 'up', 'time': '0.000s'}
-    log = {'id': '6bd08f62-8a6d-415c-9cf8-4b3cb89f88eb', 'turn': 152, 'me': {'name': 'mark_snake', 'health': 82, 'body': [(8, 6), (9, 6), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (1, 8), (1, 7), (2, 7)]}, 'others': [{'name': 'ich heisse marvin', 'health': 94, 'body': [(7, 7), (7, 6), (6, 6), (5, 6), (5, 5), (4, 5), (4, 4), (5, 4), (6, 4)]}], 'food': [(2, 1), (3, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(8, 7), (8, 5)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1', 'longer', '2 split branches', 'kill opportunity'], 'next_coord': (8, 7), 'next_move': 'up', 'time': '0.003s'}
-    log = {'id': '11267b85-972f-4d4f-99f2-4dbf108475f6', 'turn': 141, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(9, 4), (10, 4), (10, 5), (9, 5), (8, 5), (8, 6), (8, 7), (8, 8), (8, 9), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6)]}, 'others': [{'name': 'ich heisse marvin', 'health': 65, 'body': [(7, 4), (6, 4), (5, 4), (4, 4), (3, 4), (2, 4), (1, 4), (1, 3), (1, 2), (1, 1), (2, 1)]}], 'food': [(3, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(8, 4), (9, 3)], 'food_good': [], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1', 'longer', 'kill opportunity', 'kill target'], 'next_coord': (8, 4), 'next_move': 'left', 'time': '0.003s'}
-    log = {'id': '17322939-0b18-45ac-ba99-074992e1d611', 'turn': 240, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(10, 6), (9, 6), (9, 5), (9, 4), (9, 3), (9, 2), (8, 2), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8)]}, 'others': [{'name': 'ich heisse marvin', 'health': 80, 'body': [(8, 8), (8, 7), (8, 6), (8, 5), (7, 5), (7, 4), (8, 4), (8, 3), (7, 3), (6, 3), (6, 4), (6, 5), (5, 5)]}], 'food': [(10, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 7), (10, 5)], 'food_good': [((10, 1), 5)], 'food_target': (10, 1), 'head_distance': 4, 'head_path_distance': 4}, 'decision_path': ['battle_1_vs_1', 'longer', '2 split branches', 'kill opportunity', 'go to food'], 'next_coord': (10, 7), 'next_move': 'up', 'time': '0.005s'}
-    log = {'id': '17322939-0b18-45ac-ba99-074992e1d611', 'turn': 239, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(9, 6), (9, 5), (9, 4), (9, 3), (9, 2), (8, 2), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 8)]}, 'others': [{'name': 'ich heisse marvin', 'health': 81, 'body': [(8, 7), (8, 6), (8, 5), (7, 5), (7, 4), (8, 4), (8, 3), (7, 3), (6, 3), (6, 4), (6, 5), (5, 5), (5, 4)]}], 'food': [(10, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 6), (9, 7)], 'food_good': [((10, 1), 6)], 'food_target': (10, 1), 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1', 'longer', 'kill opportunity', 'go to food'], 'next_coord': (10, 6), 'next_move': 'right', 'time': '0.005s'}
-    log = {'id': '17322939-0b18-45ac-ba99-074992e1d611', 'turn': 227, 'me': {'name': 'mark_snake', 'health': 93, 'body': [(3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9), (10, 9), (10, 8)]}, 'others': [{'name': 'ich heisse marvin', 'health': 93, 'body': [(5, 4), (5, 3), (5, 2), (5, 1), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (3, 6), (2, 6), (1, 6)]}], 'food': [(9, 6)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(4, 0), (3, 1)], 'head_distance': 6, 'head_path_distance': 8}, 'decision_path': ['battle_1_vs_1', 'longer', '2 split branches'], 'next_coord': (4, 0), 'next_move': 'right', 'time': '0.001s'}
-    log = {'id': '6e27e442-d9d0-453b-851f-4f4206bb22d7', 'turn': 16, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 4)]}, 'others': [{'name': 'ich heisse marvin', 'health': 95, 'body': [(6, 8), (6, 7), (5, 7), (4, 7), (3, 7)]}], 'food': [(9, 9), (8, 5), (7, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(9, 4), (8, 5), (8, 3)], 'food_good': [((8, 5), 1), ((7, 1), 4)], 'food_target': (8, 5), 'head_distance': 6, 'head_path_distance': 6}, 'decision_path': ['battle_1_vs_1', 'food opportunity', 'go to food'], 'next_coord': (9, 4), 'next_move': 'right', 'time': '0.002s'}
-    log = {'id': '1901b242-962a-4f2e-8baf-d39056bc45e8', 'turn': 174, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (9, 2), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (0, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 90, 'body': [(5, 9), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (8, 5), (7, 5), (6, 5), (6, 6), (6, 7), (5, 7), (4, 7), (3, 7)]}], 'food': [(4, 5), (9, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(9, 8), (9, 6)], 'head_distance': 6, 'head_path_distance': 6}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (9, 8), 'next_move': 'up', 'time': '0.001s'}
-    log = {'id': '1fa01b8f-f774-4323-9bd6-42adc1d5a43f', 'turn': 199, 'me': {'name': 'mark_snake', 'health': 75, 'body': [(5, 4), (4, 4), (3, 4), (2, 4), (2, 3), (3, 3), (3, 2), (2, 2), (1, 2), (1, 1), (1, 0), (2, 0), (2, 1), (3, 1), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (7, 1), (7, 2)]}, 'others': [{'name': 'ich heisse marvin', 'health': 57, 'body': [(6, 3), (7, 3), (7, 4), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (5, 6), (5, 5)]}], 'food': [(1, 6), (2, 10), (0, 7), (1, 10), (0, 5), (10, 7), (10, 9), (5, 3), (9, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 4), (5, 5), (5, 3)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (5, 3), 'next_move': 'down', 'time': '0.001s'}
-    log = {'id': 'a35321ef-1b87-44ba-8593-20113f0c5cb5', 'turn': 136, 'me': {'name': 'mark_snake', 'health': 97, 'body': [(4, 0), (4, 1), (4, 2), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (1, 9), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0)]}, 'others': [{'name': 'ich heisse marvin', 'health': 62, 'body': [(7, 1), (7, 2), (7, 3), (6, 3), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8)]}], 'food': [(9, 7), (8, 1), (10, 6), (5, 0), (6, 0), (10, 7), (5, 9), (1, 4), (7, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 0), (3, 0)], 'head_distance': 4, 'head_path_distance': 4, 'cut': [(5, 0), (3, 0)]}, 'decision_path': ['battle_1_vs_1', 'has cut danger'], 'next_coord': (5, 0), 'next_move': 'right', 'time': '0.017s'}
-    log = {'id': '3e5faac2-5b9e-48aa-a6ba-ef8f6020548e', 'turn': 150, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 8), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (4, 9), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 69, 'body': [(6, 6), (6, 5), (6, 4), (5, 4), (5, 5), (4, 5), (3, 5), (2, 5), (2, 6), (2, 7)]}], 'food': [(9, 7), (3, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 9), (10, 7)], 'head_distance': 6, 'head_path_distance': 6, 'cut': [(10, 9), (10, 7)]}, 'decision_path': ['battle_1_vs_1', 'has cut danger'], 'next_coord': (10, 9), 'next_move': 'up', 'time': '0.023s'}
-    log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 193, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(7, 2), (7, 3), (7, 4), (6, 4), (5, 4), (5, 3), (4, 3), (3, 3), (2, 3), (2, 4), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (7, 6), (7, 7), (6, 7), (6, 6), (5, 6), (4, 6), (4, 7), (4, 8), (5, 8), (5, 9), (5, 10)]}, 'others': [{'name': 'ich heisse marvin', 'health': 74, 'body': [(8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]}], 'food': [(9, 3), (0, 7), (3, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
-    log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 297, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(7, 10), (8, 10), (8, 9), (8, 8), (9, 8), (9, 7), (10, 7), (10, 6), (10, 5), (9, 5), (8, 5), (8, 4), (8, 3), (8, 2), (9, 2), (9, 1), (9, 0), (8, 0), (8, 1), (7, 1), (7, 2), (6, 2), (6, 3), (6, 4), (5, 4), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6)]}, 'others': [{'name': 'ich heisse marvin', 'health': 87, 'body': [(0, 5), (1, 5), (2, 5), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (5, 8), (6, 8), (6, 9), (5, 9), (4, 9), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (1, 9), (1, 8)]}], 'food': [(1, 2), (0, 7), (3, 2), (6,0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
-    log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 133, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(7, 2), (8, 2), (9, 2), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (1, 2), (2, 2)]}, 'others': [{'name': 'ich heisse marvin', 'health': 49, 'body': [(6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (5, 7), (4, 7), (4, 6), (5, 6), (5, 5)]}], 'food': [(8, 4), (9, 4), (9, 8), (8,10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
-    log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 155, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(1, 8), (2, 8), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (1, 4), (2, 4), (3, 4), (4, 4)]}, 'others': [{'name': 'ich heisse marvin', 'health': 99, 'body': [(5, 6), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5), (10, 5), (10, 4), (9, 4), (9, 3), (8, 3)]}], 'food': [(4, 2), (4, 6), (8, 4), (10,2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
-    log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 76, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(7, 5), (8, 5), (9, 5), (10, 5), (10, 6), (10, 7), (9, 7), (8, 7), (7, 7), (7, 8), (7, 9)]}, 'others': [{'name': 'ich heisse marvin', 'health': 86, 'body': [(6, 4), (6, 5), (6, 6), (5, 6), (4, 6), (3, 6), (3, 5), (3, 4), (4, 4)]}], 'food': [(2,2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
     log = {'id': 'eba983d4-3a28-42fc-a4b0-47438378a268', 'turn': 236, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (1, 6), (2, 6), (2, 5), (2, 4), (2, 3), (2, 2), (2, 1), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (4, 7), (5, 7)]}, 'others': [{'name': 'ich heisse marvin', 'health': 81, 'body': [(4, 2), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (8, 4), (8, 5), (7, 5), (7, 6), (7, 7), (7, 8), (6, 8), (5, 8)]}], 'food': [(1,0),(8,0), (10,1), (10,7), (4,9)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 3), (1, 3), (2, 2)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.004s'}
     log = {'id': '4ac54524-622d-4a93-8a0e-f95d302e4043', 'turn': 239, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(2, 7), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (2, 4), (2, 3), (2, 2), (3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 0), (8, 0), (8, 1), (8, 2), (7, 2), (7, 3), (6, 3)]}, 'others': [{'name': 'ich heisse marvin', 'health': 54, 'body': [(8, 7), (7, 7), (6, 7), (6, 6), (6, 5), (5, 5), (4, 5), (3, 5), (3, 6), (4, 6), (4, 7), (4, 8), (4, 9), (5, 9)]}], 'food': [(0, 1), (3, 4), (6, 0), (8, 6), (2, 10), (0, 0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 7), (2, 8), (2, 6)], 'head_distance': 6, 'head_path_distance': 12}, 'decision_path': ['battle_1_vs_1', '3 allowed divide into 2 split branches'], 'next_coord': (2, 6), 'next_move': 'down', 'time': '0.033s'}
     log = {'id': '1afd4ff4-5628-410f-931f-2926b4946dd3', 'turn': 301, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(0, 9), (1, 9), (2, 9), (3, 9), (4, 9), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (10, 5), (9, 5), (9, 6), (9, 7), (9, 8), (8, 8), (8, 9), (7, 9), (6, 9), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (1, 8), (1, 7), (2, 7)]}, 'others': [{'name': 'ich heisse marvin', 'health': 77, 'body': [(2, 5), (2, 4), (1, 4), (1, 5), (1, 6), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1)]}], 'food': [(8, 0), (1, 0), (6, 0), (7, 6), (7, 4), (4, 7)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(0, 10), (0, 8)], 'head_distance': 6, 'head_path_distance': 999}, 'decision_path': ['battle_1_vs_1', '2 split branches'], 'next_coord': (0, 10), 'next_move': 'up', 'time': '0.001s'}
     log = {'id': 'dde50687-bf70-4b5a-a589-3409ba3b1fdb', 'turn': 23, 'me': {'name': 'mark_snake', 'health': 87, 'body': [(1, 4), (2, 4), (2, 5), (2, 6), (2, 7)]}, 'others': [{'name': 'ich heisse marvin', 'health': 95, 'body': [(3, 4), (3, 3), (3, 2), (3, 1), (3, 0), (2, 0)]}], 'food': [(7, 4), (10, 7), (4, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(0, 4), (1, 5), (1, 3)], 'food_good': [], 'head_distance': 2, 'head_path_distance': 8, 'me_heading_collision_point': False, 'other_heading_collision_point': False}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_2', 'type_1_collision', 'type_1_blocked'], 'next_coord': (0, 4), 'next_move': 'left', 'time': '0.003s'}
     log = {'id': 'dde50687-bf70-4b5a-a589-3409ba3b1fdb', 'turn': 24, 'me': {'name': 'mark_snake', 'health': 87, 'body': [(0,4), (1, 4), (2, 4), (2, 5), (2, 6)]}, 'others': [{'name': 'ich heisse marvin', 'health': 95, 'body': [(4,4), (3, 4), (3, 3), (3, 2), (3, 1), (3, 0)]}], 'food': [(7, 4), (10, 7), (4, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(0, 4), (1, 5), (1, 3)], 'food_good': [], 'head_distance': 2, 'head_path_distance': 8, 'me_heading_collision_point': False, 'other_heading_collision_point': False}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_2', 'type_1_collision', 'type_1_blocked'], 'next_coord': (0, 4), 'next_move': 'left', 'time': '0.003s'}
+    log = {'id': '330b335e-81ea-439b-9251-a9d94c9faf37', 'turn': 206, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(2, 6), (1, 6), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (2, 1), (1, 1), (1, 2)]}, 'others': [{'name': 'ich heisse marvin', 'health': 97, 'body': [(4, 6), (5, 6), (6, 6), (7, 6), (7, 5), (7, 4), (6, 4), (6, 3), (5, 3), (5, 2), (4, 2), (3, 2), (3, 3), (4, 3), (4, 4), (3, 4), (3, 5)]}], 'food': [(4, 10), (9, 10), (10, 7), (10, 4), (5, 10), (9, 8), (9, 9), (5, 9), (6, 7), (6, 8), (7, 1), (9, 7), (2, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 6), (2, 7), (2, 5)], 'food_good': [((2, 8), 2)], 'food_target': (2, 8), 'head_distance': 2, 'head_path_distance': 2, 'me_heading_collision_point': True, 'other_heading_collision_point': True}, 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid_danger', 'head_distance_2', 'type_1_collision', 'head_to_head', 'food opportunity', 'go to food'], 'next_coord': (2, 7), 'next_move': 'up', 'time': '0.006s'}
 
 
 
