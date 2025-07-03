@@ -644,6 +644,9 @@ def cut_room(a):
     if len(cut_path) == 0:
         return 999
     
+    #wayout from other when there is a cut is difficult to calculate
+    #skip for now
+
     def dummy():
         wayout_steps_required_other = g.s.other_length - 1 - len(cut_path) - max([
             i for i,c in enumerate(g.other["body"])
