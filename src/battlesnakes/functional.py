@@ -731,7 +731,9 @@ def chase_other_tail_has_distance(moves):
 def chase_other_tail_too_close(moves):
     if distance_pq(g.s.my_head, g.s.other_tail) <= 1:
         g.decision_path.append("don't follow too close")
-        return prefer_no(lambda a: a == g.s.other_tail)(moves)
+        #not tail not next to tail -1
+        moves = prefer_no(lambda a: a == g.s.other_tail or is_adjacent(a, g.other["body"][-2]))(moves)
+        return moves
 
 def wayout_from_other(moves):
     if g.s.my_length >= g.s.other_length:
