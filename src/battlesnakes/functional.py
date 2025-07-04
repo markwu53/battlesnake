@@ -716,21 +716,24 @@ def chase_other_tail_has_distance(moves):
     if distance_pq(g.s.my_head, g.s.other_tail) > 1:
         tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
         tail_moves = [a for a in tail_moves if a in moves]
+        print(tail_moves)
         if len(tail_moves) != 0:
             food1 = [a for a in moves if a in g.food]
             if len(food1) == 0:
                 return tail_moves
             food_and_tail = [a for a in tail_moves if a in food1]
+            print(food_and_tail)
             if len(food_and_tail) != 0:
                 return food_and_tail
             food_tail_connect = [a for a in food1 if any([path_connected(a, p) for p in tail_moves])]
+            print(food_tail_connect)
             if len(food_tail_connect) != 0:
                 return food_tail_connect
 
 def chase_other_tail_too_close(moves):
     if distance_pq(g.s.my_head, g.s.other_tail) <= 1:
         g.decision_path.append("don't follow too close")
-        return prefer_no(lambda a: a != g.s.other_tail)(moves)
+        return prefer_no(lambda a: a == g.s.other_tail)(moves)
 
 def wayout_from_other(moves):
     if g.s.my_length >= g.s.other_length:
@@ -909,6 +912,8 @@ def run():
     log = {'id': '80d32adf-2fec-488f-b214-2abb9e118ac7', 'turn': 120, 'me': {'name': 'mark_snake', 'health': 97, 'body': [(9, 9), (9, 8), (9, 7), (9, 6), (10, 6), (10, 5), (10, 4), (9, 4), (8, 4), (8, 5), (8, 6), (8, 7), (8, 8), (7, 8), (7, 7), (7, 6), (7, 5), (7, 4), (7, 3)]}, 'others': [{'name': 'ich heisse marvin', 'health': 97, 'body': [(2, 8), (2, 9), (2, 10), (3, 10), (4, 10), (5, 10), (5, 9), (6, 9), (6, 8), (5, 8), (4, 8)]}], 'food': [(8, 1), (7, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 9), (8, 9), (9, 10)], 'food_good': [((7, 10), 3)], 'food_target': (7, 10), 'head_distance': 8, 'head_path_distance': 999}, 'decision_path': ['battle_1_vs_1', 'food opportunity', 'go to food'], 'next_coord': (9, 10), 'next_move': 'up', 'time': '0.001s'}
     log = {'id': '7ded41a8-cdd6-4cc6-8f87-35a6ea848be9', 'turn': 151, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(1, 6), (1, 7), (1, 8), (2, 8), (3, 8), (4, 8), (4, 9), (5, 9), (6, 9), (6, 10), (7, 10), (8, 10), (8, 9), (8, 8), (7, 8), (7, 7), (6, 7), (5, 7), (5, 6), (6, 6), (7, 6), (8, 6)]}, 'others': [{'name': 'ich heisse marvin', 'health': 86, 'body': [(1, 4), (1, 5), (2, 5), (3, 5), (4, 5), (4, 4), (5, 4), (5, 3), (5, 2), (5, 1), (4, 1), (3, 1), (2, 1)]}], 'food': [(2, 4), (0, 3), (0, 2), (10, 2), (6, 2), (8, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(2, 6), (0, 6)], 'head_distance': 2, 'head_path_distance': 4}, 'decision_path': ['battle_1_vs_1', '2 split 2'], 'next_coord': (0, 6), 'next_move': 'left', 'time': '0.003s'}
     log = {'id': 'f00de2f6-44f8-49f4-9388-9f5a874cc13d', 'turn': 245, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(1, 10), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (2, 5), (2, 4), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (9, 3), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 72, 'body': [(3, 10), (3, 9), (3, 8), (3, 7), (3, 6), (4, 6), (4, 7), (4, 8), (5, 8), (6, 8), (6, 9)]}], 'food': [(9, 0), (2, 10), (8, 9), (1, 1), (5, 10), (0, 4), (6, 2), (5, 2), (0, 6), (7, 9)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(2, 10), (0, 10)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1', '2 split 2'], 'next_coord': (2, 10), 'next_move': 'right', 'time': '0.004s'}
+    log = {'id': 'cf839299-2f61-43dc-b1b3-9d03f54c935e', 'turn': 168, 'me': {'name': 'mark_snake', 'health': 90, 'body': [(6, 4), (7, 4), (7, 3), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0)]}, 'others': [{'name': 'ich heisse marvin', 'health': 95, 'body': [(7, 7), (7, 6), (6, 6), (5, 6), (4, 6), (3, 6), (3, 5), (3, 4), (4, 4), (4, 5)]}], 'food': [(1, 7), (10, 9), (0, 4)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 4), (6, 5), (6, 3)], 'head_distance': 4, 'head_path_distance': 6}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (5, 4), 'next_move': 'left', 'time': '0.009s'}
+    log = {'id': 'cf839299-2f61-43dc-b1b3-9d03f54c935e', 'turn': 169, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(5, 4), (6, 4), (7, 4), (7, 3), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0)]}, 'others': [{'name': 'ich heisse marvin', 'health': 94, 'body': [(6, 7), (7, 7), (7, 6), (6, 6), (5, 6), (4, 6), (3, 6), (3, 5), (3, 4), (4, 4)]}], 'food': [(1, 7), (10, 9), (0, 4)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(4, 4), (5, 5), (5, 3)], 'head_distance': 4, 'head_path_distance': 10}, 'decision_path': ['battle_1_vs_1', "don't follow too close"], 'next_coord': (4, 4), 'next_move': 'left', 'time': '0.003s'}
 
 
 
