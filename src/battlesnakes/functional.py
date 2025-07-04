@@ -702,8 +702,17 @@ def equal_line():
 def chase_other_tail_has_distance(moves):
     if distance_pq(g.s.my_head, g.s.other_tail) > 1:
         tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
-        moves = prefer_yes(lambda a: a in tail_moves)(moves)
-        return moves
+        tail_moves = [a for a in tail_moves if a in moves]
+        if len(tail_moves) != 0:
+            food1 = [a for a in moves if a in g.food]
+            if len(food1) == 0:
+                return tail_moves
+            food_and_tail = [a for a in tail_moves if a in food1]
+            if len(food_and_tail) != 0:
+                return food_and_tail
+            food_tail_connect = [a for a in food1 if any([path_connected(a, p) for p in tail_moves])]
+            if len(food_tail_connect) != 0:
+                return food_tail_connect
 
 def chase_other_tail_too_close(moves):
     if distance_pq(g.s.my_head, g.s.other_tail) <= 1:
@@ -792,7 +801,7 @@ def too_long(moves):
         moves = sequential([
             #cut_danger,
             split_check_room,
-            food1,
+            #food1,
             #kill_opportunity,
             chase_other_tail,
             chase_my_tail,
@@ -883,6 +892,7 @@ def run():
     log = {'id': '1433eb91-88aa-44e0-ae7c-31cff1789155', 'turn': 100, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(2,10), (2,9), (2, 8), (2, 7), (1, 7), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (1, 3), (2, 3), (3, 3)]}, 'others': [{'name': 'ich heisse marvin', 'health': 86, 'body': [(4,10), (4,9), (4, 8), (3, 8), (3, 7), (4, 7), (4, 6), (4, 5), (4, 4)]}], 'food': [(7, 7), (7, 8), (5, 5), (5, 9)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(1, 8), (2, 9)], 'food_good': [], 'head_distance': 2, 'head_path_distance': 4}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (2, 9), 'next_move': 'up', 'time': '0.002s'}
     log = {'id': '1433eb91-88aa-44e0-ae7c-31cff1789155', 'turn': 97, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(2, 7), (1, 7), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (1, 3), (2, 3), (3, 3), (3, 4), (3, 5), (3, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 87, 'body': [(3, 8), (3, 7), (4, 7), (4, 6), (4, 5), (4, 4), (5, 4), (6, 4), (7, 4)]}], 'food': [(7, 7), (7, 8), (5, 5), (5, 9)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(2, 8), (2, 6)], 'food_good': [], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1', '2 split 2'], 'next_coord': (2, 8), 'next_move': 'up', 'time': '0.006s'}
     log = {'id': 'c07fee73-b798-464f-8297-94d61a968701', 'turn': 150, 'me': {'name': 'mark_snake', 'health': 85, 'body': [(6,0), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (2, 2), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (6, 4), (7, 4), (8, 4), (9, 4), (10, 4), (10, 5), (10, 6), (10, 7)]}, 'others': [{'name': 'ich heisse marvin', 'health': 94, 'body': [(5,5), (4, 5), (3, 5), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5), (1, 5), (2, 5)]}], 'food': [(1, 7)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(1, 3), (2, 2)], 'head_distance': 4, 'head_path_distance': 4}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (2, 2), 'next_move': 'down', 'time': '0.002s'}
+    log = {'id': 'bd0c4974-194a-425d-b34c-f04b15844b61', 'turn': 239, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(1, 6), (1, 7), (1, 8), (1, 9), (2, 9), (2, 10), (3, 10), (3, 9), (4, 9), (5, 9), (6, 9), (6, 8), (7, 8), (8, 8), (9, 8), (10, 8), (10, 7), (9, 7), (9, 6), (9, 5), (8, 5), (8, 4), (8, 3), (8, 2), (7, 2), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (3, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 66, 'body': [(4, 3), (3, 3), (2, 3), (1, 3), (0, 3), (0, 4), (1, 4), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (6, 6), (5, 6)]}], 'food': [(0, 0), (2, 4), (0, 6), (4, 0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(2, 6), (0, 6)], 'head_distance': 6, 'head_path_distance': 14}, 'decision_path': ['battle_1_vs_1', '2 split 2'], 'next_coord': (0, 6), 'next_move': 'left', 'time': '0.003s'}
 
 
 
