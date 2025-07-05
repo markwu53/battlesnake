@@ -29,6 +29,7 @@ class DecisionAux:
         self.other_territory = None
         self.equal_territory = None
         self.equal_border = None
+        self.moves_info = None
 
 class SnakeInfo:
     def __init__(self):
@@ -593,12 +594,15 @@ def static_room(a):
     aset = path_connected_set(a)
     if any([p in aset for p in adj_cells(g.s.other_head)]):
         #the other snake can cut in - not static
-        return 999
+        return { "type": "cut", }
     
     nset = len(aset)
     if nset >= g.s.my_length:
         #static, but room is big enough
-        return 999
+        return {
+            "type": "static enough room",
+            "room": nset,
+        }
 
     #check if the space is big enough for my snake to wiggle 
     # until tails appear, so we have a wayout
@@ -608,7 +612,11 @@ def static_room(a):
         if any([cx in aset for cx in adj_cells(c)])
     ])
     if nset >= wayout_steps_required_me:
-        return 999
+        return {
+            "type": "static, wayout on me",
+            "room": nset,
+            "wayout_required_steps": wayout_steps_required_me,
+        }
 
     connected_to_other_snake = [
         i for i,c in enumerate(g.other["body"])
@@ -617,19 +625,30 @@ def static_room(a):
     if len(connected_to_other_snake) != 0:
         wayout_steps_required_other = g.s.other_length - 1 - max(connected_to_other_snake)
         if nset >= wayout_steps_required_other:
-            return 999
+            return {
+                "type": "static, wayout on other",
+                "room": nset,
+                "wayout_required_steps": wayout_steps_required_other,
+            }
 
-    return nset
+    return {
+        "type": "static, not enough room",
+        "room": nset,
+    }
 
 def cut_room(a):
     #assuming I'm longer than the enemy
     if g.s.my_length <= g.s.other_length:
-        return 999
+        return {
+            "type": "my snake shorter",
+        }
 
     aset = path_connected_set(a)
     if not any([p in aset for p in adj_cells(g.s.other_head)]):
         #return if static
-        return 999
+        return {
+            "type": "not a cut",
+        }
 
     #cut_set = [p for p in aset if p not in g.x.other_territory]
     cut_set = path_connected_set(a, g.occupied_cells[0]+g.x.other_territory)
@@ -657,14 +676,6 @@ def cut_room(a):
     #wayout from other when there is a cut is difficult to calculate
     #skip for now
 
-    def dummy():
-        wayout_steps_required_other = g.s.other_length - 1 - len(cut_path) - max([
-            i for i,c in enumerate(g.other["body"])
-            if any([cx in cut_set for cx in adj_cells(c)])
-        ])
-        if nset >= wayout_steps_required_other: 
-            return 999
-
     return nset
 
 def print_before(f):
@@ -681,13 +692,20 @@ def print_after(f):
         return moves
     return fn
 
-def best_wiggle_room(moves):
+def best_wiggle_room2(moves):
     moves = sequential([
         (prefer_by_score(static_room)),
         (prefer_by_score(cut_room)),
     ])(moves)
     return moves
 
+def best_wiggle_room(moves):
+    moves0 = {a:static_room(a) for a in moves}
+    moves1 = [a for a in moves0 if moves0[a]["type"] != "static, not enough room"]
+    if len(moves1) == 0:
+        moves = prefer_by_score(lambda a: moves0[a]["room"])(moves)
+        return moves
+    
 def split_2_2(moves):
     if len(moves) == 2:
         a,b = moves
@@ -708,6 +726,124 @@ def split_check_room(moves):
         split_2_2,
         split_3_2,
     ])(moves)
+
+def split_choice(moves):
+    return cases([
+        no_split2,
+        no_split3,
+        #there is a split
+        #favor easy choice
+        connected_set_info,
+        static_spacious,
+        cut_info,
+        cut_spacious,
+        static_wayout_info_me,
+        static_wayout_on_myself,
+        static_wayout_info_other,
+        static_wayout_on_other,
+        cut_wayout_info_me,
+        cut_wayout_on_me,
+        cut_but_can_see_other_tail,
+    ])(moves)
+
+def cut_but_can_see_other_tail(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+            if info["see_other_head"]
+            and any([p in info["cut_set"] for p in adj_cells(g.s.other_tail)])
+    ]
+    if len(moves) != 0:
+        return moves
+
+def cut_wayout_on_me(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+             if info["see_other_head"]
+             and len(info["cut_set"]) >= g.s.my_length - 1 - max(info["my_snake_adjacency"])
+    ]
+    if len(moves) != 0:
+        return moves
+
+def cut_wayout_info_me(moves):
+    for a in moves:
+        info = g.x.moves_info[a]
+        if info["see_other_head"]:
+            info["my_snake_adjacency"] = [
+                i for i,c in enumerate(g.me["body"])
+                if any([cx in info["cut_set"] for cx in adj_cells(c)])
+            ]
+
+def static_wayout_on_other(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+             if not info["see_other_head"]
+             and len(info["other_snake_adjacency"]) != 0
+             and len(info["aset"]) >= g.s.my_length - 1 - max(info["other_snake_adjacency"])
+             ]
+    if len(moves) != 0:
+        return moves
+
+def static_wayout_info_other(moves):
+    for a in moves:
+        info = g.x.moves_info[a]
+        if not info["see_other_head"]:
+            info["other_snake_adjacency"] = [
+                i for i,c in enumerate(g.other["body"])
+                if any([cx in info["aset"] for cx in adj_cells(c)])
+            ]
+
+def static_wayout_on_myself(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+             if not info["see_other_head"]
+             and len(info["aset"]) >= g.s.my_length - 1 - max(info["my_snake_adjacency"])
+             ]
+    if len(moves) != 0:
+        return moves
+
+def static_wayout_info_me(moves):
+    for a in moves:
+        info = g.x.moves_info[a]
+        if not info["see_other_head"]:
+            info["my_snake_adjacency"] = [
+                i for i,c in enumerate(g.me["body"])
+                if any([cx in info["aset"] for cx in adj_cells(c)])
+            ]
+
+def cut_spacious(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+        if info["see_other_head"] and len(info["cut_set"]) >= g.s.my_length ]
+    if len(moves) != 0:
+        return moves
+
+def cut_info(moves):
+    for a in moves:
+        info = g.x.moves_info[a]
+        if info["see_other_head"]:
+            info["cut_set"] = path_connected_set(a, g.occupied_cells[0]+g.x.other_territory)
+
+def static_spacious(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+        if not info["see_other_head"] and len(info["aset"]) >= g.s.my_length ]
+    if len(moves) != 0:
+        return moves
+
+def connected_set_info(moves):
+    g.x.moves_info = {
+        a: {
+            "aset": aset,
+            "see_other_head": any([p in aset for p in adj_cells(g.s.other_head)]),
+        } for a in moves for aset in [path_connected_set(a)]
+    }
+
+def no_split2(moves):
+    if len(moves) == 2:
+        a,b = moves
+        if path_distance_pq(a, b) < 4:
+            return moves
+
+def no_split3(moves):
+    if len(moves) == 3:
+        straight = [a for a in moves if is_straight(a)][0]
+        others = [a for a in moves if a != straight]
+        if not any([path_distance_pq(a, straight) > 2 for a in others]):
+            return moves
 
 def equal_line():
     my_connected_set = path_connected_layers(g.s.my_head)
@@ -831,7 +967,8 @@ def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
             #cut_danger,
-            (split_check_room),
+            #(split_check_room),
+            split_choice,
             #food1,
             #kill_opportunity,
             (chase_other_tail),
