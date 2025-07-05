@@ -464,7 +464,7 @@ def my_snake_is_shorter(moves):
         return sequential([
             avoid_collision,
             near_border_danger,
-            split_check_room,
+            split_choice,
             get_food,
             prefer_middle_by_3,
             #prefer_more_next_move,
@@ -536,7 +536,7 @@ def snake_equal_length(moves):
         g.decision_path.append("equal_length")
         moves = sequential([
             equal_length_danger,
-            split_check_room,
+            split_choice,
             get_food,
             prefer_middle_by_3,
             prefer_straight,
@@ -953,7 +953,7 @@ def chase_my_tail(moves):
 def not_too_long(moves):
     if g.s.my_length < 20:
         moves = sequential([
-            split_check_room,
+            split_choice,
             get_food,
             prefer_straight,
         ])(moves)
