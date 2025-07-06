@@ -543,10 +543,6 @@ def snake_equal_length(moves):
         ])(moves)
         return moves
 
-def not_enough_space(a):
-    room = len(path_connected_set(a))
-    return room <= g.s.my_length //2
-
 def enough_room(moves):
     #gradually more and more intensive calculation
     #1. room is enough in my territory
@@ -579,105 +575,6 @@ def cut_danger(moves):
         if len(good_moves) != 0:
             return good_moves
 
-def split_move(moves):
-    moves = sequential([
-        chase_my_tail,
-        chase_other_tail,
-        #prefer_no(not_enough_space),
-        enough_room,
-        prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head)),
-        #cut_danger,
-    ])(moves)
-    return moves
-
-def static_room(a):
-    aset = path_connected_set(a)
-    if any([p in aset for p in adj_cells(g.s.other_head)]):
-        #the other snake can cut in - not static
-        return { "type": "cut", }
-    
-    nset = len(aset)
-    if nset >= g.s.my_length:
-        #static, but room is big enough
-        return {
-            "type": "static enough room",
-            "room": nset,
-        }
-
-    #check if the space is big enough for my snake to wiggle 
-    # until tails appear, so we have a wayout
-
-    wayout_steps_required_me = g.s.my_length - 1 - max([
-        i for i,c in enumerate(g.me["body"])
-        if any([cx in aset for cx in adj_cells(c)])
-    ])
-    if nset >= wayout_steps_required_me:
-        return {
-            "type": "static, wayout on me",
-            "room": nset,
-            "wayout_required_steps": wayout_steps_required_me,
-        }
-
-    connected_to_other_snake = [
-        i for i,c in enumerate(g.other["body"])
-        if any([cx in aset for cx in adj_cells(c)])
-    ]
-    if len(connected_to_other_snake) != 0:
-        wayout_steps_required_other = g.s.other_length - 1 - max(connected_to_other_snake)
-        if nset >= wayout_steps_required_other:
-            return {
-                "type": "static, wayout on other",
-                "room": nset,
-                "wayout_required_steps": wayout_steps_required_other,
-            }
-
-    return {
-        "type": "static, not enough room",
-        "room": nset,
-    }
-
-def cut_room(a):
-    #assuming I'm longer than the enemy
-    if g.s.my_length <= g.s.other_length:
-        return {
-            "type": "my snake shorter",
-        }
-
-    aset = path_connected_set(a)
-    if not any([p in aset for p in adj_cells(g.s.other_head)]):
-        #return if static
-        return {
-            "type": "not a cut",
-        }
-
-    #cut_set = [p for p in aset if p not in g.x.other_territory]
-    cut_set = path_connected_set(a, g.occupied_cells[0]+g.x.other_territory)
-    nset = len(cut_set)
-    if len(cut_set) >= g.s.my_length:
-        return 999
-
-    wayout_steps_required_me = g.s.my_length - 1 - max([
-        i for i,c in enumerate(g.me["body"])
-        if any([cx in cut_set for cx in adj_cells(c)])
-    ])
-    if nset >= wayout_steps_required_me:
-        return 999
-
-    if any([p in cut_set for p in adj_cells(g.s.other_tail)]):
-    #if g.s.other_tail in cut_set:
-        g.decision_path.append("cut space can see other tail")
-        return 999
-
-    #cut length
-    # lost_set = [p for p in aset if p not in cut_set]
-    # cut_path = [p for p in lost_set if any([q in cut_set for q in adj_cells(p)])]
-    # if len(cut_path) == 0: return 999
-    
-    #wayout from other when there is a cut is difficult to calculate
-    #skip for now
-
-    return nset
-
 def print_before(f):
     def fn(moves):
         print(moves)
@@ -691,41 +588,6 @@ def print_after(f):
         print(moves)
         return moves
     return fn
-
-def best_wiggle_room2(moves):
-    moves = sequential([
-        (prefer_by_score(static_room)),
-        (prefer_by_score(cut_room)),
-    ])(moves)
-    return moves
-
-def best_wiggle_room(moves):
-    moves0 = {a:static_room(a) for a in moves}
-    moves1 = [a for a in moves0 if moves0[a]["type"] != "static, not enough room"]
-    if len(moves1) == 0:
-        moves = prefer_by_score(lambda a: moves0[a]["room"])(moves)
-        return moves
-    
-def split_2_2(moves):
-    if len(moves) == 2:
-        a,b = moves
-        if path_distance_pq(a, b) >= 4:
-            g.decision_path.append("2 split 2")
-            return best_wiggle_room(moves)
-
-def split_3_2(moves):
-    if len(moves) == 3:
-        straight = [a for a in moves if is_straight(a)][0]
-        others = [a for a in moves if a != straight]
-        if any([path_distance_pq(a, straight) > 2 for a in others]):
-            g.decision_path.append("3 split 2")
-            return best_wiggle_room(moves)
-
-def split_check_room(moves):
-    return cases([
-        split_2_2,
-        split_3_2,
-    ])(moves)
 
 def split_choice(moves):
     return cases([
@@ -1052,11 +914,7 @@ def food1(moves):
 def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
-            #cut_danger,
-            #(split_check_room),
             split_choice,
-            #food1,
-            #kill_opportunity,
             (chase_my_tail),
             (chase_other_tail),
             prefer_more_next_move,
