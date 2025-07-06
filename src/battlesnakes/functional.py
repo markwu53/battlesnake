@@ -985,12 +985,12 @@ def chase_tail(moves):
         return sequential([
             (chase_my_tail),
             (chase_other_tail),
-        ])
+        ])(moves)
     else:
         return sequential([
             (chase_other_tail),
             (chase_my_tail),
-        ])
+        ])(moves)
 
 def too_long(moves):
     if g.s.my_length >= 20:
