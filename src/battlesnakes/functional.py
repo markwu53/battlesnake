@@ -905,8 +905,14 @@ def food1(moves):
     return moves
 
 def is_confined(a):
+    if path_connected(g.s.my_head, g.s.my_tail):
+        return False
+    if path_connected(g.s.my_head, g.s.other_tail):
+        return False
     aset = path_connected_set(a)
-    return len(aset) <= g.s.my_length
+    if len(aset) <= g.s.my_length:
+        return True
+    return False
 
 def wayout_target_me():
     aset = path_connected_set(g.s.my_head)
@@ -1033,6 +1039,7 @@ def run():
     log = {'id': '286cdbbb-c134-4e56-a4a4-861e6e03fd2c', 'turn': 233, 'me': {'name': 'mark_snake', 'health': 87, 'body': [(5, 4), (4, 4), (3, 4), (2, 4), (2, 5), (3, 5), (4, 5), (4, 6), (4, 7), (3, 7), (3, 8), (2, 8), (1, 8), (0, 8), (0, 7), (0, 6), (1, 6), (1, 5), (1, 4), (0, 4), (0, 3), (1, 3), (1, 2), (2, 2), (2, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 91, 'body': [(6, 5), (6, 4), (6, 3), (6, 2), (6, 1), (7, 1), (8, 1), (8, 2), (8, 3), (8, 4), (7, 4), (7, 5), (7, 6), (6, 6)]}], 'food': [(10, 4), (9, 4), (10, 0), (1, 10), (9, 10), (8, 8), (5, 7)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 5), (5, 3)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1', 'cut can see my tail'], 'next_coord': (5, 5), 'next_move': 'up', 'time': '0.004s'}
     log = {'id': '361325aa-a3b6-4ee2-bb51-50610522b600', 'turn': 214, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(9, 5), (9, 4), (9, 3), (10, 3), (10, 2), (10, 1), (9, 1), (9, 0), (8, 0), (7, 0), (7, 1), (6, 1), (5, 1), (4, 1), (4, 2), (5, 2), (5, 3), (6, 3), (7, 3), (7, 4), (7, 5), (6, 5), (5, 5), (4, 5), (3, 5), (2, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 80, 'body': [(8, 6), (8, 7), (8, 8), (7, 8), (7, 9), (6, 9), (5, 9), (4, 9), (4, 8), (5, 8), (6, 8), (6, 7)]}], 'food': [(2, 0), (1, 2), (1, 1), (1, 4), (3, 4), (9, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 5), (8, 5), (9, 6)], 'head_distance': 2, 'head_path_distance': 2}, 'decision_path': ['battle_1_vs_1', 'cut way out on me'], 'next_coord': (8, 5), 'next_move': 'left', 'time': '0.003s'}
     log = {'id': '42fa5916-ba94-40c4-8508-07ef06eef749', 'turn': 254, 'me': {'name': 'mark_snake', 'health': 73, 'body': [(10, 0), (9, 0), (8, 0), (7, 0), (7, 1), (8, 1), (9, 1), (9, 2), (9, 3), (9, 4), (8, 4), (7, 4), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (4, 10), (4, 9), (4, 8), (4, 7)]}, 'others': [{'name': 'ich heisse marvin', 'health': 86, 'body': [(5, 5), (5, 4), (5, 3), (4, 3), (3, 3), (3, 2), (4, 2), (5, 2), (6, 2), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5)]}], 'food': [(2, 5), (0, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 1), (8, 1), (9, 0)], 'head_distance': 6, 'head_path_distance': 999, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (8, 1), 'next_move': 'left', 'time': '0.005s'}
+    log = {'id': 'b182f875-b737-4100-b8eb-0850a4ea756e', 'turn': 230, 'me': {'name': 'mark_snake', 'health': 24, 'body': [(6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (5, 8), (4, 8), (3, 8), (3, 7), (3, 6), (4, 6), (4, 5), (4, 4), (4, 3), (3, 3), (3, 2), (4, 2), (5, 2), (6, 2), (6, 3), (5, 3)]}, 'others': [{'name': 'ich heisse marvin', 'health': 93, 'body': [(7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (8, 0), (7, 0)]}], 'food': [(9, 2), (0, 3), (9, 9), (1, 10), (1, 2), (1, 8), (7, 8), (0, 7), (2, 3), (9, 1), (3, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 7), (6, 6)], 'head_distance': 2, 'head_path_distance': 2, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (6, 6), 'next_move': 'down', 'time': '0.003s'}
 
 
 
