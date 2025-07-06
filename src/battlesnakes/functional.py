@@ -336,7 +336,8 @@ def take_first(moves):
         assert(len(moves) != 0)
     except AssertionError:
         turn = g.state["turn"]
-        print(f"TURN: {turn}")
+        id = g.state["game"]["id"]
+        print(f"id: {id}, TURN: {turn}")
         raise AssertionError
     return moves[0]
 
