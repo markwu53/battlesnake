@@ -893,7 +893,7 @@ def chase_my_tail_my_snake_longer(moves):
                     if len(food4) == 0:
                         return tail_moves
                     min_sn = min([sn for f,sn,m in food4])
-                    f,sn,moves = take_first([f,sn,m for f,sn,m in food4 if sn == min_sn])
+                    f,sn,moves = take_first([(f,sn,m) for f,sn,m in food4 if sn == min_sn])
                     g.decision_path.append("add food waypoint {f}")
                     return moves
 
