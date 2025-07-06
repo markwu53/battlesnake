@@ -879,6 +879,7 @@ def chase_my_tail_my_snake_longer(moves):
                     if len(food_tail_connect) != 0:
                         g.decision_path.append("detour get food1")
                         return food_tail_connect
+                    return tail_moves
                     food4 = [f for f in g.food if distance_pq(f, g.s.my_head) <= 4]
                     if len(food4) == 0:
                         return tail_moves
