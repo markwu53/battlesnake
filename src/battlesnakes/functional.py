@@ -980,13 +980,24 @@ def wayout(moves):
             else:
                 g.decision_path.append("no calculated wayout")
 
+def chase_tail(moves):
+    if int(g.s.my_length / 1.5) >= g.s.other_length:
+        return sequential([
+            (chase_my_tail),
+            (chase_other_tail),
+        ])
+    else:
+        return sequential([
+            (chase_other_tail),
+            (chase_my_tail),
+        ])
+
 def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
             split_choice,
             wayout,
-            (chase_my_tail),
-            (chase_other_tail),
+            chase_tail,
             prefer_more_next_move,
             prefer_middle_by_3,
             prefer_straight,
