@@ -13,6 +13,7 @@ class DecisionSupport:
         self.collision_type = None
         self.avoid_points = None
         self.situation = None
+        self.move_connected_group = None
 
 class DecisionAux:
     def __init__(self):
@@ -591,8 +592,7 @@ def print_after(f):
 
 def split_choice(moves):
     return cases([
-        no_split2,
-        no_split3,
+        no_split_return,
         #there is a split
         #favor easy choice
         connected_set_info,
@@ -766,18 +766,11 @@ def connected_set_info(moves):
         } for a in moves for aset in [path_connected_set(a)]
     }
 
-def no_split2(moves):
-    if len(moves) == 2:
-        a,b = moves
-        if path_distance_pq(a, b) < 4:
-            return moves
-
-def no_split3(moves):
-    if len(moves) == 3:
-        straight = [a for a in moves if is_straight(a)][0]
-        others = [a for a in moves if a != straight]
-        if not any([path_distance_pq(a, straight) > 2 for a in others]):
-            return moves
+def no_split_return(moves):
+    ngroup = move_connected_group(moves)
+    g.e.move_connected_group = ngroup
+    if ngroup == 1:
+        return moves
 
 def equal_line():
     my_connected_set = path_connected_layers(g.s.my_head)
@@ -911,10 +904,45 @@ def food1(moves):
     moves = prefer_yes(lambda a: a in g.food)(moves)
     return moves
 
+def is_confined(a):
+    aset = path_connected_set(a)
+    return len(aset) <= g.s.my_length
+
+def wayout_target_me():
+    aset = path_connected_set(g.s.my_head)
+    adj_indexes = [i for i in range(g.s.my_length) if any([p in aset for p in adj_cells(g.me["body"][i])])]
+    max_index = max(adj_indexes)
+    required_steps = g.s.my_length - max_index - 1
+    wayout_point = g.me["body"][max_index]
+    layers = [[[g.s.my_head]]]
+    while True:
+        layer = layers[-1]
+        layer = [path+[p] for path in layer for end in [path[-1]] for p in adj_cells(end) if p not in path]
+        if len(layer) == 0: break
+        layers.append(layer)
+    paths = [path for i,layer in layers if i >= required_steps for path in layer]
+    paths = [path for path in paths if is_adjacent(path[-1], wayout_point)]
+    paths = [path for path in paths 
+             for food_in_path in [[p for p in path if p in g.food]] 
+             if len(path)-len(food_in_path)>=required_steps]
+    moves = list({path[1] for path in paths})
+    return moves
+
+def wayout(moves):
+    if g.e.move_connected_group == 1:
+        if is_confined(g.s.my_head):
+            moves = wayout_target_me()
+            if len(moves) != 0:
+                g.decision_path.append("calculated wayout")
+                return moves
+            else:
+                g.decision_path.append("no calculated wayout")
+
 def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
             split_choice,
+            wayout,
             (chase_my_tail),
             (chase_other_tail),
             prefer_more_next_move,
