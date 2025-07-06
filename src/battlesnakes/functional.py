@@ -734,6 +734,10 @@ def split_choice(moves):
         #there is a split
         #favor easy choice
         connected_set_info,
+        static_see_my_tail,
+        static_see_other_tail,
+        cut_see_my_tail,
+        cut_see_other_tail,
         static_spacious,
         cut_info,
         (cut_spacious),
@@ -743,10 +747,56 @@ def split_choice(moves):
         static_wayout_on_other,
         cut_wayout_info_me,
         cut_wayout_on_me,
-        cut_but_can_see_other_tail,
+        cut_just_see_other_tail,
     ])(moves)
 
-def cut_but_can_see_other_tail(moves):
+def cut_see_my_tail(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+            if 1==1
+            and info["see_other_head"]
+            and path_connected(a, g.s.my_tail)
+            and distance_pq(g.s.my_head, g.s.my_tail) <= distance_pq(g.s.other_head, g.s.my_tail)
+            and g.s.my_tail not in g.x.other_territory
+    ]
+    if len(moves) != 0:
+        g.decision_path.append("cut can see my tail")
+        return moves
+
+def cut_see_other_tail(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+            if 1==1
+            and info["see_other_head"]
+            and path_connected(a, g.s.other_tail)
+            and distance_pq(g.s.my_head, g.s.other_tail) <= distance_pq(g.s.other_head, g.s.other_tail)
+            and g.s.other_tail not in g.x.other_territory
+    ]
+    if len(moves) != 0:
+        g.decision_path.append("cut see other tail")
+        return moves
+
+def static_see_my_tail(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+            if 1==1
+            and not info["see_other_head"]
+            and path_connected(a, g.s.my_tail)
+            and distance_pq(g.s.my_head, g.s.my_tail) <= distance_pq(g.s.other_head, g.s.my_tail)
+    ]
+    if len(moves) != 0:
+        g.decision_path.append("static can see my tail")
+        return moves
+
+def static_see_other_tail(moves):
+    moves = [a for a in moves for info in [g.x.moves_info[a]]
+            if 1==1
+            and not info["see_other_head"]
+            and path_connected(a, g.s.other_tail)
+            and distance_pq(g.s.my_head, g.s.other_tail) <= distance_pq(g.s.other_head, g.s.other_tail)
+    ]
+    if len(moves) != 0:
+        g.decision_path.append("static can see other tail")
+        return moves
+
+def cut_just_see_other_tail(moves):
     moves = [a for a in moves for info in [g.x.moves_info[a]]
             if info["see_other_head"]
             and any([p in info["cut_set"] for p in adj_cells(g.s.other_tail)])
@@ -1062,6 +1112,7 @@ def run():
     log = {'id': '82ff1a74-f95d-460b-aa7b-982543cdd6bc', 'turn': 228, 'me': {'name': 'mark_snake', 'health': 65, 'body': [(0, 6), (1, 6), (2, 6), (2, 5), (2, 4), (2, 3), (2, 2), (3, 2), (4, 2), (5, 2), (5, 1), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (9, 2), (9, 1), (8, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 100, 'body': [(10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (9, 4), (9, 5), (8, 5), (7, 5), (6, 5), (5, 5), (5, 4), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (3, 8), (2, 8), (1, 8), (1, 7), (1, 7)]}], 'food': [(3, 7), (0, 2), (7, 10), (7, 6), (9, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(0, 7), (0, 5)], 'food_good': [((0, 2), 4)], 'food_target': (0, 2), 'head_distance': 12, 'head_path_distance': 14}, 'decision_path': ['battle_1_vs_1', 'equal_length', '2 split 2', 'food opportunity', 'go to food'], 'next_coord': (0, 5), 'next_move': 'down', 'time': '0.004s'}
     log = {'id': 'afb7cded-e823-45d6-9466-aa3f53cc21a3', 'turn': 172, 'me': {'name': 'mark_snake', 'health': 97, 'body': [(6, 0), (6, 1), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (1, 3), (0, 3), (0, 4), (1, 4), (2, 4), (3, 4), (4, 4), (4, 5), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (5, 8)]}, 'others': [{'name': 'ich heisse marvin', 'health': 100, 'body': [(5, 7), (6, 7), (6, 6), (7, 6), (8, 6), (8, 5), (7, 5), (7, 4), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1), (7, 1)]}], 'food': [(7, 10), (0, 10), (10, 10), (5, 4), (9, 7)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 0), (5, 0)], 'head_distance': 8, 'head_path_distance': 16}, 'decision_path': ['battle_1_vs_1', '2 split 2'], 'next_coord': (5, 0), 'next_move': 'left', 'time': '0.002s'}
     log = {'id': '21bc91c9-8db7-4372-9660-16ffd1320d55', 'turn': 221, 'me': {'name': 'mark_snake', 'health': 92, 'body': [(4, 9), (3, 9), (2, 9), (1, 9), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (1, 5), (1, 6), (1, 7), (2, 7), (3, 7), (3, 6), (3, 5), (4, 5), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (7, 8), (8, 8)]}, 'others': [{'name': 'ich heisse marvin', 'health': 33, 'body': [(8, 5), (7, 5), (7, 4), (7, 3), (7, 2), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (3, 2), (3, 3), (2, 3)]}], 'food': [(10, 1), (10, 4), (5, 3), (9, 4), (1, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 9), (4, 10), (4, 8)], 'head_distance': 8, 'head_path_distance': 8}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (4, 8), 'next_move': 'down', 'time': '0.008s'}
+    log = {'id': '4e8e9219-f906-42ff-a8ff-4c86a67ebb02', 'turn': 270, 'me': {'name': 'mark_snake', 'health': 86, 'body': [(6, 6), (7, 6), (7, 7), (7, 8), (7, 9), (8, 9), (9, 9), (10, 9), (10, 8), (9, 8), (8, 8), (8, 7), (8, 6), (8, 5), (9, 5), (9, 4), (9, 3), (8, 3), (7, 3), (7, 4), (6, 4), (5, 4), (4, 4), (4, 5), (5, 5), (5, 6), (5, 7)]}, 'others': [{'name': 'ich heisse marvin', 'health': 83, 'body': [(2, 4), (2, 5), (2, 6), (3, 6), (3, 5), (3, 4), (3, 3), (4, 3), (5, 3), (5, 2), (5, 1), (5, 0), (6, 0)]}], 'food': [(1, 0), (0, 3), (7, 10), (1, 2), (3, 8), (10, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 7), (6, 5)], 'head_distance': 6, 'head_path_distance': 10}, 'decision_path': ['battle_1_vs_1', 'static way out on myself'], 'next_coord': (6, 5), 'next_move': 'down', 'time': '0.001s'}
 
 
 
