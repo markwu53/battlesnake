@@ -236,7 +236,7 @@ def experiment_condition():
         #"Kakemonsteret-v2", #pettso
         #"Wim HU [dev]", #wim
         #"Frank The Tank", #djnuller
-        #"ich heisse marvin", #Wrenger
+        "ich heisse marvin", #Wrenger
     ): 
         return False
     return True
