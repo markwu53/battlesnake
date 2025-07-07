@@ -540,6 +540,7 @@ def snake_equal_length(moves):
             equal_length_danger,
             split_choice,
             get_food,
+            prefer_more_next_move,
             prefer_middle_by_3,
             prefer_straight,
         ])(moves)
