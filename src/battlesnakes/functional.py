@@ -996,7 +996,8 @@ def wayout(moves):
                 g.decision_path.append("no calculated wayout")
 
 def chase_tail(moves):
-    if int(g.s.my_length / 1.5) >= g.s.other_length:
+    #if int(g.s.my_length / 1.5) >= g.s.other_length:
+    if g.s.my_length >= 35:
         return sequential([
             (chase_my_tail),
             (chase_other_tail),
