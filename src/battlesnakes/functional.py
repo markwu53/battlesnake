@@ -945,6 +945,7 @@ def not_too_long(moves):
         moves = sequential([
             split_choice,
             get_food,
+            prefer_middle_by_3,
             prefer_straight,
         ])(moves)
         return moves
