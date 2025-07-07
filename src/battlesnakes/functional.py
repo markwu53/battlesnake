@@ -883,6 +883,7 @@ def chase_my_tail_my_snake_longer(moves):
                         food4 = [f for f in g.food if distance_pq(f, g.s.my_head) <= 4]
                         if len(food4) == 0:
                             return tail_moves
+                        """
                         food4 = [
                             [f, sn, list({path[1] for path in shortest_path})]
                             for f in food4 
@@ -892,6 +893,17 @@ def chase_my_tail_my_snake_longer(moves):
                             for shortest_path in [[path for path in good_paths if len(path) == sn]]
                             if len(good_paths) != 0 
                         ]
+                        """
+                        foods = []
+                        for f in food4:
+                            paths = add_waypoint(g.s.my_head, f, g.s.my_tail)
+                            good_paths = [path for path in paths if len(path) <= path_distance_pq(g.s.my_head, g.s.my_tail)+5]
+                            if len(good_paths) == 0:
+                                continue
+                            sn = min([len(path) for path in good_paths])
+                            shortest_path = [path for path in good_paths if len(path) == sn]
+                            foods.append([f, sn, list({path[1] for path in shortest_path})])
+                        food4 = foods
                         if len(food4) == 0:
                             return tail_moves
                         min_sn = min([sn for f,sn,m in food4])
