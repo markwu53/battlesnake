@@ -881,17 +881,19 @@ def chase_my_tail_my_snake_longer(moves):
                         return food_tail_connect
                     #return tail_moves
                     food4 = [f for f in g.food if distance_pq(f, g.s.my_head) <= 4]
+                    g.decision_path.append(f"food4 {food4}")
                     if len(food4) == 0:
                         return tail_moves
-                    g.decision_path.append(f"food4 {food4}")
-                    food4 = [[f, sn, list({path[1] for path in shortest_path})]
-                     for f in food4 
-                     for paths in [add_waypoint(g.s.my_head, f, g.s.my_tail)]
-                     for good_paths in [[path for path in paths if len(path) <= path_distance_pq(g.s.my_head, g.s.my_tail)+5]]
-                     for sn in [min([len(path) for path in good_paths])]
-                     for shortest_path in [[path for path in good_paths if len(path) == sn]]
-                     if len(good_paths) != 0
-                     ]
+                    food4 = [
+                        [f, sn, list({path[1] for path in shortest_path})]
+                        for f in food4 
+                        for paths in [add_waypoint(g.s.my_head, f, g.s.my_tail)]
+                        for good_paths in [[path for path in paths if len(path) <= path_distance_pq(g.s.my_head, g.s.my_tail)+5]]
+                        for sn in [min([len(path) for path in good_paths])]
+                        for shortest_path in [[path for path in good_paths if len(path) == sn]]
+                        if len(good_paths) != 0 
+                    ]
+                    g.decision_path.append(f"target food4 {food4}")
                     if len(food4) == 0:
                         g.decision_path.append("no food4")
                         return tail_moves
