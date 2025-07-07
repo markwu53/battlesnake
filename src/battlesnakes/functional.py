@@ -946,8 +946,8 @@ def not_too_long(moves):
         moves = sequential([
             split_choice,
             get_food,
-            prefer_more_next_move,
-            prefer_middle_by_3,
+            #prefer_more_next_move,
+            #prefer_middle_by_3,
             prefer_straight,
         ])(moves)
         return moves
@@ -1016,8 +1016,8 @@ def too_long(moves):
             (split_choice),
             #wayout,
             chase_tail,
-            prefer_more_next_move,
-            prefer_middle_by_3,
+            #prefer_more_next_move,
+            #prefer_middle_by_3,
             prefer_straight,
         ])(moves)
         return moves
