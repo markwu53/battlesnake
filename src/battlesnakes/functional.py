@@ -970,25 +970,32 @@ def food1(moves):
     moves = prefer_yes(lambda a: a in g.food)(moves)
     return moves
 
-def is_confined_12():
+def wayout(moves):
+    if g.e.move_connected_group != 1:
+        return
     if path_connected(g.s.my_head, g.s.my_tail):
-        return False
+        return
     if path_connected(g.s.my_head, g.s.other_tail):
-        return False
-    aset = path_connected_set(g.s.my_head)
-    if len(aset) <= 12:
-        return True
-    return False
-
-def wayout_target_me():
+        return
+    g.decision_path.append("confined")
     aset = path_connected_set(g.s.my_head)
     aset = [p for p in aset if p != g.s.my_head]
     adj_indexes = [i for i in range(g.s.my_length) if any([p in aset for p in adj_cells(g.me["body"][i])])]
     max_index = max(adj_indexes)
+    wayout_point = g.me["body"][max_index]
     required_steps = g.s.my_length - max_index - 1
     if len(aset) < required_steps:
-        return []
-    wayout_point = g.me["body"][max_index]
+        g.decision_path.append(f"no wayout: {len(aset)} < {required_steps}")
+        return
+
+    if len(aset) > 12:
+        def farther(a):
+            d = path_distance_pq(a, wayout_point)
+            if d == 999:
+                d = -1
+            return d
+        return prefer_by_score(farther)(moves)
+
     layers = [[[g.s.my_head]]]
     while True:
         layer = layers[-1]
@@ -1001,18 +1008,11 @@ def wayout_target_me():
              for food_in_path in [[p for p in path if p in g.food]] 
              if len(path)-len(food_in_path)>required_steps]
     moves = list({path[1] for path in paths})
+    if len(moves) == 0:
+        g.decision_path.append("no calculated wayout")
+        return
+    g.decision_path.append("calculated wayout")
     return moves
-
-def wayout(moves):
-    if g.e.move_connected_group == 1:
-        if is_confined_12():
-            g.decision_path.append("confined")
-            moves = wayout_target_me()
-            if len(moves) != 0:
-                g.decision_path.append("calculated wayout")
-                return moves
-            else:
-                g.decision_path.append("no calculated wayout")
 
 def chase_tail(moves):
     #if int(g.s.my_length / 1.5) >= g.s.other_length:
