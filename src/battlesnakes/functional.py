@@ -675,6 +675,7 @@ def static_see_my_tail(moves):
             and not info["see_other_head"]
             and path_connected(a, g.s.my_tail)
             and path_distance_pq(a, g.s.my_tail) <= path_distance_pq(g.s.other_head, g.s.my_tail)
+            and all([path_distance_pq(a, g.s.my_tail) <= path_distance_pq(g.s.other_head, p) for p in g.me["body"][-5:]])
     ]
     if len(moves) != 0:
         g.decision_path.append("static can see my tail")
@@ -1141,6 +1142,7 @@ def run():
     log = {'id': 'f21a4b57-e082-4812-8ff8-b12f065383a6', 'turn': 197, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9), (4, 8), (4, 7), (4, 6), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5), (0, 4), (1, 4), (2, 4), (2, 5), (3, 5), (4, 5), (4, 4)]}, 'others': [{'name': 'ich heisse marvin', 'health': 75, 'body': [(5, 6), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9), (5, 8), (5, 7)]}], 'food': [(2, 9), (7, 0), (9, 0), (4, 3), (8, 0), (10, 9)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(1, 9), (0, 8)], 'head_distance': 8, 'head_path_distance': 999, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (0, 8), 'next_move': 'down', 'time': '0.001s'}
 
     log = {'id': '55756e9b-762d-4fef-975d-00d2325f4c79', 'turn': 189, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(6, 3), (6, 4), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (6, 9), (7, 9), (8, 9), (8, 8), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (7, 2), (7, 1), (6, 1), (5, 1), (4, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 50, 'body': [(3, 2), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (1, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (3, 6)]}], 'food': [(0, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 3), (5, 3), (6, 2)], 'head_distance': 4, 'head_path_distance': 4, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'static way out on myself'], 'next_coord': (7, 3), 'next_move': 'right', 'time': '0.015s'}
+    log = {'id': 'ad8b22d1-02af-4445-a516-58a7c5d7a0bd', 'turn': 344, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (9, 8), (8, 8), (8, 9), (8, 10), (7, 10), (6, 10), (5, 10), (5, 9), (5, 8), (6, 8), (7, 8), (7, 7), (7, 6), (7, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 84, 'body': [(4, 6), (3, 6), (3, 5), (4, 5), (5, 5), (6, 5), (6, 4), (5, 4), (5, 3), (5, 2), (4, 2), (3, 2), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4), (1, 4), (1, 5), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0)]}], 'food': [(10, 10), (0, 7), (8, 5), (6, 9)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 0), (4, 1)], 'head_distance': 6, 'head_path_distance': 999, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'static can see my tail'], 'next_coord': (4, 1), 'next_move': 'up', 'time': '0.001s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
