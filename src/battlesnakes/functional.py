@@ -956,13 +956,13 @@ def food1(moves):
     moves = prefer_yes(lambda a: a in g.food)(moves)
     return moves
 
-def is_confined(a):
+def is_confined_10():
     if path_connected(g.s.my_head, g.s.my_tail):
         return False
     if path_connected(g.s.my_head, g.s.other_tail):
         return False
-    aset = path_connected_set(a)
-    if len(aset) <= g.s.my_length:
+    aset = path_connected_set(g.s.my_head)
+    if len(aset) <= 10:
         return True
     return False
 
@@ -988,7 +988,7 @@ def wayout_target_me():
 
 def wayout(moves):
     if g.e.move_connected_group == 1:
-        if is_confined(g.s.my_head):
+        if is_confined_10():
             g.decision_path.append("confined")
             moves = wayout_target_me()
             if len(moves) != 0:
@@ -1014,7 +1014,7 @@ def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
             (split_choice),
-            #wayout,
+            wayout,
             chase_tail,
             #prefer_more_next_move,
             #prefer_middle_by_3,
