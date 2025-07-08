@@ -971,6 +971,8 @@ def wayout_target_me():
     adj_indexes = [i for i in range(g.s.my_length) if any([p in aset for p in adj_cells(g.me["body"][i])])]
     max_index = max(adj_indexes)
     required_steps = g.s.my_length - max_index - 1
+    if len(aset) <= required_steps:
+        return []
     wayout_point = g.me["body"][max_index]
     layers = [[[g.s.my_head]]]
     while True:
