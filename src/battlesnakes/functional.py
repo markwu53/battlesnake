@@ -636,7 +636,7 @@ def cut_can_reach_my_tail(moves):
         if not info["see_other_head"]: return False
         aset = path_connected_set(a, occupied)
         adj_indexes = [i for i,c in enumerate(g.me["body"]) if any([p in aset for p in adj_cells(c)])]
-        good_indexes = [i for i in adj_indexes if len(g.s.my_length)-i-1<=path_distance_pq(a, g.me["body"][i])]
+        good_indexes = [i for i in adj_indexes if g.s.my_length-i-1<=path_distance_pq(a, g.me["body"][i])]
         return len(good_indexes) != 0
     moves = [a for a in moves if good(a)]
     if len(moves) != 0:
