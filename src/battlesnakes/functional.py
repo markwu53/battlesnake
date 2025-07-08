@@ -606,6 +606,8 @@ def static_too_small(moves):
         if path_connected(a, g.s.other_tail):
             return False
         aset = path_connected_set(a)
+        if any([p in aset for c in g.other["body"] for p in adj_cells(c)]):
+            return False
         adj_indexes = [i for i,c in enumerate(g.me["body"]) if any([p in aset for p in adj_cells(c) if p != a])]
         max_index = max(adj_indexes)
         required_steps = g.s.my_length - max_index - 1
@@ -613,7 +615,11 @@ def static_too_small(moves):
             return True
         return False
 
-    return prefer_no(bad)(moves)
+    removed = [a for a in moves if bad(a)]
+    if len(removed) != 0:
+        g.decision_path.append("removed static too small")
+        moves = [a for a in moves if a not in removed]
+    return moves
 
 def fallout(moves):
     g.decision_path.append("fall out")
@@ -937,17 +943,6 @@ def chase_my_tail_my_snake_longer(moves):
                         food4 = [f for f in g.food if distance_pq(f, g.s.my_head) <= 4]
                         if len(food4) == 0:
                             return tail_moves
-                        """
-                        food4 = [
-                            [f, sn, list({path[1] for path in shortest_path})]
-                            for f in food4 
-                            for paths in [add_waypoint(g.s.my_head, f, g.s.my_tail)]
-                            for good_paths in [[path for path in paths if len(path) <= path_distance_pq(g.s.my_head, g.s.my_tail)+5]]
-                            for sn in [min([len(path) for path in good_paths])]
-                            for shortest_path in [[path for path in good_paths if len(path) == sn]]
-                            if len(good_paths) != 0 
-                        ]
-                        """
                         foods = []
                         for f in food4:
                             paths = add_waypoint(g.s.my_head, f, g.s.my_tail)
@@ -1168,6 +1163,9 @@ def run():
 
     #fall out - should be able to chase other tail
     log = {'id': '1c745175-013a-45bf-a94b-9300754f351c', 'turn': 285, 'me': {'name': 'mark_snake', 'health': 92, 'body': [(5, 4), (5, 5), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (9, 5), (8, 5), (8, 4), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (3, 3), (3, 2), (3, 1), (4, 1), (4, 2), (5, 2), (6, 2), (7, 2), (8, 2), (9, 2), (9, 3)]}, 'others': [{'name': 'ich heisse marvin', 'health': 90, 'body': [(2, 3), (1, 3), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (2, 9), (2, 8), (3, 8), (4, 8), (4, 7), (3, 7), (2, 7), (2, 6), (1, 6), (1, 5), (1, 4)]}], 'food': [(9, 10), (10, 10), (3, 9), (9, 9), (3, 0)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 4), (4, 4)], 'head_distance': 4, 'head_path_distance': 4, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'fall out'], 'next_coord': (6, 4), 'next_move': 'right', 'time': '0.004s'}
+
+    log = {'id': '92080ebd-45ec-4778-a29e-0597e0953889', 'turn': 251, 'me': {'name': 'mark_snake', 'health': 79, 'body': [(5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (9, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1), (6, 1), (6, 2), (6, 3), (6, 4), (5,4), (4,4), (4,5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 37, 'body': [(2, 3), (2, 4), (2, 5), (2, 6), (1, 6), (0, 6), (0, 7), (0, 8), (1, 8), (2, 8), (3,8), (4,8)]}], 'food': [(1, 0), (3, 1), (0, 10), (2, 0), (0, 5), (5, 2), (2, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(8, 0), (9, 1)], 'head_distance': 14, 'head_path_distance': 14, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'cut can reach my tail'], 'next_coord': (8, 0), 'next_move': 'left', 'time': '0.004s'}
+    log = {'id': '92080ebd-45ec-4778-a29e-0597e0953889', 'turn': 254, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(3, 1), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (9, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1), (6, 1), (6, 2), (6, 3), (6, 4)]}, 'others': [{'name': 'ich heisse marvin', 'health': 37, 'body': [(4, 2), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (1, 6), (0, 6), (0, 7), (0, 8), (1, 8), (2, 8)]}], 'food': [(1, 0), (3, 1), (0, 10), (2, 0), (0, 5), (5, 2), (2, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(8, 0), (9, 1)], 'head_distance': 14, 'head_path_distance': 14, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'cut can reach my tail'], 'next_coord': (8, 0), 'next_move': 'left', 'time': '0.004s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
