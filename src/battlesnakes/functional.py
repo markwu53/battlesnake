@@ -658,7 +658,7 @@ def cut_can_reach_my_tail(moves):
         info = g.x.moves_info[a]
         if not info["see_other_head"]: return False
         aset = path_connected_set(a, occupied)
-        adj_indexes = [i for i,c in enumerate(g.me["body"]) if any([p in aset for p in adj_cells(c)])]
+        adj_indexes = [i for i,c in enumerate(g.me["body"]) if c != g.s.my_tail and any([p in aset for p in adj_cells(c)])]
         good_indexes = [i for i in adj_indexes if g.s.my_length-i-1<=path_distance_pq(a, g.me["body"][i])]
         return len(good_indexes) != 0
     moves = [a for a in moves if good(a)]
@@ -1166,6 +1166,8 @@ def run():
 
     log = {'id': '92080ebd-45ec-4778-a29e-0597e0953889', 'turn': 251, 'me': {'name': 'mark_snake', 'health': 79, 'body': [(5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (9, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1), (6, 1), (6, 2), (6, 3), (6, 4), (5,4), (4,4), (4,5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 37, 'body': [(2, 3), (2, 4), (2, 5), (2, 6), (1, 6), (0, 6), (0, 7), (0, 8), (1, 8), (2, 8), (3,8), (4,8)]}], 'food': [(1, 0), (3, 1), (0, 10), (2, 0), (0, 5), (5, 2), (2, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(8, 0), (9, 1)], 'head_distance': 14, 'head_path_distance': 14, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'cut can reach my tail'], 'next_coord': (8, 0), 'next_move': 'left', 'time': '0.004s'}
     log = {'id': '92080ebd-45ec-4778-a29e-0597e0953889', 'turn': 254, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(3, 1), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (9, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1), (6, 1), (6, 2), (6, 3), (6, 4)]}, 'others': [{'name': 'ich heisse marvin', 'health': 37, 'body': [(4, 2), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (1, 6), (0, 6), (0, 7), (0, 8), (1, 8), (2, 8)]}], 'food': [(1, 0), (3, 1), (0, 10), (2, 0), (0, 5), (5, 2), (2, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(8, 0), (9, 1)], 'head_distance': 14, 'head_path_distance': 14, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'cut can reach my tail'], 'next_coord': (8, 0), 'next_move': 'left', 'time': '0.004s'}
+
+    log = {'id': '3ce4cdcf-8c41-4bf7-8e05-639a3057cd4c', 'turn': 232, 'me': {'name': 'mark_snake', 'health': 92, 'body': [(7,7), (7,8), (6, 8), (5, 8), (4, 8), (4, 9), (3, 9), (2, 9), (1, 9), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (5, 9), (6, 9), (7, 9), (7, 10), (8, 10), (8, 9), (8, 8), (9, 8), (9, 9), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7)]}, 'others': [{'name': 'ich heisse marvin', 'health': 70, 'body': [(10,6), (9,6), (8, 6), (7, 6), (6, 6), (6, 5), (6, 4), (6, 3), (5, 3), (4, 3), (4, 4), (3, 4), (3, 5), (3, 6)]}], 'food': [(4, 0), (3, 0), (7, 1), (6, 10), (7, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 8), (6, 7)], 'head_distance': 4, 'head_path_distance': 4, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (7, 8), 'next_move': 'right', 'time': '0.003s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
