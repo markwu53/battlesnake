@@ -859,6 +859,11 @@ def chase_other_tail_too_close(moves):
         moves = prefer_yes(lambda a: path_distance_pq(a, g.s.other_tail) <= 4)(moves)
         moves = prefer_no(lambda a: a == g.s.other_tail or is_adjacent(a, g.other["body"][-2]))(moves)
         return moves
+    if (distance_pq(g.s.my_head, g.s.other_tail) == 2 and g.other["health"] == 100):
+        g.decision_path.append("don't follow too close")
+        moves = prefer_yes(lambda a: path_distance_pq(a, g.s.other_tail) <= 4)(moves)
+        moves = prefer_no(lambda a: a == g.s.other_tail or is_adjacent(a, g.other["body"][-2]))(moves)
+        return moves
 
 def wayout_from_other(moves):
     if g.s.my_length >= g.s.other_length:
