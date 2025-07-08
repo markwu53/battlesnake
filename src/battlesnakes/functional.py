@@ -614,6 +614,7 @@ def split_choice(moves):
         static_see_my_tail,
         static_see_other_tail,
         cut_see_my_tail,
+        cut_can_reach_my_tail,
         cut_see_other_tail,
         static_spacious,
         cut_info,
@@ -627,6 +628,21 @@ def split_choice(moves):
         cut_just_see_other_tail,
         fallout,
     ])(moves)
+
+def cut_can_reach_my_tail(moves):
+    occupied = g.occupied_cells[0]+g.x.other_territory
+    def good(a):
+        info = g.x.moves_info[a]
+        if not info["see_other_head"]: return False
+        aset = path_connected_set(a, occupied)
+        adj_indexes = [i for i,c in enumerate(g.me["body"]) if any([p in aset for p in adj_cells(c)])]
+        good_indexes = [i for i in adj_indexes if len(g.s.my_length)-i-1<=path_distance_pq(a, g.me["body"][i])]
+        return len(good_indexes) != 0
+    moves = [a for a in moves if good(a)]
+    if len(moves) != 0:
+        if move_connected_group(moves) == 1:
+            g.decision_path.append("cut can reach my tail")
+            return moves
 
 def cut_see_my_tail(moves):
     moves = [a for a in moves for info in [g.x.moves_info[a]]
@@ -1123,6 +1139,8 @@ def run():
     log = {'id': 'f21a4b57-e082-4812-8ff8-b12f065383a6', 'turn': 200, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(1, 7), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9), (4, 8), (4, 7), (4, 6), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5), (0, 4), (1, 4), (2, 4), (2, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 72, 'body': [(3, 5), (4, 5), (5, 5), (5, 6), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10)]}], 'food': [(2, 9), (7, 0), (9, 0), (4, 3), (8, 0), (10, 9), (6, 5)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(2, 7), (1, 8)], 'head_distance': 4, 'head_path_distance': 999, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1', 'confined', 'calculated wayout'], 'next_coord': (1, 8), 'next_move': 'up', 'time': '0.001s'}
     log = {'id': 'f21a4b57-e082-4812-8ff8-b12f065383a6', 'turn': 198, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9), (4, 8), (4, 7), (4, 6), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5), (0, 4), (1, 4), (2, 4), (2, 5), (3, 5), (4, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 74, 'body': [(5, 5), (5, 6), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9), (5, 8)]}], 'food': [(2, 9), (7, 0), (9, 0), (4, 3), (8, 0), (10, 9)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(1, 8), (0, 7)], 'head_distance': 8, 'head_path_distance': 999, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (0, 7), 'next_move': 'down', 'time': '0.001s'}
     log = {'id': 'f21a4b57-e082-4812-8ff8-b12f065383a6', 'turn': 197, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9), (4, 8), (4, 7), (4, 6), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5), (0, 4), (1, 4), (2, 4), (2, 5), (3, 5), (4, 5), (4, 4)]}, 'others': [{'name': 'ich heisse marvin', 'health': 75, 'body': [(5, 6), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9), (5, 8), (5, 7)]}], 'food': [(2, 9), (7, 0), (9, 0), (4, 3), (8, 0), (10, 9)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(1, 9), (0, 8)], 'head_distance': 8, 'head_path_distance': 999, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (0, 8), 'next_move': 'down', 'time': '0.001s'}
+
+    log = {'id': '55756e9b-762d-4fef-975d-00d2325f4c79', 'turn': 189, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(6, 3), (6, 4), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (6, 9), (7, 9), (8, 9), (8, 8), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (7, 2), (7, 1), (6, 1), (5, 1), (4, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 50, 'body': [(3, 2), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (1, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (3, 6)]}], 'food': [(0, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 3), (5, 3), (6, 2)], 'head_distance': 4, 'head_path_distance': 4, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'static way out on myself'], 'next_coord': (7, 3), 'next_move': 'right', 'time': '0.015s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
