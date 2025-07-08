@@ -989,6 +989,7 @@ def wayout(moves):
         return
 
     if len(aset) > 12:
+        g.decision_path.append("confine too big, meander")
         def farther(a):
             d = path_distance_pq(a, wayout_point)
             if d == 999:
