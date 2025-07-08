@@ -592,6 +592,19 @@ def print_after(f):
         return moves
     return fn
 
+def cut_too_small(moves):
+    occupied = g.occupied_cells[0]+g.x.other_territory
+    def space(a):
+        return len(path_connected_set(a, occupied))
+    moves = prefer_by_score(space)(moves)
+    return moves
+
+def fallout(moves):
+    g.decision_path.append("fall out")
+    return sequential([
+        cut_too_small,
+    ])(moves)
+
 def split_choice(moves):
     return cases([
         no_split_return,
@@ -612,6 +625,7 @@ def split_choice(moves):
         cut_wayout_info_me,
         cut_wayout_on_me,
         cut_just_see_other_tail,
+        fallout,
     ])(moves)
 
 def cut_see_my_tail(moves):
@@ -1098,6 +1112,11 @@ def run():
     log = {'id': '5bd90b92-9e8a-4063-92d8-8c6880138ce8', 'turn': 335, 'me': {'name': 'mark_snake', 'health': 72, 'body': [(5, 6), (4, 6), (3, 6), (3, 5), (3, 4), (3, 3), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2), (7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (4, 5), (5, 5), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4), (10, 4), (10, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 92, 'body': [(4, 1), (3, 1), (2, 1), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (1, 6)]}], 'food': [(10, 0), (2, 0), (9, 1), (5, 0), (7, 0), (6, 0), (7, 5), (1, 8), (7, 7)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 6), (5, 7)], 'head_distance': 6, 'head_path_distance': 999, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (6, 6), 'next_move': 'right', 'time': '0.004s'}
     log = {'id': '41a7cbf3-285b-474f-b3df-469db577410c', 'turn': 223, 'me': {'name': 'mark_snake', 'health': 87, 'body': [(6,1), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (6, 7), (6, 6), (6, 5), (6, 4), (7, 4), (8, 4), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0)]}, 'others': [{'name': 'ich heisse marvin', 'health': 92, 'body': [(2,1), (3, 1), (3, 2), (3, 3), (3, 4), (2, 4), (1, 4), (0, 4), (0, 5), (1, 5), (2, 5), (3, 5), (4, 5)]}], 'food': [(10, 8), (1, 8), (5, 9), (0,2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 1), (4, 1)], 'head_distance': 2, 'head_path_distance': 2, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'static way out on myself'], 'next_coord': (6, 1), 'next_move': 'right', 'time': '0.001s'}
 
+    #cut, but I have more space than calculated
+    log = {'id': 'f79b9708-5776-48bc-8c7e-599d8c7b340a', 'turn': 253, 'me': {'name': 'mark_snake', 'health': 91, 'body': [(10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (3, 8), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (8, 5), (8, 4), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1), (7, 1), (7, 2), (6, 2), (5, 2), (4, 2)]}, 'others': [{'name': 'ich heisse marvin', 'health': 99, 'body': [(5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (2, 7)]}], 'food': [(2, 6), (1, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(9, 5), (10, 4)], 'head_distance': 10, 'head_path_distance': 10, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'static way out on myself'], 'next_coord': (9, 5), 'next_move': 'left', 'time': '0.004s'}
+
+    #cut, shoudn't take that move
+    log = {'id': 'd9ab5d3a-5a26-4cf5-984b-4eb39c91de15', 'turn': 258, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(1, 5), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (5, 1), (5, 2), (5, 3), (6, 3), (7, 3), (7, 4), (7, 5), (7, 6), (6, 6), (5, 6), (5, 5), (4, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 88, 'body': [(2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (3, 9), (3, 10), (4, 10), (5, 10), (6, 10), (6, 9), (7, 9), (8, 9), (9, 9), (10, 9)]}], 'food': [(10, 2), (9, 0), (9, 7), (10, 0), (4, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(1, 6), (1, 4)], 'head_distance': 2, 'head_path_distance': 2, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (1, 4), 'next_move': 'down', 'time': '0.004s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
