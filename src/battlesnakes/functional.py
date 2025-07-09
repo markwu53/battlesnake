@@ -1024,50 +1024,63 @@ def food1(moves):
     moves = prefer_yes(lambda a: a in g.food)(moves)
     return moves
 
-def wayout(moves):
-    if g.e.move_connected_group != 1:
-        return
-    if path_connected(g.s.my_head, g.s.my_tail):
-        return
-    if path_connected(g.s.my_head, g.s.other_tail):
-        return
+def wayout2(moves):
+    if g.e.move_connected_group != 1: return moves
+    if path_connected(g.s.my_head, g.s.my_tail): return moves
+    if path_connected(g.s.my_head, g.s.other_tail): return moves
+    if path_connected(g.s.my_head, g.s.other_head): return moves
     g.decision_path.append("confined")
-    aset = path_connected_set(g.s.my_head)
-    aset = [p for p in aset if p != g.s.my_head]
-    adj_indexes = [i for i in range(g.s.my_length) if any([p in aset for p in adj_cells(g.me["body"][i])])]
-    max_index = max(adj_indexes)
-    wayout_point = g.me["body"][max_index]
-    required_steps = g.s.my_length - max_index - 1
-    if len(aset) < required_steps:
-        g.decision_path.append(f"no wayout: {len(aset)} < {required_steps}")
-        return
+    return cases([
+        wayout("me"),
+        wayout("other"),
+    ])(moves)
 
-    if len(aset) > 12:
-        g.decision_path.append("confine too big, meander")
-        def farther(a):
-            d = path_distance_pq(a, wayout_point)
-            if d == 999:
-                d = -1
-            return d
-        return prefer_by_score(farther)(moves)
+def wayout(who):
+    def fn(moves):
+        aset = path_connected_set(g.s.my_head)
+        aset = [p for p in aset if p != g.s.my_head]
+        adj_indexes = [i for i in range(g.s.my_length) if any([p in aset for p in adj_cells(g.me["body"][i])])]
+        max_index = max(adj_indexes)
+        wayout_point = g.me["body"][max_index]
+        required_steps = g.s.my_length - max_index - 1
+        if who == "other":
+            adj_indexes = [i for i in range(g.s.other_length) if any([p in aset for p in adj_cells(g.other["body"][i])])]
+            if len(adj_indexes) == 0: return
+            max_index = max(adj_indexes)
+            wayout_point = g.other["body"][max_index]
+            required_steps = g.s.other_length - max_index - 1
 
-    layers = [[[g.s.my_head]]]
-    while True:
-        layer = layers[-1]
-        layer = [path+[p] for path in layer for end in [path[-1]] for p in adj_cells(end) if p not in g.occupied_cells[0] and p not in path]
-        if len(layer) == 0: break
-        layers.append(layer)
-    paths = [path for i,layer in enumerate(layers) if i >= required_steps for path in layer]
-    paths = [path for path in paths if is_adjacent(path[-1], wayout_point)]
-    paths = [path for path in paths 
-             for food_in_path in [[p for p in path if p in g.food]] 
-             if len(path)-len(food_in_path)>required_steps]
-    moves = list({path[1] for path in paths})
-    if len(moves) == 0:
-        g.decision_path.append("no calculated wayout")
-        return
-    g.decision_path.append("calculated wayout")
-    return moves
+        if len(aset) < required_steps:
+            g.decision_path.append(f"no wayout on {who}: {len(aset)} < {required_steps}")
+            return
+
+        if len(aset) > 12:
+            g.decision_path.append("confine too big, meander")
+            def farther(a):
+                d = path_distance_pq(a, wayout_point)
+                if d == 999:
+                    d = -1
+                return d
+            return prefer_by_score(farther)(moves)
+
+        layers = [[[g.s.my_head]]]
+        while True:
+            layer = layers[-1]
+            layer = [path+[p] for path in layer for end in [path[-1]] for p in adj_cells(end) if p not in g.occupied_cells[0] and p not in path]
+            if len(layer) == 0: break
+            layers.append(layer)
+        paths = [path for i,layer in enumerate(layers) if i >= required_steps for path in layer]
+        paths = [path for path in paths if is_adjacent(path[-1], wayout_point)]
+        paths = [path for path in paths 
+                for food_in_path in [[p for p in path if p in g.food]] 
+                if len(path)-len(food_in_path)>required_steps]
+        moves = list({path[1] for path in paths})
+        if len(moves) == 0:
+            g.decision_path.append("no calculated wayout on {who}")
+            return
+        g.decision_path.append("calculated wayout on {who}")
+        return moves
+    return fn
 
 def chase_tail(moves):
     #if int(g.s.my_length / 1.5) >= g.s.other_length:
@@ -1086,7 +1099,7 @@ def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
             (split_choice),
-            wayout,
+            wayout2,
             chase_tail,
             #prefer_more_next_move,
             #prefer_middle_by_3,
@@ -1191,6 +1204,7 @@ def run():
 
     log = {'id': 'd83c8858-574d-4a0f-a99a-b7696bb42b5f', 'turn': 211, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (8, 6), (7, 6), (7, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 81, 'body': [(6, 5), (6, 6), (6, 7), (5, 7), (5, 6), (4, 6), (4, 7), (4, 8), (4, 9), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7)]}], 'food': [(8, 1), (2, 0), (2, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(4, 10), (5, 9)], 'head_distance': 6, 'head_path_distance': 16, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'static way out on myself'], 'next_coord': (5, 9), 'next_move': 'down', 'time': '0.003s'}
     log = {'id': 'b9cfd4e8-a33b-4014-92ca-9922e0f432c8', 'turn': 241, 'me': {'name': 'mark_snake', 'health': 80, 'body': [(9, 2), (8, 2), (8, 3), (7, 3), (7, 2), (6, 2), (6, 3), (5, 3), (5, 2), (5, 1), (5, 0), (4, 0), (3, 0), (3, 1), (4, 1), (4, 2), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (3, 7)]}, 'others': [{'name': 'ich heisse marvin', 'health': 100, 'body': [(7, 8), (8, 8), (9, 8), (9, 7), (8, 7), (7, 7), (6, 7), (6, 6), (6, 5), (7, 5), (7, 4), (8, 4), (9, 4), (9, 3), (10, 3), (10, 3)]}], 'food': [(0, 0), (0, 4), (0, 6), (8, 10), (9, 5), (6, 8), (1, 10), (2, 10)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 2), (9, 1)], 'head_distance': 8, 'head_path_distance': 999, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (10, 2), 'next_move': 'right', 'time': '0.003s'}
+    log = {'id': '9ed13cce-47c5-4a6c-a83a-c3dc9a030126', 'turn': 192, 'me': {'name': 'mark_snake', 'health': 97, 'body': [(4, 8), (3, 8), (2, 8), (1, 8), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (5, 3), (5, 2), (4, 2), (3, 2), (2, 2), (2, 1), (3, 1), (3, 0), (4, 0), (5, 0), (6, 0), (6, 1), (6, 2)]}, 'others': [{'name': 'ich heisse marvin', 'health': 78, 'body': [(6, 8), (6, 7), (6, 6), (6, 5), (6, 4), (7, 4), (8, 4), (9, 4), (9, 5), (9, 6), (9, 7)]}], 'food': [(1, 0), (1, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(5, 8), (4, 9), (4, 7)], 'head_distance': 2, 'head_path_distance': 2, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (5, 8), 'next_move': 'right', 'time': '0.004s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
