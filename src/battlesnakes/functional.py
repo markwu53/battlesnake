@@ -942,8 +942,7 @@ def add_waypoint(a, b, c):
 
 def chase_my_tail_my_snake_longer(moves):
     if g.s.my_length > g.s.other_length:
-        if path_distance_pq(g.s.other_head, g.s.my_tail) < path_distance_pq(g.s.my_head, g.s.my_tail):
-            print(g.x.other_territory)
+        if path_distance_pq(g.s.other_head, g.s.my_tail) > path_distance_pq(g.s.my_head, g.s.my_tail):
             # moves = [a for a in moves if path_connected(a, g.s.my_tail)]
             # if len(moves) != 0:
             #     return moves
