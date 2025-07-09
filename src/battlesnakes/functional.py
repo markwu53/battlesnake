@@ -875,7 +875,11 @@ def chase_other_tail_has_distance(moves):
             return tail_moves
 
 def chase_other_tail_too_close(moves):
-    if distance_pq(g.s.my_head, g.s.other_tail) <= 1:
+    if is_adjacent(g.s.my_head, g.s.other_tail) == 1:
+        if any([p for p in adj_cells(g.other["body"][-2]) if is_adjacent(p, g.s.other_head) and p not in g.occupied_cells[0]]):
+            if g.s.other_tail in moves:
+                return [g.s.other_tail]
+
         g.decision_path.append("don't follow too close")
         #not tail, not next to tail -1
         moves = prefer_yes(lambda a: path_distance_pq(a, g.s.other_tail) <= 4)(moves)
