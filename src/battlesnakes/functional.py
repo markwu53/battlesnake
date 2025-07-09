@@ -410,11 +410,19 @@ def battle_1_vs_1(moves):
     if g.e.n_other == 1:
         g.decision_path.append("battle_1_vs_1")
         equal_line()
-        return cases([
-            my_snake_is_shorter, 
-            snake_equal_length, 
-            my_snake_is_longer,
-        ])(moves)
+        try:
+            moves = cases([
+                my_snake_is_shorter, 
+                snake_equal_length, 
+                my_snake_is_longer,
+            ])(moves)
+        except Exception as e:
+            turn = g.state["turn"]
+            id = g.state["game"]["id"]
+            print(f"id: {id}, MARK_EXCEPTION, TURN: {turn}")
+            raise
+
+        return moves
 
 def avoid_collision(moves):
     moves = cases([
