@@ -966,7 +966,7 @@ def chase_my_tail_my_snake_longer(moves):
         detour = 2-min_tail
         paths = [[g.s.my_head]]
         for i in range(detour):
-            paths = [path+[p] for path in paths for end in [path[-1]] for p in adj_cells[end]
+            paths = [path+[p] for path in paths for end in [path[-1]] for p in adj_cells(end)
                      if p not in path and p not in g.occupied_cells[0] ]
         paths = [path for path in paths for end in [path[-1]] if distance_pq(end, target) <= 2]
         paths = prefer_by_score(lambda path: len([p for p in path if p in g.food]))(paths)
