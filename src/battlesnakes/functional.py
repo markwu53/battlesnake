@@ -868,7 +868,7 @@ def equal_line():
     g.x.equal_territory = equal_territory
     g.x.equal_border = equal_border
 
-def chase_other_tail_has_distance(moves):
+def chase_other_tail_has_distance2(moves):
     if distance_pq(g.s.my_head, g.s.other_tail) > 1:
         tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
         tail_moves = [a for a in tail_moves if a in moves]
@@ -883,6 +883,31 @@ def chase_other_tail_has_distance(moves):
             if len(food_tail_connect) != 0:
                 return food_tail_connect
             return tail_moves
+
+def chase_other_tail_has_distance(moves):
+    if g.s.my_length <= g.s.other_length: return
+    tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.other["body"][-5:])) for d in [path_distance_pq(g.s.my_head, c)]]
+    min_tail = min([d for i,c,d in tail_info])
+    if min_tail >= 10: return
+    if not any([d < path_distance_pq(g.s.other_head, g.s.other_tail) for i,c,d in tail_info]): return
+    min_tail_target = [(i,c) for i,c,d in tail_info if d == min_tail]
+    i,target = take_first(min_tail_target)
+    if min_tail >= 2:
+        tail_move = shortest_path_move(g.s.my_head, target)
+        tail_move = [a for a in moves if a in tail_move]
+        if len(tail_move) != 0:
+            return tail_move
+    else:
+        detour = 2-min_tail
+        paths = [[g.s.my_head]]
+        for i in range(detour):
+            paths = [path+[p] for path in paths for end in [path[-1]] for p in adj_cells(end)
+                     if p not in path and p not in g.occupied_cells[0] ]
+        paths = [path for path in paths for end in [path[-1]] if distance_pq(end, target) <= 2]
+        paths = prefer_by_score(lambda path: len([p for p in path if p in g.food]))(paths)
+        detour_moves = list(set([path[1] for path in paths]))
+        moves = prefer_yes(lambda a: a in detour_moves)(moves)
+        return moves
 
 def chase_other_tail_too_close(moves):
     if is_adjacent(g.s.my_head, g.s.other_tail) == 1:
@@ -1263,6 +1288,7 @@ def run():
     log = {'id': '40481703-0d9f-4cc7-9280-2d14d7d0e4fc', 'turn': 203, 'me': {'name': 'mark_snake', 'health': 70, 'body': [(7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (9, 3), (9, 4), (10, 4), (10, 5), (9, 5), (8, 5), (7, 5), (7, 6), (7, 7), (6, 7), (5, 7), (5, 6), (5, 5), (5, 4), (6, 4), (6, 3), (7, 3)]}, 'others': [{'name': 'ich heisse marvin', 'health': 91, 'body': [(6, 1), (5, 1), (5, 2), (4, 2), (4, 1), (3, 1), (2, 1), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0)]}], 'food': [(9, 7), (7, 4), (8, 8)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 0), (7, 1)], 'head_distance': 2, 'head_path_distance': 2, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'cut can see my tail'], 'next_coord': (7, 1), 'next_move': 'up', 'time': '0.002s'}
     log = {'id': '21ba65da-5ff2-4771-8085-2ee78f662c7d', 'turn': 38, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(5,10), (5, 9), (5, 8), (5, 7), (5, 6), (4, 6), (3, 6), (2, 6)]}, 'others': [{'name': 'ich heisse marvin', 'health': 90, 'body': [(3,4), (4, 4), (5, 4), (6, 4), (6, 5), (6, 6)]}], 'food': [(1, 1)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(6, 9), (4, 9), (5, 10)], 'head_distance': 6, 'head_path_distance': 12, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (5, 10), 'next_move': 'up', 'time': '0.005s'}
     log = {'id': '5a73447e-79ac-457d-ba17-adc89f00cd74', 'turn': 86, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1)]}, 'others': [{'name': 'ich heisse marvin', 'health': 99, 'body': [(7, 9), (7, 8), (6, 8), (6, 7), (6, 6), (6, 5), (6, 4), (6, 3), (6, 2)]}], 'food': [(7, 1), (0, 9)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 10), (8, 9)], 'head_distance': 2, 'head_path_distance': 2, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (7, 10), 'next_move': 'left', 'time': '0.002s'}
+    log = {'id': '50309707-5dd2-45fc-890f-3710a06db5ba', 'turn': 141, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 9), (9, 9), (8, 9), (7, 9), (7, 8), (6, 8), (5, 8), (5, 7), (4, 7), (4, 6), (4, 5), (3, 5), (3, 4), (2, 4), (2, 5), (2, 6), (1, 6), (1, 5), (1, 4), (0, 4), (0, 5), (0, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 88, 'body': [(8, 3), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (8, 7), (8, 6), (8, 5), (8, 4)]}], 'food': [(4, 9), (4, 2), (7, 3)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(10, 10), (10, 8)], 'head_distance': 8, 'head_path_distance': 10, 'move_connected_group': 2}, 'decision_path': ['battle_1_vs_1', 'cut can reach other tail'], 'next_coord': (10, 8), 'next_move': 'down', 'time': '0.009s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
