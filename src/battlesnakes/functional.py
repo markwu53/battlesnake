@@ -635,6 +635,7 @@ def fallout(moves):
 def split_choice(moves):
     return (cases([
         no_split_return,
+        too_short_return,
         #there is a split
         #favor easy choice
         connected_set_info,
@@ -847,6 +848,10 @@ def no_split_return(moves):
     ngroup = move_connected_group(moves)
     g.e.move_connected_group = ngroup
     if ngroup == 1:
+        return moves
+
+def too_short_return(moves):
+    if g.s.my_length < 15:
         return moves
 
 def equal_line():
