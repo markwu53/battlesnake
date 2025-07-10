@@ -609,6 +609,8 @@ def static_too_small(moves):
         aset = path_connected_set(a)
         if any([p in aset for c in g.other["body"] for p in adj_cells(c)]):
             return False
+        if len(aset) == 1:
+            return True
         adj_indexes = [i for i,c in enumerate(g.me["body"]) if any([p in aset for p in adj_cells(c) if p != a])]
         max_index = max(adj_indexes)
         required_steps = g.s.my_length - max_index - 1
