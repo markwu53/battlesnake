@@ -950,6 +950,31 @@ def add_waypoint(a, b, c):
     return paths
 
 def chase_my_tail_my_snake_longer(moves):
+    if g.s.my_length <= g.s.other_length: return
+    tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.me["body"][-5:])) for d in [path_distance_pq(g.s.my_head, c)]]
+    min_tail = min([d for i,c,d in tail_info])
+    if min_tail >= 10: return
+    if not any([d < path_distance_pq(g.s.other_head, g.s.my_tail) for i,c,d in tail_info]): return
+    min_tail_target = [(i,c) for i,c,d in tail_info if d == min_tail]
+    i,target = take_first(min_tail_target)
+    if min_tail >= 2:
+        tail_move = shortest_path_move(g.s.my_head, c)
+        tail_move = [a for a in moves if a in tail_move]
+        if len(tail_move) != 0:
+            return tail_move
+    else:
+        detour = 2-min_tail
+        paths = [[g.s.my_head]]
+        for i in range(detour):
+            paths = [path+[p] for path in paths for end in [path[-1]] for p in adj_cells[end]
+                     if p not in path and p not in g.occupied_cells[0] ]
+        paths = [path for path in paths for end in [path[-1]] if distance_pq(end, target) <= 2]
+        paths = prefer_by_score(lambda path: len([p for p in path if p in g.food]))(paths)
+        detour_moves = list(set([path[1] for path in paths]))
+        moves = prefer_yes(lambda a: a in detour_moves)(moves)
+        return moves
+
+def chase_my_tail_my_snake_longer2(moves):
     if g.s.my_length > g.s.other_length:
         if path_distance_pq(g.s.other_head, g.s.my_tail) > path_distance_pq(g.s.my_head, g.s.my_tail):
             # moves = [a for a in moves if path_connected(a, g.s.my_tail)]
