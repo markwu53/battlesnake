@@ -1104,7 +1104,11 @@ def wayout(who):
                 if d == 999:
                     d = -1
                 return d
-            return prefer_by_score(farther)(moves)
+            def packed(a):
+                n_allowed = [p for p in adj_cells(a) if a not in g.occupied_cells[0]]
+                n_packed = 3 - n_allowed
+                return n_packed
+            return prefer_by_score(packed)(prefer_by_score(farther)(moves))
 
         layers = [[[g.s.my_head]]]
         while True:
