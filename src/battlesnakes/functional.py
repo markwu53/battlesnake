@@ -958,7 +958,7 @@ def chase_my_tail_my_snake_longer(moves):
     min_tail_target = [(i,c) for i,c,d in tail_info if d == min_tail]
     i,target = take_first(min_tail_target)
     if min_tail >= 2:
-        tail_move = shortest_path_move(g.s.my_head, c)
+        tail_move = shortest_path_move(g.s.my_head, target)
         tail_move = [a for a in moves if a in tail_move]
         if len(tail_move) != 0:
             return tail_move
