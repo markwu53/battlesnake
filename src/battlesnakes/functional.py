@@ -539,6 +539,16 @@ def equal_length_danger(moves):
         collision_points = [a for a in adj_cells(g.s.my_head) if is_adjacent(a, g.s.other_head) and a not in g.occupied_cells[0]]
         return prefer_no(lambda a: a in collision_points)(moves)
 
+def longer_but_not_enough(moves):
+    if g.s.my_length > g.s.other_length and g.s.my_length - g.s.other_length <= 5:
+        g.decision_path.append("longer but not eough")
+        moves = sequential([
+            split_choice,
+            get_food,
+            prefer_straight,
+        ])(moves)
+        return moves
+
 def snake_equal_length(moves):
     if g.s.my_length == g.s.other_length:
         g.decision_path.append("equal_length")
@@ -1214,6 +1224,7 @@ def too_long(moves):
 def my_snake_is_longer(moves):
     if g.s.my_length > g.s.other_length:
         return cases([
+            longer_but_not_enough,
             not_too_long,
             too_long,
         ])(moves)
