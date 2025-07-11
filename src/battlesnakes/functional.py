@@ -886,7 +886,7 @@ def chase_other_tail_has_distance2(moves):
 
 def chase_other_tail_has_distance(moves):
     if g.s.my_length <= g.s.other_length: return
-    tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.other["body"][-5:])) for d in [path_distance_pq(g.s.my_head, c)]]
+    tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.other["body"][-10:])) for d in [path_distance_pq(g.s.my_head, c)]]
     min_tail = min([d for i,c,d in tail_info])
     if min_tail >= 10: return
     if not any([d < path_distance_pq(g.s.other_head, g.s.other_tail) for i,c,d in tail_info]): return
