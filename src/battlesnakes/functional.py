@@ -917,11 +917,13 @@ def chase_other_tail_has_distance(moves):
         for i in range(detour):
             paths = [path+[p] for path in paths for end in [path[-1]] for p in adj_cells(end)
                      if p not in path and p not in g.occupied_cells[0] ]
-        paths = [path for path in paths for end in [path[-1]] if distance_pq(end, target) <= 2]
-        paths = prefer_by_score(lambda path: len([p for p in path if p in g.food]))(paths)
-        detour_moves = list(set([path[1] for path in paths]))
-        moves = prefer_yes(lambda a: a in detour_moves)(moves)
-        return moves
+        paths = [path for path in paths for end in [path[-1]] if distance_pq(end, target) <= 2 and path[1] in moves]
+        if len(paths) != 0:
+            paths = prefer_by_score(lambda path: len([p for p in path if p in g.food]))(paths)
+            nfood = len([a for a in take_first(paths) if a in g.food])
+            moves = list(set([path[1] for path in paths]))
+            g.decision_path.append(f"chase other tail detour food {nfood}")
+            return moves
 
 def chase_other_tail_too_close(moves):
     if is_adjacent(g.s.my_head, g.s.other_tail) == 1:
