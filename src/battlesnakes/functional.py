@@ -1213,6 +1213,14 @@ def chase_tail(moves):
         ])(moves)
         return moves
 
+def prefer_more_territory(moves):
+    def distance_to_frontier(a):
+        dist_set = [d for p in g.x.other_territory for d in [path_distance_pq(a, p)] if d != 999]
+        if len(dist_set) == 0:
+            return 0
+        return 999-min(dist_set)
+    return prefer_by_score(distance_to_frontier)(moves)
+
 def too_long(moves):
     if g.s.my_length >= 20:
         moves = sequential([
@@ -1221,6 +1229,7 @@ def too_long(moves):
             (chase_tail),
             #prefer_more_next_move,
             #prefer_middle_by_3,
+            prefer_more_territory,
             prefer_straight,
         ])(moves)
         return moves
