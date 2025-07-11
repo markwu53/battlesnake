@@ -884,6 +884,17 @@ def chase_other_tail_has_distance2(moves):
                 return food_tail_connect
             return tail_moves
 
+def chase_other_tail_long_shot(moves):
+    if g.s.my_length <= g.s.other_length: return
+    tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.other["body"])) 
+                for d in [path_distance_pq(g.s.my_head, c)] if path_connected(g.s.my_head, c)]
+    tail_info = [c for i,c,d in tail_info if abs(d) <= 2]
+    if len(tail_info) != 0:
+        tail_move = shortest_path_move(g.s.my_head, take_first(tail_info))
+        tail_move = [a for a in moves if a in tail_move]
+        if len(tail_move) != 0:
+            return tail_move
+
 def chase_other_tail_has_distance(moves):
     if g.s.my_length <= g.s.other_length: return
     tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.other["body"][-10:])) for d in [path_distance_pq(g.s.my_head, c)]]
@@ -947,6 +958,7 @@ def chase_other_tail(moves):
     moves = cases([
         chase_other_tail_too_close,
         (chase_other_tail_has_distance),
+        chase_other_tail_long_shot,
     ])(moves)
     return moves
 
