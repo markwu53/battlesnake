@@ -473,6 +473,7 @@ def my_snake_is_shorter(moves):
             avoid_collision,
             near_border_danger,
             split_choice,
+            wayout2,
             get_food,
             prefer_more_next_move,
             prefer_middle_by_3,
@@ -544,6 +545,7 @@ def longer_but_not_enough(moves):
         g.decision_path.append("longer but not eough")
         moves = sequential([
             split_choice,
+            wayout2,
             get_food,
             prefer_straight,
         ])(moves)
@@ -555,6 +557,7 @@ def snake_equal_length(moves):
         moves = sequential([
             equal_length_danger,
             split_choice,
+            wayout2,
             get_food,
             prefer_more_next_move,
             prefer_middle_by_3,
@@ -1114,6 +1117,7 @@ def not_too_long(moves):
     if g.s.my_length < 20:
         moves = sequential([
             split_choice,
+            wayout2,
             get_food,
             #prefer_more_next_move,
             #prefer_middle_by_3,
