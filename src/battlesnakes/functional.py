@@ -899,20 +899,20 @@ def chase_other_tail_long_shot(moves):
 
 def chase_other_tail_has_distance(moves):
     if g.s.my_length <= g.s.other_length: return
-    tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.other["body"][-5:])) for d in [path_distance_pq(g.s.my_head, c)]]
+    tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.other["body"][-10:])) for d in [path_distance_pq(g.s.my_head, c)]]
     min_tail = min([d for i,c,d in tail_info])
     if min_tail >= 10: return
     if not any([d < path_distance_pq(g.s.other_head, g.s.other_tail) for i,c,d in tail_info]): return
     min_tail_target = [(i,c) for i,c,d in tail_info if d == min_tail]
     i,target = take_first(min_tail_target)
     g.decision_path.append(f"chase other tail, target {target}")
-    if min_tail >= 2:
+    if min_tail >= 4:
         tail_move = shortest_path_move(g.s.my_head, target)
         tail_move = [a for a in moves if a in tail_move]
         if len(tail_move) != 0:
             return tail_move
     else:
-        detour = 2-min_tail
+        detour = 4-min_tail
         paths = [[g.s.my_head]]
         for i in range(detour):
             paths = [path+[p] for path in paths for end in [path[-1]] for p in adj_cells(end)
