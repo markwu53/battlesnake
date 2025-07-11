@@ -1,5 +1,4 @@
 import time
-import functional2
 
 #these class variables are used to trick the editor to display them in intellisense
 
@@ -232,7 +231,6 @@ def experiment_condition():
     if g.e.n_other != 1: return False
     #Eastern time (7AM - 8PM) + 4
     #if not 11 <= time.localtime().tm_hour <= 23: return False
-    """
     if g.other["name"] not in (
         "Snakeformatika", #inform
         #"Kakemonsteret-v2", #pettso
@@ -241,12 +239,9 @@ def experiment_condition():
         "ich heisse marvin", #Wrenger
     ): 
         return False
-    """
     return True
 
 def special_experimenting_code(game_state):
-    if functional2.special_experimenting_code(game_state): return True
-
     init_game(game_state)
     if not experiment_condition(): return False
 
