@@ -1229,6 +1229,7 @@ def too_long(moves):
             (chase_tail),
             #prefer_more_next_move,
             #prefer_middle_by_3,
+            get_food,
             prefer_more_territory,
             prefer_straight,
         ])(moves)
