@@ -471,6 +471,11 @@ def get_food(moves):
                 g.decision_path.append("go to food")
                 return moves
 
+def get_food_or_chase_tail(moves):
+    if g.s.my_length < 20:
+        return get_food(moves)
+    return chase_tail(moves)
+
 def my_snake_is_shorter(moves):
     if g.s.my_length < g.s.other_length:
         g.decision_path.append("shorter")
@@ -479,7 +484,7 @@ def my_snake_is_shorter(moves):
             near_border_danger,
             split_choice,
             wayout2,
-            get_food,
+            get_food_or_chase_tail,
             prefer_more_next_move,
             prefer_middle_by_3,
             prefer_straight,
@@ -563,7 +568,7 @@ def snake_equal_length(moves):
             equal_length_danger,
             split_choice,
             wayout2,
-            get_food,
+            get_food_or_chase_tail,
             prefer_more_next_move,
             prefer_middle_by_3,
             prefer_straight,
