@@ -904,7 +904,49 @@ def chase_other_tail_long_shot(moves):
             g.decision_path.append(f"chase other tail long shot target {target}")
             return tail_move
 
+
 def chase_other_tail_has_distance(moves):
+    if g.s.my_length > g.s.other_length:
+        if path_distance_pq(g.s.other_head, g.s.other_tail) > path_distance_pq(g.s.my_head, g.s.other_tail):
+            # moves = [a for a in moves if path_connected(a, g.s.my_tail)]
+            # if len(moves) != 0:
+            #     return moves
+            if distance_pq(g.s.my_head, g.s.other_tail) >= 1:
+                tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
+                tail_moves = [a for a in tail_moves if a in moves]
+                if len(tail_moves) != 0:
+                    food1 = [a for a in moves if a in g.food]
+                    if len(food1) != 0:
+                        food_and_tail = [a for a in tail_moves if a in food1]
+                        if len(food_and_tail) != 0:
+                            return food_and_tail
+                        food_tail_connect = [a for a in food1 if any([path_connected(a, p) for p in tail_moves])]
+                        if len(food_tail_connect) != 0:
+                            g.decision_path.append("detour get food1")
+                            return food_tail_connect
+                    #return tail_moves
+                    else:
+                        food4 = [f for f in g.food if distance_pq(f, g.s.my_head) <= 4]
+                        if len(food4) == 0:
+                            return tail_moves
+                        foods = []
+                        for f in food4:
+                            paths = add_waypoint(g.s.my_head, f, g.s.other_tail)
+                            good_paths = [path for path in paths if len(path) <= path_distance_pq(g.s.my_head, g.s.other_tail)+5]
+                            if len(good_paths) == 0:
+                                continue
+                            sn = min([len(path) for path in good_paths])
+                            shortest_path = [path for path in good_paths if len(path) == sn]
+                            foods.append([f, sn, list({path[1] for path in shortest_path})])
+                        food4 = foods
+                        if len(food4) == 0:
+                            return tail_moves
+                        min_sn = min([sn for f,sn,m in food4])
+                        f,sn,moves = take_first([(f,sn,m) for f,sn,m in food4 if sn == min_sn])
+                        g.decision_path.append(f"add food waypoint {f}")
+                        return moves
+
+def chase_other_tail_has_distance2(moves):
     if distance_pq(g.s.my_head, g.s.other_tail) > 1:
         tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
         tail_moves = [a for a in tail_moves if a in moves]
