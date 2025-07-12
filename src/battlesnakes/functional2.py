@@ -232,11 +232,11 @@ def experiment_condition():
     #Eastern time (7AM - 8PM) + 4
     #if not 11 <= time.localtime().tm_hour <= 23: return False
     if g.other["name"] not in (
-        "Snakeformatika", #inform
+        #"Snakeformatika", #inform
         #"Kakemonsteret-v2", #pettso
         #"Wim HU [dev]", #wim
         #"Frank The Tank", #djnuller
-        "ich heisse marvin", #Wrenger
+        #"ich heisse marvin", #Wrenger
     ): 
         return False
     return True
@@ -245,7 +245,7 @@ def special_experimenting_code(game_state):
     init_game(game_state)
     if not experiment_condition(): return False
 
-    g.log["experiment2"] = True
+    g.log["experiment"] = "Yes"
     start_time = time.time()
     #g.e.localtime = time.localtime()
 
