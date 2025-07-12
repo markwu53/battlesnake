@@ -250,7 +250,7 @@ def special_experimenting_code(game_state):
     init_game(game_state)
     if not experiment_condition(): return False
 
-    g.log["experiment"] = True
+    g.log["experiment"] = "No"
     start_time = time.time()
     #g.e.localtime = time.localtime()
 
@@ -446,6 +446,11 @@ def prefer_more_next_move(moves):
 def prefer_middle_by_3(moves):
     return prefer_yes(lambda a: all([d>=2 for d in distance_to_border(a)]))(moves)
 
+def food1(moves):
+    have_food = [a for a in moves if a in g.food]
+    if len(have_food) != 0:
+        return have_food
+    
 def get_food(moves):
     d_food = 8
     food_near = [f for f in g.food if distance_pq(f, g.s.my_head) < d_food]
@@ -886,6 +891,19 @@ def equal_line():
     g.x.equal_territory = equal_territory
     g.x.equal_border = equal_border
 
+def chase_other_tail_long_shot(moves):
+    if g.s.my_length <= g.s.other_length: return
+    tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.other["body"])) 
+                for d in [path_distance_pq(g.s.my_head, c)] if path_connected(g.s.my_head, c)]
+    tail_info = [c for i,c,d in tail_info if abs(d) <= 2]
+    if len(tail_info) != 0:
+        target = take_first(tail_info)
+        tail_move = shortest_path_move(g.s.my_head, target)
+        tail_move = [a for a in moves if a in tail_move]
+        if len(tail_move) != 0:
+            g.decision_path.append(f"chase other tail long shot target {target}")
+            return tail_move
+
 def chase_other_tail_has_distance(moves):
     if distance_pq(g.s.my_head, g.s.other_tail) > 1:
         tail_moves = shortest_path_move(g.s.my_head, g.s.other_tail)
@@ -901,19 +919,6 @@ def chase_other_tail_has_distance(moves):
             if len(food_tail_connect) != 0:
                 return food_tail_connect
             return tail_moves
-
-def chase_other_tail_long_shot(moves):
-    if g.s.my_length <= g.s.other_length: return
-    tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.other["body"])) 
-                for d in [path_distance_pq(g.s.my_head, c)] if path_connected(g.s.my_head, c)]
-    tail_info = [c for i,c,d in tail_info if abs(d) <= 2]
-    if len(tail_info) != 0:
-        target = take_first(tail_info)
-        tail_move = shortest_path_move(g.s.my_head, target)
-        tail_move = [a for a in moves if a in tail_move]
-        if len(tail_move) != 0:
-            g.decision_path.append(f"chase other tail long shot target {target}")
-            return tail_move
 
 def chase_other_tail_has_distance2(moves):
     if g.s.my_length <= g.s.other_length: return
@@ -1009,7 +1014,7 @@ def add_waypoint(a, b, c):
     paths = [pab+pbc[1:] for pab in ab for pbc in bc if not any([p in pab for p in pbc[1:]])]
     return paths
 
-def chase_my_tail_my_snake_longer(moves):
+def chase_my_tail_my_snake_longer2(moves):
     if g.s.my_length <= g.s.other_length: return
     tail_info = [(i,c,d-i) for i,c in enumerate(reversed(g.me["body"][-5:])) for d in [path_distance_pq(g.s.my_head, c)]]
     min_tail = min([d for i,c,d in tail_info])
@@ -1038,7 +1043,7 @@ def chase_my_tail_my_snake_longer(moves):
         g.decision_path.append(f"detour move {moves}")
         return moves
 
-def chase_my_tail_my_snake_longer2(moves):
+def chase_my_tail_my_snake_longer(moves):
     if g.s.my_length > g.s.other_length:
         if path_distance_pq(g.s.other_head, g.s.my_tail) > path_distance_pq(g.s.my_head, g.s.my_tail):
             # moves = [a for a in moves if path_connected(a, g.s.my_tail)]
