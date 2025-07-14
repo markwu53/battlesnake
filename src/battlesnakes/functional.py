@@ -1,5 +1,4 @@
 import time
-import functional2
 
 #these class variables are used to trick the editor to display them in intellisense
 
@@ -245,7 +244,7 @@ def experiment_condition():
     return True
 
 def special_experimenting_code(game_state):
-    if functional2.special_experimenting_code(game_state): return True
+    #if functional2.special_experimenting_code(game_state): return True
 
     init_game(game_state)
     if not experiment_condition(): return False
@@ -1400,6 +1399,7 @@ def run():
     log = {'id': '835014c5-5b48-48f6-a2f4-a7fe96eaf2e7', 'turn': 237, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(4, 1), (5, 1), (5, 2), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3), (0, 3), (0, 4), (0, 5), (0, 6), (1, 6), (1, 7), (2, 7), (3, 7), (4, 7), (4, 6), (3, 6), (2, 6), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (6, 4), (6, 3), (6, 2), (6, 2)]}, 'others': [{'name': 'Snakeformatika', 'health': 97, 'body': [(7, 4), (7, 5), (7, 6), (7, 7), (6, 7), (6, 6), (5, 6), (5, 7), (5, 8), (5, 9), (6, 9), (6, 8), (7, 8), (7, 9), (8, 9)]}], 'food': [(10, 9), (0, 2), (0, 0), (7, 2)], 'experiment': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 1), (4, 2), (4, 0)], 'head_distance': 6, 'head_path_distance': 8, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 1), 'next_move': 'left', 'time': '0.020s'}
     log = {'id': 'bd0f3d8d-6e72-4a4d-80af-593912511b4d', 'turn': 238, 'me': {'name': 'mark_snake', 'health': 73, 'body': [(4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4), (10, 4), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (1, 2), (1, 3), (2, 3)]}, 'others': [{'name': 'ich heisse marvin', 'health': 75, 'body': [(3, 9), (3, 8), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (9, 6), (9, 5), (8, 5), (7, 5)]}], 'food': [(0, 9), (8, 0), (0, 3), (10, 9), (3, 2), (9, 10), (5, 10), (7, 0), (7, 2), (0, 10), (1, 5), (6, 9)], 'experiment2': True, 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 4), (4, 5), (4, 3)], 'head_distance': 6, 'head_path_distance': 8, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1', 'chase other tail, target (4, 7)', 'chase other tail detour food 1', 'chase my tail target (2, 3)', 'go to tail directly'], 'next_coord': (3, 4), 'next_move': 'left', 'time': '0.049s'}
     log = {'id': '4d2ca713-646a-4655-b7bd-aa713e3d3a35', 'turn': 362, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(3,6), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 5), (9, 5), (9, 4), (9, 3), (9, 2), (9, 1), (9, 0), (8, 0), (7, 0), (7, 1), (7, 2), (7, 3), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4), (3, 4), (3, 3), (2, 3), (1, 3), (1, 4), (1, 5), (2, 5), (2, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 92, 'body': [(0,5), (0, 6), (1, 6), (1, 7), (1, 8), (0, 8), (0, 9), (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (5, 8), (6, 8), (7, 8), (8, 8), (9, 8), (10, 8)]}], 'food': [(10, 10), (3, 2), (2, 4), (9, 10), (10, 3)], 'experiment': 'No', 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 6), (4, 7), (4, 5)], 'head_distance': 4, 'head_path_distance': 999, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 6), 'next_move': 'left', 'time': '0.003s'}
+    log = {'id': '9e93878d-1372-457d-a78d-f297c6c059af', 'turn': 206, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (9, 8), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (8, 3), (7, 3), (7, 4), (7, 5), (7, 6), (8, 6), (8, 7), (8, 8), (8, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 95, 'body': [(2, 2), (3, 2), (3, 3), (4, 3), (4, 2), (4, 1), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (4, 7), (3, 7), (3, 8), (3, 9)]}], 'food': [(0, 2), (2, 9)], 'experiment': 'No', 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 10), (8, 9)], 'head_distance': 14, 'head_path_distance': 14, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (8, 9), 'next_move': 'down', 'time': '0.002s'}
 
 
     game_state = init_from_log(log)
