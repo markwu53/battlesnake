@@ -2,54 +2,7 @@ import typing
 import math
 import time
 
-# info is called when you create your Battlesnake on play.battlesnake.com
-# and controls your Battlesnake's appearance
-# TIP: If you open your Battlesnake URL in a browser you should see this data
-def info() -> typing.Dict:
-    print("INFO")
-
-    return {
-        "apiversion": "1",
-        "author": "markwu2025",  # TODO: Your Battlesnake Username
-        "color": "#FF0000",  # TODO: Choose color
-        "head": "all-seeing",  # TODO: Choose head
-        "tail": "flake",  # TODO: Choose tail
-    }
-
-def get_up_coord(head_coord: dict[str, int]) -> dict[str, int]:
-    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
-        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
-
-    return {"x": head_coord["x"], "y": head_coord["y"] + 1}
-
-def get_direction_coord(direction: str, head_coord: dict[str, int]) -> dict[str, int]:
-    if "x" not in head_coord.keys() or "y" not in head_coord.keys():
-        raise ValueError(f"head_coord must have both 'x' and 'y' keys: {head_coord}")
-
-    match direction:
-        case "up":
-            return {"x": head_coord["x"], "y": head_coord["y"] + 1}
-        case "down":
-            return {"x": head_coord["x"], "y": head_coord["y"] - 1}
-        case "left":
-            return {"x": head_coord["x"] - 1, "y": head_coord["y"]}
-        case "right":
-            return {"x": head_coord["x"] + 1, "y": head_coord["y"]}
-
-    raise ValueError(f"invalid direction: {direction}")
-
-# start is called when your Battlesnake begins a game
-def start(game_state: typing.Dict):
-    print("GAME START")
-
-
-# end is called when your Battlesnake finishes a game
-def end(game_state: typing.Dict):
-    print("GAME OVER\n")
-
-
-#this gives me #20 score 8603 on 6/3/2025
-def move(game_state: typing.Dict) -> typing.Dict:
+def snake_1vn(game_state: typing.Dict) -> typing.Dict:
 
     #ideas:
     #1. In avoid_danger:
@@ -838,9 +791,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         if len(result) == 0:
             result = shortest_path_move(my_head, target)
         #prefer keep direction
-        result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
-        result = sorted(result)
-        result = [move for rank, move in result]
+        if game_state["turn"] > 3:
+            result = [(0 if get_adjacent_dir(my_head, move) == get_adjacent_dir(my_neck, my_head) else 1, move) for move in result]
+            result = sorted(result)
+            result = [move for rank, move in result]
         return result
 
     def best_choice():
@@ -1051,9 +1005,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     end_time = time.time()
 
     next_move = get_next_move(get_my_head(), game_state["next_head_coord"])
+    game_state["next_move"] = next_move
 
     #logging
-    log_move = next_move
+    log_move = game_state["next_move"]
     log_boxing_area = game_state["boxing_area"]
     log_routine_move = game_state["routine_move"]
     log_allowed_move = game_state["allowed_move"]
@@ -1095,5 +1050,5 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     print(log_text)
 
-    return {"move": next_move}
+    return {"move": game_state["next_move"]}
 
