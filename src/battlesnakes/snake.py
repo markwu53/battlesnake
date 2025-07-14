@@ -2,6 +2,7 @@ import typing
 import math
 import time
 from functional import special_experimenting_code
+import snake_1vn
 
 # info is called when you create your Battlesnake on play.battlesnake.com
 # and controls your Battlesnake's appearance
@@ -31,6 +32,7 @@ def end(game_state: typing.Dict):
 def move(game_state: typing.Dict) -> typing.Dict:
 
     if special_experimenting_code(game_state): return {"move": game_state["next_move"]}
+    return snake_1vn.snake_1vn(game_state)
 
     #ideas:
     #1. In avoid_danger:
