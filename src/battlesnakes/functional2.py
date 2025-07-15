@@ -347,6 +347,10 @@ def init_game(game_state):
 
     g.me = [snake for snake in g.snakes for c in [game_state["you"]["body"][0]] if snake.head == (c["x"], c["y"])][0]
     g.others = [snake for snake in g.snakes if snake.head != g.me.head]
+    if len(g.others) == 0:
+        turn = game_state["turn"]
+        id = game_state["game"]["id"]
+        print(f"MARK_EXCEPTION, TURN: {turn}, id: {id}")
     g.other = g.others[0]
 
     g.food = get_coord(game_state["board"]["food"])
