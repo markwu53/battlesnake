@@ -405,6 +405,7 @@ def battle_1_vs_n(moves):
             wayout,
             get_food_1_vs_n,
             prefer_more_next_moves,
+            prefer_straight,
         ])(moves)
 
 def avoid_danger_1_vs_n(moves):
@@ -419,6 +420,9 @@ def get_food_1_vs_n(moves):
         get_food_1,
         get_food_near,
     ])(moves)
+
+def prefer_straight(moves):
+    return prefer_yes(is_straight)(moves)
 
 def prefer_more_next_moves(moves):
     def n_next_moves(a):
