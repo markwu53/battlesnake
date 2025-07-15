@@ -468,6 +468,7 @@ def me_at_corner(moves):
         return prefer_no(on_border)(moves)
 
 def me_on_border(moves):
+    if not on_border(g.me.head): return
     real_killers = g.x.real_killers
     if len(real_killers) == 1:
         killer = real_killers[0]
