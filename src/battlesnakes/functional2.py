@@ -475,11 +475,11 @@ def me_on_border(moves):
         dist1 = distance_pq(g.me.head, killer.head)
         dist2 = path_distance_pq(g.me.head, killer.head)
         if dist1 <= 4 and dist1 == dist2:
-            g.decision_path.append("killer near, return off border")
+            g.decision_path.append("return off border")
             return prefer_no(on_border)(moves)
         if dist1 == 6 and dist1 == dist2:
             if coming_near(killer):
-                g.decision_path.append("killer near, return off border")
+                g.decision_path.append("return off border")
                 return prefer_no(on_border)(moves)
 
 def coming_near(killer):
