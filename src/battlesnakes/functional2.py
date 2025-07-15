@@ -401,6 +401,7 @@ def battle_1_vs_n(moves):
     if len(g.others) >= 1:
         return sequential([
             avoid_danger_1_vs_n,
+            avoid_confinement,
             get_food_1_vs_n,
         ])(moves)
 
@@ -409,6 +410,40 @@ def avoid_danger_1_vs_n(moves):
         avoid_collision_1_vs_n,
         avoid_equal_collision,
     ])(moves)
+
+def get_food_1_vs_n(moves):
+    return cases([
+        get_food_1,
+        get_food_near,
+    ])(moves)
+
+def move_connected_group(moves):
+    if len(moves) == 1:
+        return 1
+    if len(moves) == 2:
+        a,b = moves
+        if path_distance_pq(a, b) >= 4:
+            return 2
+        return 1
+    if len(moves) == 3:
+        straight = [a for a in moves if is_straight(a)][0]
+        others = [a for a in moves if a != straight]
+        if any([path_distance_pq(a, straight) > 2 for a in others]):
+            return 2
+        return 1
+
+def avoid_confinement(moves):
+    ngroup = move_connected_group(moves)
+    if ngroup > 1:
+        g.decision_path.append("split choice")
+        confined_moves = [a for a in moves if len(path_connected_set(a)) < g.me.length //2]
+        if len(confined_moves) != 0:
+            g.decision_path.append("has confined moves")
+            good_moves = [a for a in moves if a not in confined_moves]
+            if len(good_moves) != 0:
+                g.decision_path.append("avoid confined moves")
+                return good_moves
+            g.decision_path.append("nowhere avoid confined moves")
 
 def avoid_collision_1_vs_n(moves):
     danger_moves = [a for a in moves
@@ -423,12 +458,6 @@ def avoid_collision_1_vs_n(moves):
 
 def avoid_equal_collision(moves):
     return moves
-
-def get_food_1_vs_n(moves):
-    return cases([
-        get_food_1,
-        get_food_near,
-    ])(moves)
 
 def get_food_1(moves):
     food1 = [a for a in moves if a in g.food]
