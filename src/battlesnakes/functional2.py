@@ -372,7 +372,6 @@ def decision():
         for step in [1,2,3,4,5]
     ]
     g.e.allowed_moves = [a for a in adj_cells(g.me.head) if a not in g.occupied_cells[0]]
-    g.x.other_allowed_moves = [a for a in adj_cells(g.other.head) if a not in g.occupied_cells[0]]
     g.e.head_distance = distance_pq(g.me.head, g.other.head)
     g.e.head_path_distance = path_distance_pq(g.me.head, g.other.head)
 
