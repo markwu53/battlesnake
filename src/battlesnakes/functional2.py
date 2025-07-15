@@ -427,7 +427,7 @@ def avoid_near_border_danger(moves):
             real_killers = [snake for snake in killers if path_distance_pq(snake.head, g.me.head) <= 10]
             if len(real_killers) != 0:
                 g.decision_path.append("killer near")
-                g.x.real_keillers = real_killers
+                g.x.real_killers = real_killers
                 return cases([
                     me_at_corner,
                     me_at_off_border,
