@@ -401,7 +401,7 @@ def battle_1_vs_n(moves):
     if len(g.others) >= 1:
         return sequential([
             avoid_danger_1_vs_n,
-            avoid_confinement,
+            split_choice,
             wayout,
             get_food_1_vs_n,
             prefer_more_next_moves,
@@ -428,7 +428,7 @@ def prefer_towards_larger_territory(moves):
     nonkillers = [snake for snake in g.others if snake.length <= g.me.length]
     aset = [a for a in aset 
      if all([path_distance_pq(a, g.me.head) < path_distance_pq(a, snake.head) for snake in killers])
-     if all([path_distance_pq(a, g.me.head) <= path_distance_pq(a, snake.head) for snake in nonkillers])
+     #and all([path_distance_pq(a, g.me.head) <= path_distance_pq(a, snake.head) for snake in nonkillers])
      ]
     nset = len(aset)
     center = int(round(sum([x for x,y in aset])/nset, 0)), int(round(sum([y for x,y in aset])/nset, 0))
@@ -578,20 +578,27 @@ def move_connected_group(moves):
     id = g.state["game"]["id"]
     print(f"MARK_EXCEPTION, id: {id}, turn: {turn}, move_connected_group")
 
-def avoid_confinement(moves):
+def split_choice(moves):
     ngroup = move_connected_group(moves)
     if ngroup > 1:
         g.decision_path.append("split choice")
         confined_moves = [a for a in moves if len(path_connected_set(a)) < g.me.length //2]
-        if len(confined_moves) != 0:
-            g.decision_path.append("has confined moves")
-            good_moves = [a for a in moves if a not in confined_moves]
-            if len(good_moves) != 0:
-                g.decision_path.append("avoid confined moves")
-                return good_moves
-            g.decision_path.append("nowhere avoid confined moves")
-        else:
+        if len(confined_moves) == 0:
             g.decision_path.append("no confinement")
+            return
+        g.decision_path.append("has confined moves")
+        good_moves = [a for a in moves if a not in confined_moves]
+        if len(good_moves) != 0:
+            g.decision_path.append("avoid confined moves")
+            return good_moves
+        g.decision_path.append("both confined moves")
+        #prefer near tail
+        def tail_index(a):
+            aset = path_connected_set(a)
+            adj_set = [i for i,c in enumerate(g.me.body) if any([p in aset for p in adj_cells(c)])]
+            max_index = max(adj_set) if len(adj_set) != 0 else 0
+            return max_index
+        return prefer_by_score(tail_index)(moves)
 
 def avoid_collision_1_vs_n(moves):
     danger_moves = [a for a in moves
