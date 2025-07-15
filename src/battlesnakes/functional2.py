@@ -411,6 +411,7 @@ def avoid_danger_1_vs_n(moves):
     return sequential([
         avoid_collision_1_vs_n,
         avoid_equal_collision,
+        avoid_near_border_danger,
     ])(moves)
 
 def get_food_1_vs_n(moves):
@@ -418,6 +419,64 @@ def get_food_1_vs_n(moves):
         get_food_1,
         get_food_near,
     ])(moves)
+
+def avoid_near_border_danger(moves):
+    if min(distance_to_border) < 2:
+        killers = [snake for snake in g.others if snake.length > g.me.length and distance_pq(snake.head, g.me.head) <= 6]
+        if len(killers) != 0:
+            real_killers = [snake for snake in killers if path_distance_pq(snake.head, g.me.head) <= 10]
+            if len(real_killers) != 0:
+                g.decision_path.append("killer near")
+                g.x.real_keillers = real_killers
+                return cases([
+                    me_at_corner,
+                    me_at_off_border,
+                    me_on_border,
+                ])(moves)
+
+def me_at_corner(moves):
+    dist = distance_to_border(g.me.head)
+    if dist in [(0,1), (1,0), (1,1), (0,2), (2,0)]:
+        g.decision_path.append("me at corner")
+        return prefer_no(on_border)(moves)
+
+def me_on_border(moves):
+    real_killers = g.x.real_killers
+    if len(real_killers) == 1:
+        killer = real_killers[0]
+        dist1 = distance_pq(g.me.head, killer.head)
+        dist2 = path_distance_pq(g.me.head, killer.head)
+        if dist1 <= 4 and dist1 == dist2:
+            g.decision_path.append("killer near, return off border")
+            return prefer_no(on_border)(moves)
+        if dist1 == 6 and dist1 == dist2:
+            if coming_near(killer):
+                g.decision_path.append("killer near, return off border")
+                return prefer_no(on_border)(moves)
+
+def coming_near(killer):
+    killer_next = [p for p in adj_cells(killer.head) if get_adjacent_dir(killer.neck, killer.head) == get_adjacent_dir(killer.head, p)][0]
+    killer_next = [p for p in killer_next if p not in g.occupied_cells[0]]
+    if len(killer_next) == 0:
+        return False
+    my_next = [p for p in adj_cells(g.me.head) if is_straight(p) and p not in g.occupied_cells[0]]
+    if len(my_next) == 0:
+        return False
+    if distance_pq(killer_next, my_next) < distance_pq(g.me.head, killer.head):
+        return True
+    return False
+
+def me_at_off_border(moves):
+    if off_border_1(g.me.head):
+        real_killers = g.x.real_killers
+        if len(real_killers) == 1:
+            killer = real_killers[0]
+            dist1 = distance_pq(g.me.head, killer.head)
+            dist2 = path_distance_pq(g.me.head, killer.head)
+            if dist1 <= 4 and dist1 == dist2:
+                if coming_near(killer):
+                    g.decision_path.append("killer near, return off border")
+                    return prefer_no(on_border)(moves)
 
 def wayout(moves):
     ngroup = move_connected_group(moves)
