@@ -351,7 +351,8 @@ def init_game(game_state):
         turn = game_state["turn"]
         id = game_state["game"]["id"]
         print(f"MARK_EXCEPTION, TURN: {turn}, id: {id}")
-    g.other = g.others[0]
+    else:
+        g.other = g.others[0]
 
     g.food = get_coord(game_state["board"]["food"])
 
@@ -393,13 +394,18 @@ def decision():
     g.next_coord = take_first(moves)
 
 def battle_1_vs_1(moves):
-    return moves
+    if len(g.others) == 1:
+        return sequential([
+            avoid_danger_1_vs_n,
+            get_food_1_vs_n,
+        ])(moves)
 
 def battle_1_vs_n(moves):
-    return sequential([
-        avoid_danger_1_vs_n,
-        get_food_1_vs_n,
-    ])(moves)
+    if len(g.others) > 1:
+        return sequential([
+            avoid_danger_1_vs_n,
+            get_food_1_vs_n,
+        ])(moves)
 
 def avoid_danger_1_vs_n(moves):
     return sequential([
