@@ -405,6 +405,7 @@ def battle_1_vs_n(moves):
             wayout,
             get_food_1_vs_n,
             prefer_more_next_moves,
+            prefer_towards_larger_territory,
             prefer_straight,
         ])(moves)
 
@@ -420,6 +421,19 @@ def get_food_1_vs_n(moves):
         get_food_1,
         get_food_near,
     ])(moves)
+
+def prefer_towards_larger_territory(moves):
+    aset = path_connected_set(g.me.head)
+    killers = [snake for snake in g.others if snake.length > g.me.length]
+    nonkillers = [snake for snake in g.others if snake.length <= g.me.length]
+    aset = [a for a in aset 
+     if all([path_distance_pq(a, g.me.head) < path_distance_pq(a, snake.head) for snake in killers])
+     if all([path_distance_pq(a, g.me.head) <= path_distance_pq(a, snake.head) for snake in nonkillers])
+     ]
+    nset = len(aset)
+    center = int(round(sum([x for x,y in aset])/nset, 0)), int(round(sum([y for x,y in aset])/nset, 0))
+    if center != g.me.head:
+        return shortest_path_move(g.me.head, center)
 
 def prefer_straight(moves):
     return prefer_yes(is_straight)(moves)
