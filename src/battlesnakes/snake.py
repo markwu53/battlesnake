@@ -30,6 +30,6 @@ def end(game_state: typing.Dict):
 #this gives me #20 score 8603 on 6/3/2025
 def move(game_state: typing.Dict) -> typing.Dict:
 
-    if functional.special_experimenting_code(game_state): return {"move": game_state["next_move"]}
     if functional2.special_experimenting_code(game_state): return {"move": game_state["next_move"]}
+    if functional.special_experimenting_code(game_state): return {"move": game_state["next_move"]}
     return snake_1vn.snake_1vn(game_state)
