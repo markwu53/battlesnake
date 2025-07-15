@@ -418,7 +418,10 @@ def avoid_equal_collision(moves):
     return moves
 
 def get_food_1_vs_n(moves):
-    return moves
+    food1 = [a for a in moves if a in g.food]
+    if len(food1) != 0:
+        g.decision_path.append("get food1")
+        return food1
 
 ######################################################
 
