@@ -486,6 +486,9 @@ def move_connected_group(moves):
         if any([path_distance_pq(a, straight) > 2 for a in others]):
             return 2
         return 1
+    turn = g.state["turn"]
+    id = g.state["game"]["id"]
+    print(f"MARK_EXCEPTION, id: {id}, turn: {turn}, move_connected_group")
 
 def avoid_confinement(moves):
     ngroup = move_connected_group(moves)
