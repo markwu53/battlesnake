@@ -400,12 +400,22 @@ def battle_1_vs_n(moves):
 def avoid_danger_1_vs_n(moves):
     return sequential([
         avoid_collision_1_vs_n,
+        avoid_equal_collision,
     ])(moves)
 
 def avoid_collision_1_vs_n(moves):
-    [a for a in moves
-     for snakes in [[snake for snake in g.others if is_adjacent(a, snake["body"][0]) and snake["body"]]]
-     ]
+    danger_moves = [a for a in moves
+        for snakes in [[snake for snake in g.others if is_adjacent(a, snake.head) and snake.length > g.me.length]]
+        if len(snakes) != 0 ]
+    if len(danger_moves) != 0:
+        g.decision_path.append("avoid collision")
+        moves = [a for a in moves if a not in danger_moves]
+        if len(moves) != 0:
+            return moves
+        g.decision_path.append("nowhere to avoid")
+
+def avoid_equal_collision(moves):
+    return moves
 
 def get_food_1_vs_n(moves):
     return moves
