@@ -387,6 +387,7 @@ def decision():
 
     #allowed_moves must be 2 or 3
     moves = cases([
+        first_two_turn,
         #battle_1_vs_1, 
         battle_1_vs_n,
         id, #cases at entry point ends by id to close possible None return
@@ -421,6 +422,10 @@ def get_food_1_vs_n(moves):
         get_food_1,
         get_food_near,
     ])(moves)
+
+def first_two_turn(moves):
+    if g.state["turn"] < 2:
+        return moves
 
 def prefer_towards_larger_territory(moves):
     aset = path_connected_set(g.me.head)
