@@ -387,18 +387,14 @@ def decision():
 
     #allowed_moves must be 2 or 3
     moves = cases([
-        battle_1_vs_1, 
+        #battle_1_vs_1, 
         battle_1_vs_n,
         id, #cases at entry point ends by id to close possible None return
     ])(g.e.allowed_moves)
     g.next_coord = take_first(moves)
 
 def battle_1_vs_1(moves):
-    if len(g.others) == 1:
-        return sequential([
-            avoid_danger_1_vs_n,
-            get_food_1_vs_n,
-        ])(moves)
+    return moves
 
 def battle_1_vs_n(moves):
     if len(g.others) > 1:
@@ -428,10 +424,30 @@ def avoid_equal_collision(moves):
     return moves
 
 def get_food_1_vs_n(moves):
+    return cases([
+        get_food_1,
+        get_food_near,
+    ])(moves)
+
+def get_food_1(moves):
     food1 = [a for a in moves if a in g.food]
     if len(food1) != 0:
         g.decision_path.append("get food1")
         return food1
+
+def get_food_near(moves):
+    food_near = [f for f in g.food if distance_pq(f, g.me.head) <= 8]
+    if len(food_near) != 0:
+        food_good = [f for f in food_near 
+                     if path_connected(f, g.me.head)
+                     and all([path_distance_pq(f, g.me.head) < path_distance_pq(f, snake.head) for snake in g.others])]
+        if len(food_good) != 0:
+            target = take_first(prefer_by_score(lambda f: 999-path_distance_pq(f, g.me.head))(food_good))
+            food_moves = shortest_path_move(g.me.head, target)
+            food_moves = [a for a in moves if a in food_moves]
+            if len(food_moves) != 0:
+                g.decision_path.append("go to food")
+                return food_moves
 
 ######################################################
 
