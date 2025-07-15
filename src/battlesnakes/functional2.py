@@ -433,7 +433,10 @@ def prefer_towards_larger_territory(moves):
     nset = len(aset)
     center = int(round(sum([x for x,y in aset])/nset, 0)), int(round(sum([y for x,y in aset])/nset, 0))
     if center != g.me.head:
-        return shortest_path_move(g.me.head, center)
+        space_moves = shortest_path_move(g.me.head, center)
+        space_moves = [a for a in moves if a in space_moves]
+        if len(space_moves) != 0:
+            return space_moves
 
 def prefer_straight(moves):
     return prefer_yes(is_straight)(moves)
@@ -487,6 +490,7 @@ def coming_near(killer):
     my_next = [p for p in adj_cells(g.me.head) if is_straight(p) and p not in g.occupied_cells[0]]
     if len(my_next) == 0:
         return False
+    my_next = my_next[0]
     if distance_pq(killer_next, my_next) < distance_pq(g.me.head, killer.head):
         return True
     return False
