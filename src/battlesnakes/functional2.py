@@ -50,7 +50,7 @@ class Game:
         self.x = DecisionAux()
 
 class Snake:
-    def __init__(self, name, body, health):
+    def __init__(self, name, body, health, id=None):
         self.name = name
         self.body = body
         self.health = health
@@ -58,9 +58,10 @@ class Snake:
         self.head = None
         self.neck = None
         self.tail = None
+        self.id = id
 
     def dict(self):
-        return {k: self.__dict__[k] for k in ["name", "health", "body"]}
+        return {k: self.__dict__[k] for k in ["name", "health", "body", "id"]}
 
 g = Game()
 
@@ -336,6 +337,7 @@ def init_game(game_state):
             name=snake["name"],
             body=get_coord(snake["body"]),
             health=snake["health"],
+            id=snake["id"],
         ) for snake in game_state["board"]["snakes"] ]
     for snake in g.snakes:
         snake.length = len(snake.body)
