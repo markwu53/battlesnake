@@ -299,8 +299,8 @@ def id(moves):
 ######################################################
 
 def experiment_condition():
-    n_me = [snake for snake in g.snakes if snake.name == "mark_snake"]
-    if n_me >= 2: return True
+    mes = [snake for snake in g.snakes if snake.name == "mark_snake"]
+    if len(mes) >= 2: return True
     return False
 
 def special_experimenting_code(game_state):
