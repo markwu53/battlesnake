@@ -402,6 +402,7 @@ def battle_1_vs_n(moves):
         return sequential([
             avoid_danger_1_vs_n,
             avoid_confinement,
+            wayout,
             get_food_1_vs_n,
         ])(moves)
 
@@ -416,6 +417,59 @@ def get_food_1_vs_n(moves):
         get_food_1,
         get_food_near,
     ])(moves)
+
+def wayout(moves):
+    ngroup = move_connected_group(moves)
+    if ngroup == 1:
+        aset = path_connected_set(g.me.head)
+        aset = [p for p in aset if p != g.me.head]
+        if len(aset) <= int(g.me.length * 1.5):
+            g.decision_path.append("consider wayout")
+            adj_indexes = [i for i in range(g.me.length) if any([p in aset for p in adj_cells(g.me.body[i])])]
+            max_index = max(adj_indexes)
+            wayout_point = g.me.body[max_index]
+            required_steps = g.me.length - max_index - 1
+            if path_connected(g.me.head, wayout_point):
+                if required_steps < int(path_distance_pq(g.me.head, wayout_point) * 1.2):
+                    g.decision_path.append("wayout point far enough")
+                else:
+                    if len(aset) > 12:
+                        g.decision_path.append("confined space too large - meander")
+                        far_points = prefer_by_score(lambda a: path_distance_pq(a, wayout_point))(moves)
+                        if len(far_points) == 1:
+                            return far_points
+
+                        #then there are 2 points, cannot  have 3
+                        #and they are perpendicular, ie, one straight, one left or right
+                        #and they have a common adjacent point
+                        a,b = far_points
+                        c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head][0]
+                        occupied = g.occupied_cells[0]+[c]
+                        a_connection = path_connected(a, wayout_point, occupied)
+                        b_connection = path_connected(b, wayout_point, occupied)
+                        if not all([a_connection, b_connection]):
+                            choice = a if not a_connection else b
+                            g.decision_path.append(f"go first {choice}")
+                            return [choice]
+
+                    else:
+                        g.decision_path.append("confined space calculate wayout")
+
+                        layers = [[[g.me.head]]]
+                        while True:
+                            layer = layers[-1]
+                            layer = [path+[p] for path in layer for end in [path[-1]] for p in adj_cells(end) if p not in g.occupied_cells[0] and p not in path]
+                            if len(layer) == 0: break
+                            layers.append(layer)
+                        paths = [path for i,layer in enumerate(layers) if i >= required_steps for path in layer]
+                        paths = [path for path in paths if is_adjacent(path[-1], wayout_point)]
+                        paths = [path for path in paths 
+                                for food_in_path in [[p for p in path if p in g.food]] 
+                                if len(path)-len(food_in_path)>required_steps]
+                        moves = list({path[1] for path in paths})
+                        if len(moves) != 0:
+                            return moves
+                        g.decision_path.append("no calculated wayout")
 
 def move_connected_group(moves):
     if len(moves) == 1:
@@ -444,6 +498,8 @@ def avoid_confinement(moves):
                 g.decision_path.append("avoid confined moves")
                 return good_moves
             g.decision_path.append("nowhere avoid confined moves")
+        else:
+            g.decision_path.append("no confinement")
 
 def avoid_collision_1_vs_n(moves):
     danger_moves = [a for a in moves
