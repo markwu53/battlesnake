@@ -454,10 +454,11 @@ def me_on_border(moves):
                 return prefer_no(on_border)(moves)
 
 def coming_near(killer):
-    killer_next = [p for p in adj_cells(killer.head) if get_adjacent_dir(killer.neck, killer.head) == get_adjacent_dir(killer.head, p)][0]
+    killer_next = [p for p in adj_cells(killer.head) if get_adjacent_dir(killer.neck, killer.head) == get_adjacent_dir(killer.head, p)]
     killer_next = [p for p in killer_next if p not in g.occupied_cells[0]]
     if len(killer_next) == 0:
         return False
+    killer_next = killer_next[0]
     my_next = [p for p in adj_cells(g.me.head) if is_straight(p) and p not in g.occupied_cells[0]]
     if len(my_next) == 0:
         return False
