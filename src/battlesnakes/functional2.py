@@ -318,7 +318,7 @@ def special_experimenting_code(game_state):
     decision()
     g.state["next_move"] = get_adjacent_dir(g.me.head, g.next_coord)
 
-    g.log["decision_support"] = {k:v for k,v in g.e.__dict__.items() if v is not None}
+    #g.log["decision_support"] = {k:v for k,v in g.e.__dict__.items() if v is not None}
     g.log["decision_path"] = g.decision_path
     g.log["next_coord"] = g.next_coord
     g.log["next_move"] = g.state["next_move"]
@@ -387,6 +387,7 @@ def decision():
 
     #allowed_moves must be 2 or 3
     moves = cases([
+        first_two_turn,
         #battle_1_vs_1, 
         battle_1_vs_n,
         id, #cases at entry point ends by id to close possible None return
@@ -421,6 +422,10 @@ def get_food_1_vs_n(moves):
         get_food_1,
         get_food_near,
     ])(moves)
+
+def first_two_turn(moves):
+    if g.state["turn"] < 2:
+        return moves
 
 def prefer_towards_larger_territory(moves):
     aset = path_connected_set(g.me.head)
