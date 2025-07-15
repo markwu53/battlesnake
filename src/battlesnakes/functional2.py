@@ -404,6 +404,7 @@ def battle_1_vs_n(moves):
             avoid_confinement,
             wayout,
             get_food_1_vs_n,
+            prefer_more_next_moves,
         ])(moves)
 
 def avoid_danger_1_vs_n(moves):
@@ -418,6 +419,12 @@ def get_food_1_vs_n(moves):
         get_food_1,
         get_food_near,
     ])(moves)
+
+def prefer_more_next_moves(moves):
+    def n_next_moves(a):
+        next_moves = [p for p in adj_cells(a) if p not in g.occupied_cells[1]]
+        return len(next_moves)
+    return prefer_by_score(n_next_moves)(moves)
 
 def avoid_near_border_danger(moves):
     if min(distance_to_border(g.me.head)) < 2:
