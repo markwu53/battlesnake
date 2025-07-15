@@ -421,7 +421,7 @@ def get_food_1_vs_n(moves):
     ])(moves)
 
 def avoid_near_border_danger(moves):
-    if min(distance_to_border) < 2:
+    if min(distance_to_border(g.me.head)) < 2:
         killers = [snake for snake in g.others if snake.length > g.me.length and distance_pq(snake.head, g.me.head) <= 6]
         if len(killers) != 0:
             real_killers = [snake for snake in killers if path_distance_pq(snake.head, g.me.head) <= 10]
