@@ -296,6 +296,20 @@ def prefer_by_score(score):
 def id(moves):
     return moves
 
+def print_before(f):
+    def fn(moves):
+        print(moves)
+        moves = f(moves)
+        return moves
+    return fn
+
+def print_after(f):
+    def fn(moves):
+        moves = f(moves)
+        print(moves)
+        return moves
+    return fn
+
 ######################################################
 
 def experiment_condition():
@@ -402,7 +416,7 @@ def battle_1_vs_n(moves):
             avoid_collision_1_vs_n,
             avoid_equal_collision,
             kill_oppotunies,
-            avoid_near_border_danger,
+            (killer_near),
             split_choice,
             wayout,
             get_food_1_vs_n,
@@ -452,7 +466,6 @@ def enemy_in_trap():
         return False
     return True
 
-
 def first_two_turn(moves):
     if g.state["turn"] < 2:
         return moves
@@ -480,7 +493,8 @@ def prefer_more_next_moves(moves):
         return len(next_moves)
     return prefer_by_score(n_next_moves)(moves)
 
-def avoid_near_border_danger(moves):
+def killer_near(moves):
+    print(moves)
     if min(distance_to_border(g.me.head)) < 2:
         killers = [snake for snake in g.others if snake.length > g.me.length and distance_pq(snake.head, g.me.head) <= 6]
         if len(killers) != 0:
@@ -530,6 +544,7 @@ def coming_near(killer):
     return False
 
 def me_at_off_border(moves):
+    print(moves)
     if off_border_1(g.me.head):
         real_killers = g.x.real_killers
         if len(real_killers) == 1:
@@ -538,7 +553,7 @@ def me_at_off_border(moves):
             dist2 = path_distance_pq(g.me.head, killer.head)
             if dist1 <= 4 and dist1 == dist2:
                 if coming_near(killer):
-                    g.decision_path.append("killer near, return off border")
+                    g.decision_path.append("don't go border")
                     return prefer_no(on_border)(moves)
 
 def wayout(moves):
@@ -646,7 +661,15 @@ def avoid_collision_1_vs_n(moves):
         g.decision_path.append("nowhere to avoid")
 
 def avoid_equal_collision(moves):
-    return moves
+    danger_moves = [a for a in moves
+        for snakes in [[snake for snake in g.others if is_adjacent(a, snake.head) and snake.length == g.me.length]]
+        if len(snakes) != 0 ]
+    if len(danger_moves) != 0:
+        g.decision_path.append("avoid equal collision")
+        moves = [a for a in moves if a not in danger_moves]
+        if len(moves) != 0:
+            return moves
+        g.decision_path.append("nowhere to avoid")
 
 def get_food_1(moves):
     food1 = [a for a in moves if a in g.food]
@@ -708,6 +731,8 @@ def run():
     log = {'id': 'e7f4cae2-49e9-45c6-983d-6e24763e280f', 'turn': 84, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(10,4), (9,4), (8,4), (7,4), (6,4), (6, 5), (6, 6), (6, 7), (5, 7), (4, 7), (3, 7), (3, 6), (3, 5), (3, 4), (3, 3)], 'id': 'gs_rjt4MgXVRPTgQbwdfHv3YmMc'}, 'others': [{'name': 'mark_snake', 'health': 96, 'body': [(6,8), (5,8), (4,8), (3,8), (2,8), (1, 8), (1, 9), (2, 9), (3, 9), (4, 9)], 'id': 'gs_qCmJqkQrx3YP8XwjrhM7qgFc'}], 'food': [(10, 2)], 'experiment': 'Yes', 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 5), (5, 5), (6, 4)], 'head_distance': 8, 'head_path_distance': 10}, 'decision_path': ['get food1'], 'next_coord': (6, 4), 'next_move': 'down', 'time': '0.002s'}
     log = {'id': '4a988799-cda8-4914-b716-27b2346aeb88', 'turn': 105, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(6, 7), (6, 6), (6, 5), (5, 5), (4, 5), (4, 6), (4, 7), (3, 7), (2, 7), (2, 8), (2, 9), (3, 9), (3, 10)], 'id': 'gs_8YxYqXPxrbqr4PYDkmM94FDR'}, 'others': [{'name': 'Frank The Tank', 'health': 89, 'body': [(4, 9), (5, 9), (6, 9), (7, 9), (7, 8), (8, 8), (8, 9), (9, 9), (9, 8), (9, 7)], 'id': 'gs_v8CMgg4bg7cf8Sw8PMbq9mXQ'}, {'name': 'Wim HU [dev]', 'health': 77, 'body': [(7, 2), (7, 3), (7, 4), (8, 4), (9, 4), (10, 4), (10, 3), (10, 2)], 'id': 'gs_YRKKjjVPT8jTq7jXXBhcDmSP'}, {'name': 'Kakemonsteret-v2', 'health': 96, 'body': [(3, 2), (3, 1), (3, 0), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (3, 4), (3, 3), (4, 3)], 'id': 'gs_jYfmcXQSdvPBxvcDGYgKq7kT'}], 'food': [(9, 10)], 'experiment': 'Yes', 'decision_path': ['split choice', 'no confinement'], 'next_coord': (5, 7), 'next_move': 'left', 'time': '0.004s'}
     log = {'id': 'bf9336d7-ab5c-4452-8a90-3ab7d004304f', 'turn': 116, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (9, 9), (9, 8)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(7, 3), (7, 4), (8, 4), (8, 5), (8, 6), (7, 6), (7, 5), (6, 5), (5, 5), (5, 6), (4, 6), (3, 6), (3, 7), (2, 7), (2, 6)]}, {'name': 'Wim HU [dev]', 'health': 100, 'body': [(2, 4), (1, 4), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (6, 2), (6, 1), (6, 0), (7, 0), (7, 0)]}], 'food': [(0, 1)], 'experiment': 'Yes', 'decision_path': ['avoid collision', 'killer near', 'split choice', 'no confinement'], 'next_coord': (9, 2), 'next_move': 'down', 'time': '0.099s'}
+    log = {'id': '6f80615c-5936-434c-9112-8c2e95153299', 'turn': 35, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(8, 9), (8, 8), (8, 7), (8, 6), (8, 5)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 83, 'body': [(9, 4), (9, 3), (8, 3), (8, 2), (8, 1), (8, 0)]}, {'name': 'Frank The Tank', 'health': 97, 'body': [(2, 3), (1, 3), (0, 3), (0, 2), (1, 2), (2, 2), (3, 2), (3, 3)]}, {'name': 'Wim HU [dev]', 'health': 95, 'body': [(2, 9), (2, 8), (2, 7), (3, 7), (4, 7), (5, 7)]}], 'food': [(3, 9)], 'experiment': 'Yes', 'decision_path': ['killer near'], 'next_coord': (9, 9), 'next_move': 'right', 'time': '0.199s'}
+    log = {'id': '6f80615c-5936-434c-9112-8c2e95153299', 'turn': 35, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(8, 9), (8, 8), (8, 7), (8, 6), (8, 5)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 83, 'body': [(9, 4), (9, 3), (8, 3), (8, 2), (8, 1), (8, 0)]}, {'name': 'Frank The Tank', 'health': 97, 'body': [(2, 3), (1, 3), (0, 3), (0, 2), (1, 2), (2, 2), (3, 2), (3, 3)]}, ], 'food': [(3, 9)], 'experiment': 'Yes', 'decision_path': ['killer near'], 'next_coord': (9, 9), 'next_move': 'right', 'time': '0.199s'}
 
 
     game_state = init_from_log(log)
