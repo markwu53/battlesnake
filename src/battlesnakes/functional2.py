@@ -345,8 +345,10 @@ def init_game(game_state):
         snake.neck = snake.body[1]
         snake.tail = snake.body[-1]
 
-    g.me = [snake for snake in g.snakes for c in [game_state["you"]["body"][0]] if snake.head == (c["x"], c["y"])][0]
-    g.others = [snake for snake in g.snakes if snake.head != g.me.head]
+    # g.me = [snake for snake in g.snakes for c in [game_state["you"]["body"][0]] if snake.head == (c["x"], c["y"])][0]
+    # g.others = [snake for snake in g.snakes if snake.head != g.me.head]
+    g.me = [snake for snake in g.snakes if snake.id == game_state["you"]["id"]]
+    g.others = [snake for snake in g.snakes if snake.id != g.me.id]
     if len(g.others) == 0:
         turn = game_state["turn"]
         id = game_state["game"]["id"]
