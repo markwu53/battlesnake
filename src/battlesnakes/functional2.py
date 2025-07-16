@@ -652,7 +652,7 @@ def split_choice(moves):
         confined_moves = [a for a in moves if len(path_connected_set(a)) < g.me.length //2]
         confined_moves = [a for a in confined_moves if not path_connected(a, g.me.tail)]
         if len(confined_moves) == 0:
-            g.decision_path.append("no confinement - need further consideration")
+            g.decision_path.append("no confinement - consider space ahead")
             return no_confinement(moves)
         g.decision_path.append("has confined moves")
         good_moves = [a for a in moves if a not in confined_moves]
