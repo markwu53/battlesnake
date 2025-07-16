@@ -484,7 +484,7 @@ def prefer_open_space(moves):
     nset = len(aset)
     center = int(round(sum([x for x,y in aset])/nset, 0)), int(round(sum([y for x,y in aset])/nset, 0))
     if distance_pq(center, g.me.head) >= 3:
-        g.decision_path.append("go to open space")
+        g.decision_path.append(f"go to open space {center}")
         return prefer_by_rank(lambda a: distance_pq(a, center))(moves)
 
 def prefer_straight(moves):
