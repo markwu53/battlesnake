@@ -664,7 +664,7 @@ def avoid_collision_1_vs_n(moves):
         if len(moves) != 0:
             if len(moves) == 1:
                 a = moves[0]
-                next_next_move = [p for p in adj_cells if a not in g.occupied_cells[1]]
+                next_next_move = [p for p in adj_cells(a) if a not in g.occupied_cells[1]]
                 if len(next_next_move) <= 1:
                     g.decision_path.append("take risk")
                     return danger_moves
