@@ -399,8 +399,10 @@ def battle_1_vs_n(moves):
     #if len(g.others) > 1:
     if len(g.others) >= 1:
         return sequential([
+            avoid_collision_1_vs_n,
+            avoid_equal_collision,
             kill_oppotunies,
-            avoid_danger_1_vs_n,
+            avoid_near_border_danger,
             split_choice,
             wayout,
             get_food_1_vs_n,
@@ -408,13 +410,6 @@ def battle_1_vs_n(moves):
             prefer_more_next_moves,
             prefer_straight,
         ])(moves)
-
-def avoid_danger_1_vs_n(moves):
-    return sequential([
-        avoid_collision_1_vs_n,
-        avoid_equal_collision,
-        avoid_near_border_danger,
-    ])(moves)
 
 def get_food_1_vs_n(moves):
     return cases([
@@ -424,11 +419,39 @@ def get_food_1_vs_n(moves):
 
 def kill_oppotunies(moves):
     return cases([
-        enemy_in_trap,
+        enemy_in_trap_move,
     ])(moves)
 
-def enemy_in_trap(moves):
-    return
+def enemy_in_trap_move(moves):
+    if enemy_in_trap():
+        kill_moves = [a for a in moves if on_border(a)]
+        if len(kill_moves) != 0:
+            g.decision_path.append("kill")
+            return kill_moves
+
+def enemy_in_trap():
+    if not off_border_1(g.me.head):
+        return False
+    in_trap = False
+    for i,c in enumerate(g.me.body):
+        if c == g.me.tail and g.me.health != 100: continue
+        for snake in g.others:
+            if not is_adjacent(snake.head, c): continue
+            if not on_border(snake.head): continue
+            if not on_border(c): continue
+            b = g.me.body[i-1]
+            if g.me.health == 100:
+                b = g.me.body[i-2]
+            if get_adjacent_dir(c, b) == get_adjacent_dir(snake.neck, snake.head):
+                in_trap = True
+                break
+    if not in_trap:
+        return False
+    if any([on_border(g.me.body[j]) for j in range(i)]):
+        #already performed kill action
+        return False
+    return True
+
 
 def first_two_turn(moves):
     if g.state["turn"] < 2:
