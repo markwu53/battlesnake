@@ -63,7 +63,7 @@ class Snake:
     def dict(self):
         return {k: self.__dict__[k] for k in ["name", "health", "body", "id"]}
 
-g = Game()
+g = None
 
 
 ######################################################
