@@ -632,6 +632,19 @@ def move_group(moves):
     ngroup = move_connected_group(moves)
     g.x.ngroup = ngroup
 
+def no_confinement(moves):
+    head_space = path_connected_set(g.me.head)
+    killers = [snake for snake in g.others if snake.length > g.me.length]
+    nonkillers = [snake for snake in g.others if snake.length <= g.me.length]
+    my_space = [a for a in head_space 
+     if all([path_distance_pq(a, g.me.head) < path_distance_pq(a, snake.head) for snake in killers]) ]
+    my_space = [a for a in my_space 
+     if all([path_distance_pq(a, g.me.head) <= path_distance_pq(a, snake.head) for snake in nonkillers]) ]
+    occupied = g.occupied_cells[0]+[a for a in head_space if a not in my_space]
+    def move_space(a):
+        return len(path_connected_set(a, occupied))
+    return prefer_by_score(move_space)(moves)
+
 def split_choice(moves):
     ngroup = g.x.ngroup
     if ngroup > 1:
@@ -639,8 +652,8 @@ def split_choice(moves):
         confined_moves = [a for a in moves if len(path_connected_set(a)) < g.me.length //2]
         confined_moves = [a for a in confined_moves if not path_connected(a, g.me.tail)]
         if len(confined_moves) == 0:
-            g.decision_path.append("no confinement - need further consideration")
-            return
+            g.decision_path.append("no confinement - consider space ahead")
+            return no_confinement(moves)
         g.decision_path.append("has confined moves")
         good_moves = [a for a in moves if a not in confined_moves]
         if len(good_moves) != 0:
@@ -751,6 +764,7 @@ def run():
     log = {'id': '32fcee8d-03d8-4e6e-981f-83a54c3445ca', 'turn': 149, 'me': {'name': 'mark_snake', 'health': 85, 'body': [(10, 5), (9, 5), (8, 5), (7, 5), (6, 5), (5, 5), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 56, 'body': [(8, 1), (8, 0), (7, 0), (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4), (8, 4), (8, 3), (9, 3)]}, {'name': 'Kakemonsteret-v2', 'health': 99, 'body': [(0, 5), (0, 6), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10), (3, 9), (2, 9), (2, 8), (2, 7), (2, 6), (3, 6), (4, 6)]}], 'food': [(1, 0)], 'experiment': 'Yes', 'decision_path': ['split choice', 'has confined moves', 'avoid confined moves'], 'next_coord': (10, 4), 'next_move': 'down', 'time': '0.000s'}
     log = {'id': '49650c4c-8b0b-40a8-be5a-4312fe526212', 'turn': 104, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(9, 3), (9, 2), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3)]}, 'others': [{'name': 'Frank The Tank', 'health': 100, 'body': [(8, 4), (7, 4), (6, 4), (6, 5), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9), (9, 9)]}, {'name': 'Kakemonsteret-v2', 'health': 92, 'body': [(3, 3), (3, 2), (2, 2), (2, 1), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4), (1, 4), (1, 5)]}], 'food': [(10, 7)], 'experiment': 'Yes', 'decision_path': ['avoid collision'], 'next_coord': (10, 3), 'next_move': 'right', 'time': '0.001s'}
     log = {'id': 'ef5ac3ef-96d7-420a-8fa6-83f795f281b8', 'turn': 236, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(1, 3), (2, 3), (2, 2), (3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (9, 8), (9, 9), (8, 9), (8, 10), (7, 10)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 90, 'body': [(1, 5), (1, 4), (2, 4), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4)]}, {'name': 'Kakemonsteret-v2', 'health': 94, 'body': [(5, 5), (5, 4), (5, 3), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6), (6, 6), (7, 6), (7, 5), (7, 4), (7, 3), (8, 3), (8, 4)]}], 'food': [(9, 10)], 'experiment': 'Yes', 'decision_path': ['consider wayout', 'wayout point far enough', 'go to open space'], 'next_coord': (1, 2), 'next_move': 'down', 'time': '0.001s'}
+    log = {'id': '3104d1b4-d02b-44ac-8cde-510183de0b65', 'turn': 85, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 100, 'body': [(4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 2)]}, {'name': 'Frank The Tank', 'health': 100, 'body': [(3, 4), (3, 5), (3, 6), (2, 6), (2, 5), (2, 4), (2, 3), (3, 3), (3, 2), (4, 2), (4, 2)]}, {'name': 'Kakemonsteret-v2', 'health': 84, 'body': [(7, 2), (8, 2), (8, 1), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6)]}], 'food': [(10, 8)], 'experiment': 'Yes', 'decision_path': ['split choice', 'no confinement - need further consideration'], 'next_coord': (5, 3), 'next_move': 'left', 'time': '0.002s'}
 
 
     game_state = init_from_log(log)
