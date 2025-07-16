@@ -567,11 +567,8 @@ def wayout(moves):
             adj_indexes = [i for i in range(g.me.length) if any([p in aset for p in adj_cells(g.me.body[i])])]
             max_index = max(adj_indexes)
             wayout_point = g.me.body[max_index]
-            print(wayout_point)
             required_steps = g.me.length - max_index - 1
             if path_connected(g.me.head, wayout_point):
-                print(required_steps)
-                print(path_distance_pq(g.me.head, wayout_point))
                 if required_steps < path_distance_pq(g.me.head, wayout_point) or len(aset) > 12:
                     g.decision_path.append("confined space too large to calculate - meander")
                     far_points = prefer_by_score(lambda a: path_distance_pq(a, wayout_point))(moves)
