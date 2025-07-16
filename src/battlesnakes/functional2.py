@@ -414,6 +414,8 @@ def battle_1_vs_n(moves):
     if len(g.others) >= 1:
         return sequential([
             move_group,
+
+            dont_go_in_trap,
             avoid_collision_1_vs_n,
             avoid_equal_collision,
             kill_oppotunies,
@@ -436,6 +438,25 @@ def kill_oppotunies(moves):
     return cases([
         enemy_in_trap_move,
     ])(moves)
+
+def is_a_border_trap(a):
+    if not on_border(a):
+        return False
+    for snake in g.others:
+        for i,c in enumerate(snake.body):
+            if c == snake.tail and snake.health != 100: continue
+            if not is_adjacent(c, a): continue
+            if on_border(c): continue
+            b = snake[i-1]
+            if get_adjacent_dir(g.me.neck, g.me.head) == get_adjacent_dir(c, b):
+                return True
+    return False
+
+def dont_go_in_trap(moves):
+    trap = [a for a in moves if is_a_border_trap(a)]
+    if len(trap) != 0:
+        g.decision_path.append(f"don't go in trap {trap}")
+        return prefer_no(lambda a: a in trap)(moves)
 
 def enemy_in_trap_move(moves):
     if enemy_in_trap():
