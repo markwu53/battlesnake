@@ -125,9 +125,9 @@ def occupied_cells(step):
     sbody = []
     for s in g.snakes:
         body = s.body
-        if s.health == 100:
+        # if s.health == 100:
             #eat food, tail will not move in the next step
-            body = body + [body[-1]]
+            # body = body + [body[-1]]
         sbody.append(body[:-step])
     cells = [c for s in sbody for c in s]
     return cells
