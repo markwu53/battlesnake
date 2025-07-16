@@ -639,7 +639,7 @@ def split_choice(moves):
         confined_moves = [a for a in moves if len(path_connected_set(a)) < g.me.length //2]
         confined_moves = [a for a in confined_moves if not path_connected(a, g.me.tail)]
         if len(confined_moves) == 0:
-            g.decision_path.append("no confinement")
+            g.decision_path.append("no confinement - need further consideration")
             return
         g.decision_path.append("has confined moves")
         good_moves = [a for a in moves if a not in confined_moves]
@@ -660,9 +660,15 @@ def avoid_collision_1_vs_n(moves):
         for snakes in [[snake for snake in g.others if is_adjacent(a, snake.head) and snake.length > g.me.length]]
         if len(snakes) != 0 ]
     if len(danger_moves) != 0:
-        g.decision_path.append("avoid collision")
         moves = [a for a in moves if a not in danger_moves]
         if len(moves) != 0:
+            if len(moves) == 1:
+                a = moves[0]
+                next_next_move = [p for p in adj_cells if a not in g.occupied_cells[1]]
+                if len(next_next_move) <= 1:
+                    g.decision_path.append("take risk")
+                    return danger_moves
+            g.decision_path.append("avoid collision")
             return moves
         g.decision_path.append("nowhere to avoid")
 
@@ -743,6 +749,7 @@ def run():
     log = {'id': '4b1cfdc7-775f-459e-bbbb-02c4e4e2efbf', 'turn': 144, 'me': {'name': 'mark_snake', 'health': 62, 'body': [(9, 9), (8, 9), (8, 8), (8, 7), (7, 7), (7, 6), (7, 5), (8, 5), (9, 5)]}, 'others': [{'name': 'Frank The Tank', 'health': 88, 'body': [(6, 8), (5, 8), (4, 8), (4, 7), (3, 7), (3, 8), (2, 8), (2, 7), (2, 6), (2, 5), (2, 4), (3, 4), (3, 3), (4, 3), (4, 2), (5, 2), (5, 3)]}, {'name': 'Wim HU [dev]', 'health': 90, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3)]}, {'name': 'Kakemonsteret-v2', 'health': 96, 'body': [(8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6)]}], 'food': [(10, 9)], 'experiment': 'Yes', 'decision_path': ['avoid collision', 'killer near', 'me at corner'], 'next_coord': (9, 8), 'next_move': 'down', 'time': '0.001s'}
     log = {'id': 'fe74fdfa-4aeb-43de-8395-870f61ce5b7b', 'turn': 219, 'me': {'name': 'mark_snake', 'health': 68, 'body': [(0, 9), (0, 8), (1, 8), (1, 7), (2, 7), (3, 7), (3, 8), (3, 9), (4, 9), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 86, 'body': [(0, 1), (0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 5), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5)]}, {'name': 'Kakemonsteret-v2', 'health': 91, 'body': [(5, 0), (4, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6), (6, 6), (6, 5), (6, 4), (6, 3), (6, 2), (6, 1), (7, 1), (7, 0)]}], 'food': [(6, 0)], 'experiment': 'Yes', 'decision_path': ['consider wayout', 'wayout point far enough'], 'next_coord': (1, 9), 'next_move': 'right', 'time': '0.001s'}
     log = {'id': '32fcee8d-03d8-4e6e-981f-83a54c3445ca', 'turn': 149, 'me': {'name': 'mark_snake', 'health': 85, 'body': [(10, 5), (9, 5), (8, 5), (7, 5), (6, 5), (5, 5), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 56, 'body': [(8, 1), (8, 0), (7, 0), (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4), (8, 4), (8, 3), (9, 3)]}, {'name': 'Kakemonsteret-v2', 'health': 99, 'body': [(0, 5), (0, 6), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10), (3, 9), (2, 9), (2, 8), (2, 7), (2, 6), (3, 6), (4, 6)]}], 'food': [(1, 0)], 'experiment': 'Yes', 'decision_path': ['split choice', 'has confined moves', 'avoid confined moves'], 'next_coord': (10, 4), 'next_move': 'down', 'time': '0.000s'}
+    log = {'id': '49650c4c-8b0b-40a8-be5a-4312fe526212', 'turn': 104, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(9, 3), (9, 2), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3)]}, 'others': [{'name': 'Frank The Tank', 'health': 100, 'body': [(8, 4), (7, 4), (6, 4), (6, 5), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9), (9, 9)]}, {'name': 'Kakemonsteret-v2', 'health': 92, 'body': [(3, 3), (3, 2), (2, 2), (2, 1), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4), (1, 4), (1, 5)]}], 'food': [(10, 7)], 'experiment': 'Yes', 'decision_path': ['avoid collision'], 'next_coord': (10, 3), 'next_move': 'right', 'time': '0.001s'}
 
 
     game_state = init_from_log(log)
