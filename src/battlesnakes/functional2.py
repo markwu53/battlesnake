@@ -403,8 +403,8 @@ def battle_1_vs_n(moves):
             split_choice,
             wayout,
             get_food_1_vs_n,
-            prefer_more_next_moves,
             prefer_towards_larger_territory,
+            prefer_more_next_moves,
             prefer_straight,
         ])(moves)
 
@@ -435,7 +435,7 @@ def prefer_towards_larger_territory(moves):
      ]
     nset = len(aset)
     center = int(round(sum([x for x,y in aset])/nset, 0)), int(round(sum([y for x,y in aset])/nset, 0))
-    if center != g.me.head:
+    if distance_pq(center, g.me.head) >= 5:
         space_moves = shortest_path_move(g.me.head, center)
         space_moves = [a for a in moves if a in space_moves]
         if len(space_moves) != 0:
