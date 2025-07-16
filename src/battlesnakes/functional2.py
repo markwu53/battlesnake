@@ -403,7 +403,7 @@ def battle_1_vs_n(moves):
             split_choice,
             wayout,
             get_food_1_vs_n,
-            prefer_towards_larger_territory,
+            prefer_open_space,
             prefer_more_next_moves,
             prefer_straight,
         ])(moves)
@@ -425,7 +425,7 @@ def first_two_turn(moves):
     if g.state["turn"] < 2:
         return moves
 
-def prefer_towards_larger_territory(moves):
+def prefer_open_space(moves):
     aset = path_connected_set(g.me.head)
     killers = [snake for snake in g.others if snake.length > g.me.length]
     nonkillers = [snake for snake in g.others if snake.length <= g.me.length]
@@ -439,6 +439,7 @@ def prefer_towards_larger_territory(moves):
         space_moves = shortest_path_move(g.me.head, center)
         space_moves = [a for a in moves if a in space_moves]
         if len(space_moves) != 0:
+            g.decision_path.append("go to open space")
             return space_moves
 
 def prefer_straight(moves):
