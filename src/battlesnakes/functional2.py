@@ -567,48 +567,48 @@ def wayout(moves):
             adj_indexes = [i for i in range(g.me.length) if any([p in aset for p in adj_cells(g.me.body[i])])]
             max_index = max(adj_indexes)
             wayout_point = g.me.body[max_index]
+            print(wayout_point)
             required_steps = g.me.length - max_index - 1
             if path_connected(g.me.head, wayout_point):
-                if required_steps < path_distance_pq(g.me.head, wayout_point):
-                    g.decision_path.append("wayout point far enough")
+                print(required_steps)
+                print(path_distance_pq(g.me.head, wayout_point))
+                if required_steps < path_distance_pq(g.me.head, wayout_point) or len(aset) > 12:
+                    g.decision_path.append("confined space too large to calculate - meander")
+                    far_points = prefer_by_score(lambda a: path_distance_pq(a, wayout_point))(moves)
+                    if len(far_points) == 1:
+                        return far_points
+
+                    #then there are 2 points, cannot  have 3
+                    #and they are perpendicular, ie, one straight, one left or right
+                    #and they have a common adjacent point
+                    a,b = far_points
+                    c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head][0]
+                    occupied = g.occupied_cells[0]+[c]
+                    a_connection = path_connected(a, wayout_point, occupied)
+                    b_connection = path_connected(b, wayout_point, occupied)
+                    if not all([a_connection, b_connection]):
+                        choice = a if not a_connection else b
+                        g.decision_path.append(f"go first {choice}")
+                        return [choice]
+
                 else:
-                    if len(aset) > 12:
-                        g.decision_path.append("confined space too large - meander")
-                        far_points = prefer_by_score(lambda a: path_distance_pq(a, wayout_point))(moves)
-                        if len(far_points) == 1:
-                            return far_points
+                    g.decision_path.append("confined space calculate wayout")
 
-                        #then there are 2 points, cannot  have 3
-                        #and they are perpendicular, ie, one straight, one left or right
-                        #and they have a common adjacent point
-                        a,b = far_points
-                        c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head][0]
-                        occupied = g.occupied_cells[0]+[c]
-                        a_connection = path_connected(a, wayout_point, occupied)
-                        b_connection = path_connected(b, wayout_point, occupied)
-                        if not all([a_connection, b_connection]):
-                            choice = a if not a_connection else b
-                            g.decision_path.append(f"go first {choice}")
-                            return [choice]
-
-                    else:
-                        g.decision_path.append("confined space calculate wayout")
-
-                        layers = [[[g.me.head]]]
-                        while True:
-                            layer = layers[-1]
-                            layer = [path+[p] for path in layer for end in [path[-1]] for p in adj_cells(end) if p not in g.occupied_cells[0] and p not in path]
-                            if len(layer) == 0: break
-                            layers.append(layer)
-                        paths = [path for i,layer in enumerate(layers) if i >= required_steps for path in layer]
-                        paths = [path for path in paths if is_adjacent(path[-1], wayout_point)]
-                        paths = [path for path in paths 
-                                for food_in_path in [[p for p in path if p in g.food]] 
-                                if len(path)-len(food_in_path)>required_steps]
-                        moves = list({path[1] for path in paths})
-                        if len(moves) != 0:
-                            return moves
-                        g.decision_path.append("no calculated wayout")
+                    layers = [[[g.me.head]]]
+                    while True:
+                        layer = layers[-1]
+                        layer = [path+[p] for path in layer for end in [path[-1]] for p in adj_cells(end) if p not in g.occupied_cells[0] and p not in path]
+                        if len(layer) == 0: break
+                        layers.append(layer)
+                    paths = [path for i,layer in enumerate(layers) if i >= required_steps for path in layer]
+                    paths = [path for path in paths if is_adjacent(path[-1], wayout_point)]
+                    paths = [path for path in paths 
+                            for food_in_path in [[p for p in path if p in g.food]] 
+                            if len(path)-len(food_in_path)>required_steps]
+                    moves = list({path[1] for path in paths})
+                    if len(moves) != 0:
+                        return moves
+                    g.decision_path.append("no calculated wayout")
 
 def move_connected_group(moves):
     if len(moves) == 1:
@@ -750,6 +750,7 @@ def run():
     log = {'id': 'fe74fdfa-4aeb-43de-8395-870f61ce5b7b', 'turn': 219, 'me': {'name': 'mark_snake', 'health': 68, 'body': [(0, 9), (0, 8), (1, 8), (1, 7), (2, 7), (3, 7), (3, 8), (3, 9), (4, 9), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 86, 'body': [(0, 1), (0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 5), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5)]}, {'name': 'Kakemonsteret-v2', 'health': 91, 'body': [(5, 0), (4, 0), (3, 0), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6), (6, 6), (6, 5), (6, 4), (6, 3), (6, 2), (6, 1), (7, 1), (7, 0)]}], 'food': [(6, 0)], 'experiment': 'Yes', 'decision_path': ['consider wayout', 'wayout point far enough'], 'next_coord': (1, 9), 'next_move': 'right', 'time': '0.001s'}
     log = {'id': '32fcee8d-03d8-4e6e-981f-83a54c3445ca', 'turn': 149, 'me': {'name': 'mark_snake', 'health': 85, 'body': [(10, 5), (9, 5), (8, 5), (7, 5), (6, 5), (5, 5), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 56, 'body': [(8, 1), (8, 0), (7, 0), (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4), (8, 4), (8, 3), (9, 3)]}, {'name': 'Kakemonsteret-v2', 'health': 99, 'body': [(0, 5), (0, 6), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10), (3, 9), (2, 9), (2, 8), (2, 7), (2, 6), (3, 6), (4, 6)]}], 'food': [(1, 0)], 'experiment': 'Yes', 'decision_path': ['split choice', 'has confined moves', 'avoid confined moves'], 'next_coord': (10, 4), 'next_move': 'down', 'time': '0.000s'}
     log = {'id': '49650c4c-8b0b-40a8-be5a-4312fe526212', 'turn': 104, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(9, 3), (9, 2), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3)]}, 'others': [{'name': 'Frank The Tank', 'health': 100, 'body': [(8, 4), (7, 4), (6, 4), (6, 5), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9), (9, 9)]}, {'name': 'Kakemonsteret-v2', 'health': 92, 'body': [(3, 3), (3, 2), (2, 2), (2, 1), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4), (1, 4), (1, 5)]}], 'food': [(10, 7)], 'experiment': 'Yes', 'decision_path': ['avoid collision'], 'next_coord': (10, 3), 'next_move': 'right', 'time': '0.001s'}
+    log = {'id': 'ef5ac3ef-96d7-420a-8fa6-83f795f281b8', 'turn': 236, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(1, 3), (2, 3), (2, 2), (3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (9, 8), (9, 9), (8, 9), (8, 10), (7, 10)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 90, 'body': [(1, 5), (1, 4), (2, 4), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4)]}, {'name': 'Kakemonsteret-v2', 'health': 94, 'body': [(5, 5), (5, 4), (5, 3), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6), (6, 6), (7, 6), (7, 5), (7, 4), (7, 3), (8, 3), (8, 4)]}], 'food': [(9, 10)], 'experiment': 'Yes', 'decision_path': ['consider wayout', 'wayout point far enough', 'go to open space'], 'next_coord': (1, 2), 'next_move': 'down', 'time': '0.001s'}
 
 
     game_state = init_from_log(log)
