@@ -447,7 +447,7 @@ def is_a_border_trap(a):
             if c == snake.tail and snake.health != 100: continue
             if not is_adjacent(c, a): continue
             if on_border(c): continue
-            b = snake[i-1]
+            b = snake.body[i-1]
             if get_adjacent_dir(g.me.neck, g.me.head) == get_adjacent_dir(c, b):
                 return True
     return False
