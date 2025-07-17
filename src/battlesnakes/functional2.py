@@ -578,6 +578,11 @@ def me_at_off_border(moves):
                     g.decision_path.append("don't go border")
                     return prefer_no(on_border)(moves)
 
+def log_print(anything=None):
+    turn = g.state["turn"]
+    id = g.state["game"]["id"]
+    print(f"MARK_EXCEPTION, TURN: {turn}, id: {id}, {anything}")
+
 def wayout(moves):
     ngroup = move_connected_group(moves)
     if ngroup == 1:
@@ -596,11 +601,15 @@ def wayout(moves):
                     if len(far_points) == 1:
                         return far_points
 
-                    #then there are 2 points, cannot  have 3
+                    #then there are 2 points, cannot have 3
                     #and they are perpendicular, ie, one straight, one left or right
                     #and they have a common adjacent point
                     a,b = far_points
-                    c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head][0]
+                    c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head]
+                    if len(c) == 0:
+                        log_print(far_points)
+                        return far_points
+                    c = c[0]
                     occupied = g.occupied_cells[0]+[c]
                     a_connection = path_connected(a, wayout_point, occupied)
                     b_connection = path_connected(b, wayout_point, occupied)
