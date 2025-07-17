@@ -566,9 +566,9 @@ def killer_near(moves):
                 g.decision_path.append("killer near")
                 g.x.real_killers = real_killers
                 return cases([
-                    me_at_corner,
                     me_at_off_border,
                     me_on_border,
+                    me_at_corner,
                 ])(moves)
 
 def killer_near_not_long_enough(moves):
@@ -832,6 +832,7 @@ def init_from_log(log):
             "name": snake["name"],
             "health": snake["health"],
             "body": reverse_coord(snake["body"]),
+            "latency": "0.010s",
         } for snake in [log["me"]] ][0]
 
     game_state = {
@@ -864,6 +865,7 @@ def run():
     log = {'id': '49650c4c-8b0b-40a8-be5a-4312fe526212', 'turn': 104, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(9, 3), (9, 2), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3)]}, 'others': [{'name': 'Frank The Tank', 'health': 100, 'body': [(8, 4), (7, 4), (6, 4), (6, 5), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9), (9, 9)]}, {'name': 'Kakemonsteret-v2', 'health': 92, 'body': [(3, 3), (3, 2), (2, 2), (2, 1), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4), (1, 4), (1, 5)]}], 'food': [(10, 7)], 'experiment': 'Yes', 'decision_path': ['avoid collision'], 'next_coord': (10, 3), 'next_move': 'right', 'time': '0.001s'}
     log = {'id': 'ef5ac3ef-96d7-420a-8fa6-83f795f281b8', 'turn': 236, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(1, 3), (2, 3), (2, 2), (3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (9, 8), (9, 9), (8, 9), (8, 10), (7, 10)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 90, 'body': [(1, 5), (1, 4), (2, 4), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4)]}, {'name': 'Kakemonsteret-v2', 'health': 94, 'body': [(5, 5), (5, 4), (5, 3), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6), (6, 6), (7, 6), (7, 5), (7, 4), (7, 3), (8, 3), (8, 4)]}], 'food': [(9, 10)], 'experiment': 'Yes', 'decision_path': ['consider wayout', 'wayout point far enough', 'go to open space'], 'next_coord': (1, 2), 'next_move': 'down', 'time': '0.001s'}
     log = {'id': '3104d1b4-d02b-44ac-8cde-510183de0b65', 'turn': 85, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 100, 'body': [(4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 2)]}, {'name': 'Frank The Tank', 'health': 100, 'body': [(3, 4), (3, 5), (3, 6), (2, 6), (2, 5), (2, 4), (2, 3), (3, 3), (3, 2), (4, 2), (4, 2)]}, {'name': 'Kakemonsteret-v2', 'health': 84, 'body': [(7, 2), (8, 2), (8, 1), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6)]}], 'food': [(10, 8)], 'experiment': 'Yes', 'decision_path': ['split choice', 'no confinement - need further consideration'], 'next_coord': (5, 3), 'next_move': 'left', 'time': '0.002s'}
+    log = {'id': '88399949-e250-4b19-813b-d2cba8172542', 'turn': 40, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(8,10), (8,9), (7,9), (6,9), (5,9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 96, 'body': [(9,1), (9,2), (9,3), (9,4), (9,5), (8,5), (8,4), (8,3), (8,2)]}, {'name': 'Wim HU [dev]', 'health': 71, 'body': [(0,4), (0,3), (0,2), (0,1), (0,0), (1,0)]}, {'name': 'Frank The Tank', 'health': 99, 'body': [(10,8), (9,8), (9,7), (9,6), (8,6), (7,6), (6,6), (5,6), (5,7)]}], 'food': [(0, 0), (2, 0), (10, 9)], 'experiment': 'Yes', 'decision_path': ['killer near'], 'next_coord': (1, 9), 'next_move': 'up', 'latency': '150', 'time': '0.122s'}
 
 
     game_state = init_from_log(log)
