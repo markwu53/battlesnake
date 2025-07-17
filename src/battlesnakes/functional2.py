@@ -587,18 +587,26 @@ def me_at_corner(moves):
 
 def me_on_border(moves):
     if not on_border(g.me.head): return
+    return cases([
+        heading_border,
+        crawling_border,
+    ])(moves)
+
+def crawling_border(moves):
+    if on_border(g.me.neck):
+        g.decision_path.append("go off border")
+        return prefer_no(on_border)(moves)
+
+def heading_border(moves):
+    if on_border(g.me.neck): return
     real_killers = g.x.real_killers
     if len(real_killers) == 1:
         killer = real_killers[0]
         dist1 = distance_pq(g.me.head, killer.head)
         dist2 = path_distance_pq(g.me.head, killer.head)
-        if dist1 <= 4 and dist1 == dist2:
-            g.decision_path.append("return off border")
-            return prefer_no(on_border)(moves)
-        if dist1 == 6 and dist1 == dist2:
-            if coming_near(killer):
-                g.decision_path.append("return off border")
-                return prefer_no(on_border)(moves)
+        if dist1 == dist2:
+            g.decision_path.append("go away from killer")
+            return prefer_by_score(lambda a: path_distance_pq(a, killer.head))(moves)
 
 def coming_near(killer):
     killer_next = [p for p in adj_cells(killer.head) if get_adjacent_dir(killer.neck, killer.head) == get_adjacent_dir(killer.head, p)]
