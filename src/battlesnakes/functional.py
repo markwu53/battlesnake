@@ -1060,47 +1060,6 @@ def chase_my_tail_my_snake_longer2(moves):
         g.decision_path.append(f"detour move {moves}")
         return moves
 
-def chase_my_tail_my_snake_longer(moves):
-    if g.s.my_length > g.s.other_length:
-        if path_distance_pq(g.s.other_head, g.s.my_tail) > path_distance_pq(g.s.my_head, g.s.my_tail):
-            # moves = [a for a in moves if path_connected(a, g.s.my_tail)]
-            # if len(moves) != 0:
-            #     return moves
-            if distance_pq(g.s.my_head, g.s.my_tail) >= 1:
-                tail_moves = shortest_path_move(g.s.my_head, g.s.my_tail)
-                tail_moves = [a for a in tail_moves if a in moves]
-                if len(tail_moves) != 0:
-                    food1 = [a for a in moves if a in g.food]
-                    if len(food1) != 0:
-                        food_and_tail = [a for a in tail_moves if a in food1]
-                        if len(food_and_tail) != 0:
-                            return food_and_tail
-                        food_tail_connect = [a for a in food1 if any([path_connected(a, p) for p in tail_moves])]
-                        if len(food_tail_connect) != 0:
-                            g.decision_path.append("detour get food1")
-                            return food_tail_connect
-                    #return tail_moves
-                    else:
-                        food4 = [f for f in g.food if distance_pq(f, g.s.my_head) <= 4]
-                        if len(food4) == 0:
-                            return tail_moves
-                        foods = []
-                        for f in food4:
-                            paths = add_waypoint(g.s.my_head, f, g.s.my_tail)
-                            good_paths = [path for path in paths if len(path) <= path_distance_pq(g.s.my_head, g.s.my_tail)+5]
-                            if len(good_paths) == 0:
-                                continue
-                            sn = min([len(path) for path in good_paths])
-                            shortest_path = [path for path in good_paths if len(path) == sn]
-                            foods.append([f, sn, list({path[1] for path in shortest_path})])
-                        food4 = foods
-                        if len(food4) == 0:
-                            return tail_moves
-                        min_sn = min([sn for f,sn,m in food4])
-                        f,sn,moves = take_first([(f,sn,m) for f,sn,m in food4 if sn == min_sn])
-                        g.decision_path.append(f"add food waypoint {f}")
-                        return moves
-
 def chase_my_tail_other_not_in_the_way(moves):
     if path_distance_pq(g.s.my_head, g.s.my_tail) <= path_distance_pq(g.s.my_head, g.s.other_head):
         moves = [a for a in moves if path_connected(a, g.s.my_tail) and path_distance_pq(a, g.s.my_tail) <= path_distance_pq(a, g.s.other_head)]
@@ -1126,13 +1085,44 @@ def chase_my_tail_not_connected_return(moves):
         return moves
 
 def chase_my_tail(moves):
-    moves = cases([
-        chase_my_tail_my_snake_longer,
-        chase_my_tail_not_connected_return,
-        chase_my_tail_my_snake_not_longer,
-        chase_my_tail_other_not_in_the_way,
-    ])(moves)
-    return moves
+    if path_distance_pq(g.s.other_head, g.s.my_tail) > path_distance_pq(g.s.my_head, g.s.my_tail):
+        # moves = [a for a in moves if path_connected(a, g.s.my_tail)]
+        # if len(moves) != 0:
+        #     return moves
+        if distance_pq(g.s.my_head, g.s.my_tail) >= 1:
+            tail_moves = shortest_path_move(g.s.my_head, g.s.my_tail)
+            tail_moves = [a for a in tail_moves if a in moves]
+            if len(tail_moves) != 0:
+                food1 = [a for a in moves if a in g.food]
+                if len(food1) != 0:
+                    food_and_tail = [a for a in tail_moves if a in food1]
+                    if len(food_and_tail) != 0:
+                        return food_and_tail
+                    food_tail_connect = [a for a in food1 if any([path_connected(a, p) for p in tail_moves])]
+                    if len(food_tail_connect) != 0:
+                        g.decision_path.append("detour get food1")
+                        return food_tail_connect
+                #return tail_moves
+                else:
+                    food4 = [f for f in g.food if distance_pq(f, g.s.my_head) <= 4]
+                    if len(food4) == 0:
+                        return tail_moves
+                    foods = []
+                    for f in food4:
+                        paths = add_waypoint(g.s.my_head, f, g.s.my_tail)
+                        good_paths = [path for path in paths if len(path) <= path_distance_pq(g.s.my_head, g.s.my_tail)+5]
+                        if len(good_paths) == 0:
+                            continue
+                        sn = min([len(path) for path in good_paths])
+                        shortest_path = [path for path in good_paths if len(path) == sn]
+                        foods.append([f, sn, list({path[1] for path in shortest_path})])
+                    food4 = foods
+                    if len(food4) == 0:
+                        return tail_moves
+                    min_sn = min([sn for f,sn,m in food4])
+                    f,sn,moves = take_first([(f,sn,m) for f,sn,m in food4 if sn == min_sn])
+                    g.decision_path.append(f"add food waypoint {f}")
+                    return moves
 
 def not_too_long(moves):
     if g.s.my_length < 20:
@@ -1333,6 +1323,7 @@ def run():
     log = {'id': '4d2ca713-646a-4655-b7bd-aa713e3d3a35', 'turn': 362, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(3,6), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 5), (9, 5), (9, 4), (9, 3), (9, 2), (9, 1), (9, 0), (8, 0), (7, 0), (7, 1), (7, 2), (7, 3), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 4), (3, 4), (3, 3), (2, 3), (1, 3), (1, 4), (1, 5), (2, 5), (2, 5)]}, 'others': [{'name': 'ich heisse marvin', 'health': 92, 'body': [(0,5), (0, 6), (1, 6), (1, 7), (1, 8), (0, 8), (0, 9), (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (5, 8), (6, 8), (7, 8), (8, 8), (9, 8), (10, 8)]}], 'food': [(10, 10), (3, 2), (2, 4), (9, 10), (10, 3)], 'experiment': 'No', 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 6), (4, 7), (4, 5)], 'head_distance': 4, 'head_path_distance': 999, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1'], 'next_coord': (3, 6), 'next_move': 'left', 'time': '0.003s'}
     log = {'id': '9e93878d-1372-457d-a78d-f297c6c059af', 'turn': 206, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (9, 8), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (8, 3), (7, 3), (7, 4), (7, 5), (7, 6), (8, 6), (8, 7), (8, 8), (8, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 95, 'body': [(2, 2), (3, 2), (3, 3), (4, 3), (4, 2), (4, 1), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (4, 7), (3, 7), (3, 8), (3, 9)]}], 'food': [(0, 2), (2, 9)], 'experiment': 'No', 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 10), (8, 9)], 'head_distance': 14, 'head_path_distance': 14, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (8, 9), 'next_move': 'down', 'time': '0.002s'}
     log = {'id': '322df58a-76e8-4ffe-8709-7613b54ed949', 'turn': 254, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(3,9), (2,9), (2, 8), (1, 8), (1, 9), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (1, 6), (1, 7), (2, 7), (3, 7), (4, 7), (4, 8), (4, 9), (5, 9), (6, 9), (7, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 87, 'body': [(8,8), (8,7), (8, 6), (8, 5), (8, 4), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8), (6, 8), (6, 7), (6, 6), (5, 6), (4, 6), (4, 5), (3, 5), (3, 6), (2, 6), (2, 5), (1, 5), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1)]}], 'food': [(5, 0), (9, 6)], 'experiment': 'No', 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 8), (2, 9)], 'head_distance': 8, 'head_path_distance': 14, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (2, 9), 'next_move': 'up', 'time': '0.007s'}
+    log = {'id': 'd71f4687-d93d-4b9c-bf8e-304a03557bc7', 'turn': 354, 'me': {'name': 'mark_snake', 'health': 20, 'body': [(10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (8, 1), (9, 1), (9, 2), (9, 3), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (4, 7), (3, 7), (2, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 94, 'body': [(2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6), (7, 5), (6, 5), (5, 5), (5, 4), (5, 3), (6, 3), (6, 4), (7, 4), (7, 3), (7, 2), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2)]}], 'food': [(1, 0), (9, 5), (9, 10)], 'experiment': 'No', 'decision_support': {'n_other': 1, 'allowed_moves': [(9, 8), (10, 9)], 'head_distance': 10, 'head_path_distance': 10, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (9, 8), 'next_move': 'left', 'time': '0.004s'}
 
 
     game_state = init_from_log(log)
