@@ -209,6 +209,12 @@ def distance_to_border(p):
     dy = min([y, g.state["board"]["height"]-y-1])
     return (dx, dy)
 
+def distance_vector_abs(p, q):
+    x1,y1 = p
+    x2,y2 = q
+    dx,dy = x2-x1, y2-y1
+    return (abs(dx), abs(dy))
+
 def get_dir_number(p, q):
     assert(is_adjacent(p, q))
     x1,y1 = p
@@ -401,26 +407,59 @@ def decision():
     #allowed_moves must be 2 or 3
     moves = cases([
         first_two_turn,
-        #battle_1_vs_1, 
         battle_1_vs_n,
         id, #cases at entry point ends by id to close possible None return
     ])(g.e.allowed_moves)
     g.next_coord = take_first(moves)
 
-def battle_1_vs_1(moves):
-    return moves
-
 def battle_1_vs_n(moves):
-    #if len(g.others) > 1:
-    if len(g.others) >= 1:
-        return sequential([
-            move_group,
+    return cases([
+        #preparation works
+        move_group,
 
+        #cases
+        short_enough,
+        not_long_enough,
+        long_enough,
+    ])(moves)
+
+def long_enough(moves):
+    if g.me.length > 10:
+        return sequential([
             dont_go_in_trap,
             avoid_collision_1_vs_n,
             avoid_equal_collision,
             kill_oppotunies,
+            #(killer_near),
+            split_choice,
+            wayout,
+            get_food_1_vs_n,
+            prefer_straight,
+        ])(moves)
+
+def short_enough(moves):
+    if g.me.length <= 6:
+        return sequential([
+            dont_go_in_trap,
+            avoid_collision_1_vs_n,
+            avoid_equal_collision,
             (killer_near),
+            #split_choice,
+            #wayout,
+            get_food_1_vs_n,
+            prefer_open_space,
+            prefer_more_next_moves,
+            prefer_straight,
+        ])(moves)
+
+def not_long_enough(moves):
+    if g.me.length <= 10:
+        return sequential([
+            dont_go_in_trap,
+            avoid_collision_1_vs_n,
+            avoid_equal_collision,
+            kill_oppotunies,
+            (killer_near_not_long_enough),
             split_choice,
             wayout,
             get_food_1_vs_n,
@@ -531,6 +570,14 @@ def killer_near(moves):
                     me_at_off_border,
                     me_on_border,
                 ])(moves)
+
+def killer_near_not_long_enough(moves):
+    killers = [snake for snake in g.others 
+               for dv in [distance_vector_abs(snake.head, g.me.head)]
+               if snake.length > g.me.length and dv in [(1,3), (3,1), (2,2)] ]
+    if len(killers) != 0:
+        g.decision_path.append("killer near")
+        return prefer_no(lambda a: any([distance_vector_abs(a, snake.head) in [(1,2), (2,1)] for snake in killers]))(moves)
 
 def me_at_corner(moves):
     dist = distance_to_border(g.me.head)
