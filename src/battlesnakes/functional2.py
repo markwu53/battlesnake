@@ -431,6 +431,7 @@ def long_enough(moves):
             avoid_equal_collision,
             kill_oppotunies,
             killer_near_long_enough,
+            avoid_single_next_move,
             split_choice,
             wayout,
             get_food_1_vs_n,
@@ -446,6 +447,7 @@ def short_enough(moves):
             (killer_near),
             #split_choice,
             #wayout,
+            avoid_single_next_move,
             get_food_1_vs_n,
             prefer_open_space,
             prefer_more_next_moves,
@@ -462,6 +464,7 @@ def not_long_enough(moves):
             split_choice,
             (killer_near_not_long_enough),
             wayout,
+            avoid_single_next_move,
             get_food_1_vs_n,
             prefer_open_space,
             prefer_more_next_moves,
@@ -478,6 +481,12 @@ def kill_oppotunies(moves):
     return cases([
         enemy_in_trap_move,
     ])(moves)
+
+def avoid_single_next_move(moves):
+    def next_next_move(a):
+        next_moves = [p for p in adj_cells(a) if p not in g.occupied_cells[1]]
+        return len(next_moves)
+    return prefer_no(lambda a: next_next_move(a) == 1)(moves)
 
 def is_a_border_trap(a):
     if not on_border(a):
