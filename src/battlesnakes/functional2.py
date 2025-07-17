@@ -430,7 +430,7 @@ def long_enough(moves):
             avoid_collision_1_vs_n,
             avoid_equal_collision,
             kill_oppotunies,
-            #(killer_near),
+            killer_near_long_enough,
             split_choice,
             wayout,
             get_food_1_vs_n,
@@ -578,6 +578,20 @@ def killer_near_not_long_enough(moves):
     if len(killers) != 0:
         g.decision_path.append("killer near")
         return prefer_no(lambda a: any([distance_vector_abs(a, snake.head) in [(1,2), (2,1)] for snake in killers]))(moves)
+
+def crawling():
+    return on_border(g.me.head) and on_border(g.me.neck)
+
+def killer_near_long_enough(moves):
+    if not crawling(): return
+    killers = [snake for snake in g.others 
+               if snake.length > g.me.length 
+               and distance_pq(snake.head, g.me.head) <= 6
+               and distance_pq(snake.head, g.me.head) == path_distance_pq(snake.head, g.me.head)
+               ]
+    if len(killers) != 0:
+        g.decision_path.append("go back to off border")
+        return prefer_no(on_border)(moves)
 
 def me_at_corner(moves):
     dist = distance_to_border(g.me.head)
