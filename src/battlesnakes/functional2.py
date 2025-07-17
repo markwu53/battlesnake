@@ -586,6 +586,9 @@ def killer_near_not_long_enough(moves):
                if snake.length > g.me.length and dv in [(1,3), (3,1), (2,2)] ]
     if len(killers) != 0:
         g.decision_path.append("killer near")
+        if crawling():
+            g.decision_path.append("crawling")
+            return prefer_no(on_border)(moves)
         return prefer_no(lambda a: any([distance_vector_abs(a, snake.head) in [(1,2), (2,1)] for snake in killers]))(moves)
 
 def crawling():
