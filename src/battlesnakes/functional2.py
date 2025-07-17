@@ -620,7 +620,9 @@ def heading_border(moves):
         dist2 = path_distance_pq(g.me.head, killer.head)
         if dist1 == dist2:
             g.decision_path.append("go away from killer")
-            return prefer_by_score(lambda a: path_distance_pq(a, killer.head))(moves)
+            moves = prefer_yes(lambda a: len(path_connected_set(a)) >= g.me.length)(moves)
+            moves = prefer_by_score(lambda a: path_distance_pq(a, killer.head))(moves)
+            return moves
 
 def coming_near(killer):
     killer_next = [p for p in adj_cells(killer.head) if get_adjacent_dir(killer.neck, killer.head) == get_adjacent_dir(killer.head, p)]
