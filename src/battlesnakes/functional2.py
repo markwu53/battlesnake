@@ -337,6 +337,7 @@ def special_experimenting_code(game_state):
     g.log["next_move"] = g.state["next_move"]
 
     end_time = time.time()
+    g.log["latency"] = g.state["you"]["latency"]
     g.log["time"] = f"{end_time-start_time:.3f}s"
 
     print(g.log)
