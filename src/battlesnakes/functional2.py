@@ -427,8 +427,9 @@ def long_enough(moves):
     if g.me.length > 10:
         return sequential([
             dont_go_in_trap,
-            avoid_collision_1_vs_n,
+            avoid_collision,
             avoid_equal_collision,
+            avoid_multi_step_collision,
             kill_oppotunies,
             killer_near_long_enough,
             split_choice,
@@ -441,8 +442,9 @@ def short_enough(moves):
     if g.me.length <= 6:
         return sequential([
             dont_go_in_trap,
-            avoid_collision_1_vs_n,
+            avoid_collision,
             avoid_equal_collision,
+            avoid_multi_step_collision,
             (killer_near),
             split_choice,
             #wayout,
@@ -456,8 +458,9 @@ def not_long_enough(moves):
     if g.me.length <= 10:
         return sequential([
             dont_go_in_trap,
-            avoid_collision_1_vs_n,
+            avoid_collision,
             avoid_equal_collision,
+            avoid_multi_step_collision,
             kill_oppotunies,
             split_choice,
             (killer_near_not_long_enough),
@@ -478,12 +481,6 @@ def kill_oppotunies(moves):
     return cases([
         enemy_in_trap_move,
     ])(moves)
-
-def avoid_single_next_move(moves):
-    def next_next_move(a):
-        next_moves = [p for p in adj_cells(a) if p not in g.occupied_cells[1]]
-        return len(next_moves)
-    return prefer_no(lambda a: next_next_move(a) == 1)(moves)
 
 def is_a_border_trap(a):
     if not on_border(a):
@@ -777,7 +774,7 @@ def split_choice(moves):
             return max_index
         return prefer_by_score(tail_index)(moves)
 
-def avoid_collision_1_vs_n(moves):
+def avoid_collision(moves):
     danger_moves = [a for a in moves
         for snakes in [[snake for snake in g.others if is_adjacent(a, snake.head) and snake.length > g.me.length]]
         if len(snakes) != 0 ]
@@ -804,6 +801,33 @@ def avoid_equal_collision(moves):
         if len(moves) != 0:
             return moves
         g.decision_path.append("nowhere to avoid")
+
+def grow_paths(killers):
+    for snake in killers+[g.me]:
+        snake.paths = [[[snake.head]]]
+        for i in range(4):
+            layer = [path+[p] for path in snake.paths[-1] for end in [path[-1]] for p in adj_cells(end) 
+                     if p not in g.occupied_cells[i] and p not in path] 
+            if len(layer) == 0: break
+            snake.paths.append(layer)
+
+def avoid_multi_step_collision(moves):
+    killers = [snake for snake in g.others if snake.length > g.me.length]
+    if len(killers) == 0: 
+        return moves
+    killers = [snake for snake in killers if distance_pq(snake.head, g.me.head) <= 6]
+    if len(killers) == 0:
+        return moves
+
+    def score_a_move_by_second_step(a):
+        aa = [p for p in adj_cells(a) if p not in g.occupied_cells[1]]
+        if len(aa) == 0:
+            return 1
+        if all([any([path_distance_pq(snake.head, p) == 2 for snake in killers]) for p in aa]):
+            return 2
+        return 999
+
+    return prefer_by_score(score_a_move_by_second_step)(moves)
 
 def get_food_1(moves):
     food1 = [a for a in moves if a in g.food]
@@ -868,6 +892,7 @@ def run():
     log = {'id': '13db488f-3e6f-4729-994c-da5fd05f6abd', 'turn': 125, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(0, 5), (0, 6), (0, 7), (0, 8), (1, 8), (1, 7), (1, 6), (2, 6), (3, 6)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 96, 'body': [(6, 9), (6, 8), (6, 7), (6, 6), (6, 5), (5, 5), (5, 4), (5, 3), (4, 3), (3, 3), (2, 3), (2, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1)]}, {'name': 'Wim HU [dev]', 'health': 33, 'body': [(5, 2), (5, 1), (5, 0), (6, 0), (6, 1), (6, 2), (7, 2), (7, 1)]}, {'name': 'Frank The Tank', 'health': 87, 'body': [(8, 9), (7, 9), (7, 8), (7, 7), (7, 6), (7, 5), (8, 5), (9, 5), (9, 6), (9, 7), (9, 8)]}], 'food': [(0, 4)], 'experiment': 'Yes', 'decision_path': ['split choice', 'no confinement - consider space ahead'], 'next_coord': (1, 5), 'next_move': 'right', 'latency': '20', 'time': '0.085s'}
     log = {'id': 'b5571207-5796-4bdf-961a-090d36a6ce55', 'turn': 126, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(10, 4), (10, 3), (9, 3), (8, 3), (8, 2), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (5, 1), (5, 2)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 86, 'body': [(0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (2, 1)]}, {'name': 'Frank The Tank', 'health': 86, 'body': [(6, 6), (7, 6), (7, 5), (8, 5), (9, 5), (9, 6), (8, 6), (8, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (4, 7), (4, 6), (4, 5), (3, 5)]}], 'food': [(9, 8)], 'experiment': 'Yes', 'decision_path': ['go back to off border'], 'next_coord': (9, 4), 'next_move': 'left', 'latency': '96', 'time': '0.001s'}
     log = {'id': 'be685a01-7906-4c50-bf91-bc05336fad95', 'turn': 37, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(0, 3), (0, 2), (1, 2), (2, 2), (2, 1), (3, 1)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 95, 'body': [(8, 7), (7, 7), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (10, 8)]}, {'name': 'snakey_wakey', 'health': 76, 'body': [(5, 8), (5, 9), (6, 9), (6, 8), (6, 7)]}, {'name': 'Frank The Tank', 'health': 98, 'body': [(3, 2), (3, 3), (2, 3), (2, 4), (1, 4), (1, 5), (1, 6)]}], 'food': [(10, 2)], 'experiment': 'Yes', 'decision_path': [], 'next_coord': (1, 3), 'next_move': 'right', 'latency': '22', 'time': '0.000s'}
+    log = {'id': '64b8021b-eed7-458b-ae6e-de65da397d7f', 'turn': 80, 'me': {'name': 'mark_snake', 'health': 92, 'body': [(8, 2), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (8, 6), (8, 7), (8, 8)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 90, 'body': [(3, 9), (3, 8), (3, 7), (3, 6), (3, 5), (2, 5), (2, 6), (2, 7)]}, {'name': 'Würmchen', 'health': 72, 'body': [(1, 1), (2, 1), (3, 1), (3, 2), (3, 3), (2, 3)]}, {'name': 'suboptimal', 'health': 75, 'body': [(5, 1), (4, 1), (4, 2), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (8, 4)]}], 'food': [(6, 1)], 'experiment': 'Yes', 'decision_path': ['go to open space (5, 5)'], 'next_coord': (7, 2), 'next_move': 'left', 'latency': '26', 'time': '0.004s'}
 
 
     game_state = init_from_log(log)
