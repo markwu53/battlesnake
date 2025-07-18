@@ -256,7 +256,7 @@ def special_experimenting_code(game_state):
     decision()
     g.state["next_move"] = get_adjacent_dir(g.s.my_head, g.next_coord)
 
-    g.log["decision_support"] = {k:v for k,v in g.e.__dict__.items() if v is not None}
+    #g.log["decision_support"] = {k:v for k,v in g.e.__dict__.items() if v is not None}
     g.log["decision_path"] = g.decision_path
     g.log["next_coord"] = g.next_coord
     g.log["next_move"] = g.state["next_move"]
