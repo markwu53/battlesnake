@@ -456,7 +456,6 @@ def short_enough(moves):
 
 def not_long_enough(moves):
     if g.me.length <= 10:
-        print(moves)
         return sequential([
             dont_go_in_trap,
             avoid_collision,
@@ -668,6 +667,9 @@ def wayout(moves):
     if ngroup != 1:
         return
     aset = path_connected_set(g.me.head)
+    if len(aset) >= int(g.me.length * 1.2):
+        return
+
     calc = [ (snake, adj_set, snake.length - max(adj_set), max(adj_set), snake.body[max(adj_set)]) 
         for snake in g.snakes
         for adj_set in [[i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)])]]
