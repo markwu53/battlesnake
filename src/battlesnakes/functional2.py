@@ -431,7 +431,6 @@ def long_enough(moves):
             avoid_equal_collision,
             kill_oppotunies,
             killer_near_long_enough,
-            avoid_single_next_move,
             split_choice,
             wayout,
             get_food_1_vs_n,
@@ -445,9 +444,8 @@ def short_enough(moves):
             avoid_collision_1_vs_n,
             avoid_equal_collision,
             (killer_near),
-            #split_choice,
+            split_choice,
             #wayout,
-            avoid_single_next_move,
             get_food_1_vs_n,
             prefer_open_space,
             prefer_more_next_moves,
@@ -464,7 +462,6 @@ def not_long_enough(moves):
             split_choice,
             (killer_near_not_long_enough),
             wayout,
-            avoid_single_next_move,
             get_food_1_vs_n,
             prefer_open_space,
             prefer_more_next_moves,
@@ -870,6 +867,7 @@ def run():
     log = {'id': '88399949-e250-4b19-813b-d2cba8172542', 'turn': 40, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(8,10), (8,9), (7,9), (6,9), (5,9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 96, 'body': [(9,1), (9,2), (9,3), (9,4), (9,5), (8,5), (8,4), (8,3), (8,2)]}, {'name': 'Wim HU [dev]', 'health': 71, 'body': [(0,4), (0,3), (0,2), (0,1), (0,0), (1,0)]}, {'name': 'Frank The Tank', 'health': 99, 'body': [(10,8), (9,8), (9,7), (9,6), (8,6), (7,6), (6,6), (5,6), (5,7)]}], 'food': [(0, 0), (2, 0), (10, 9)], 'experiment': 'Yes', 'decision_path': ['killer near'], 'next_coord': (1, 9), 'next_move': 'up', 'latency': '150', 'time': '0.122s'}
     log = {'id': '13db488f-3e6f-4729-994c-da5fd05f6abd', 'turn': 125, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(0, 5), (0, 6), (0, 7), (0, 8), (1, 8), (1, 7), (1, 6), (2, 6), (3, 6)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 96, 'body': [(6, 9), (6, 8), (6, 7), (6, 6), (6, 5), (5, 5), (5, 4), (5, 3), (4, 3), (3, 3), (2, 3), (2, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1)]}, {'name': 'Wim HU [dev]', 'health': 33, 'body': [(5, 2), (5, 1), (5, 0), (6, 0), (6, 1), (6, 2), (7, 2), (7, 1)]}, {'name': 'Frank The Tank', 'health': 87, 'body': [(8, 9), (7, 9), (7, 8), (7, 7), (7, 6), (7, 5), (8, 5), (9, 5), (9, 6), (9, 7), (9, 8)]}], 'food': [(0, 4)], 'experiment': 'Yes', 'decision_path': ['split choice', 'no confinement - consider space ahead'], 'next_coord': (1, 5), 'next_move': 'right', 'latency': '20', 'time': '0.085s'}
     log = {'id': 'b5571207-5796-4bdf-961a-090d36a6ce55', 'turn': 126, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(10, 4), (10, 3), (9, 3), (8, 3), (8, 2), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (5, 1), (5, 2)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 86, 'body': [(0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (2, 1)]}, {'name': 'Frank The Tank', 'health': 86, 'body': [(6, 6), (7, 6), (7, 5), (8, 5), (9, 5), (9, 6), (8, 6), (8, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (4, 7), (4, 6), (4, 5), (3, 5)]}], 'food': [(9, 8)], 'experiment': 'Yes', 'decision_path': ['go back to off border'], 'next_coord': (9, 4), 'next_move': 'left', 'latency': '96', 'time': '0.001s'}
+    log = {'id': 'be685a01-7906-4c50-bf91-bc05336fad95', 'turn': 37, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(0, 3), (0, 2), (1, 2), (2, 2), (2, 1), (3, 1)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 95, 'body': [(8, 7), (7, 7), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (10, 8)]}, {'name': 'snakey_wakey', 'health': 76, 'body': [(5, 8), (5, 9), (6, 9), (6, 8), (6, 7)]}, {'name': 'Frank The Tank', 'health': 98, 'body': [(3, 2), (3, 3), (2, 3), (2, 4), (1, 4), (1, 5), (1, 6)]}], 'food': [(10, 2)], 'experiment': 'Yes', 'decision_path': [], 'next_coord': (1, 3), 'next_move': 'right', 'latency': '22', 'time': '0.000s'}
 
 
     game_state = init_from_log(log)
