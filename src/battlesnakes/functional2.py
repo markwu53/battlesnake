@@ -841,7 +841,10 @@ def get_food_near(moves):
     if len(food_near) != 0:
         food_good = [f for f in food_near 
                      if path_connected(f, g.me.head)
-                     and all([path_distance_pq(f, g.me.head) < path_distance_pq(f, snake.head) for snake in g.others])]
+                     and all([path_distance_pq(f, g.me.head) < path_distance_pq(f, snake.head) 
+                     if snake.length >= g.me.length
+                        else path_distance_pq(f, g.me.head) <= path_distance_pq(f, snake.head)
+                              for snake in g.others])]
         if len(food_good) != 0:
             food_best = prefer_by_score(lambda f: 999-path_distance_pq(f, g.me.head))(food_good)
             target = take_first(food_best)
@@ -894,6 +897,7 @@ def run():
     log = {'id': 'b5571207-5796-4bdf-961a-090d36a6ce55', 'turn': 126, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(10, 4), (10, 3), (9, 3), (8, 3), (8, 2), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (5, 1), (5, 2)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 86, 'body': [(0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (2, 1)]}, {'name': 'Frank The Tank', 'health': 86, 'body': [(6, 6), (7, 6), (7, 5), (8, 5), (9, 5), (9, 6), (8, 6), (8, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (4, 7), (4, 6), (4, 5), (3, 5)]}], 'food': [(9, 8)], 'experiment': 'Yes', 'decision_path': ['go back to off border'], 'next_coord': (9, 4), 'next_move': 'left', 'latency': '96', 'time': '0.001s'}
     log = {'id': 'be685a01-7906-4c50-bf91-bc05336fad95', 'turn': 37, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(0, 3), (0, 2), (1, 2), (2, 2), (2, 1), (3, 1)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 95, 'body': [(8, 7), (7, 7), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (10, 8)]}, {'name': 'snakey_wakey', 'health': 76, 'body': [(5, 8), (5, 9), (6, 9), (6, 8), (6, 7)]}, {'name': 'Frank The Tank', 'health': 98, 'body': [(3, 2), (3, 3), (2, 3), (2, 4), (1, 4), (1, 5), (1, 6)]}], 'food': [(10, 2)], 'experiment': 'Yes', 'decision_path': [], 'next_coord': (1, 3), 'next_move': 'right', 'latency': '22', 'time': '0.000s'}
     log = {'id': '64b8021b-eed7-458b-ae6e-de65da397d7f', 'turn': 80, 'me': {'name': 'mark_snake', 'health': 92, 'body': [(8, 2), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (8, 6), (8, 7), (8, 8)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 90, 'body': [(3, 9), (3, 8), (3, 7), (3, 6), (3, 5), (2, 5), (2, 6), (2, 7)]}, {'name': 'Würmchen', 'health': 72, 'body': [(1, 1), (2, 1), (3, 1), (3, 2), (3, 3), (2, 3)]}, {'name': 'suboptimal', 'health': 75, 'body': [(5, 1), (4, 1), (4, 2), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (8, 4)]}], 'food': [(6, 1)], 'experiment': 'Yes', 'decision_path': ['go to open space (5, 5)'], 'next_coord': (7, 2), 'next_move': 'left', 'latency': '26', 'time': '0.004s'}
+    log = {'id': '6a15c0d1-d86d-4ecc-8768-1b6d62442aa3', 'turn': 141, 'me': {'name': 'mark_snake', 'health': 80, 'body': [(5, 10), (6, 10), (7, 10), (8, 10), (8, 9), (9, 9), (9, 10), (10, 10), (10, 9), (10, 8), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 99, 'body': [(2, 7), (2, 8), (2, 9), (2, 10), (1, 10), (1, 9), (0, 9), (0, 8), (0, 7), (0, 6), (1, 6), (2, 6), (2, 5), (2, 4)]}, {'name': 'Wim HU [dev]', 'health': 90, 'body': [(10, 5), (9, 5), (9, 6), (10, 6), (10, 7), (9, 7), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (8, 0), (7, 0)]}], 'food': [(5, 7)], 'experiment': 'Yes', 'decision_path': [], 'next_coord': (4, 10), 'next_move': 'left', 'latency': '23', 'time': '0.003s'}
 
 
     game_state = init_from_log(log)
