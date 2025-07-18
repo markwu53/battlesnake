@@ -665,6 +665,44 @@ def log_print(anything=None):
 
 def wayout(moves):
     ngroup = move_connected_group(moves)
+    if ngroup != 1:
+        return
+    aset = path_connected_set(g.me.head)
+    calc = [ (snake, adj_set, snake.length - max(adj_set), max(adj_set), snake.body[max(adj_set)]) 
+        for snake in g.snakes
+        for adj_set in [[i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)])]]
+        if len(adj_set) != 0 ]
+    min_wayout = min([a[2] for a in calc])
+    calc = [a for a in calc if a[2] == min_wayout]
+    wayout_point = take_first(prefer_yes(lambda a: a[0].head == g.me.head)(calc))[4]
+
+    #meander
+    g.decision_path.append(f"meander to {wayout_point}")
+    far_points = prefer_by_score(lambda a: path_distance_pq(a, wayout_point))(moves)
+    if len(far_points) == 1:
+        return far_points
+
+    #then there are 2 points, cannot have 3
+    #and they are perpendicular, ie, one straight, one left or right
+    #and they have a common adjacent point
+    a,b = far_points
+    c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head]
+    if len(c) == 0:
+        log_print(far_points)
+        return far_points
+    c = c[0]
+    occupied = g.occupied_cells[0]+[c]
+    a_connection = path_connected(a, wayout_point, occupied)
+    b_connection = path_connected(b, wayout_point, occupied)
+    if not all([a_connection, b_connection]):
+        choice = a if not a_connection else b
+        g.decision_path.append(f"go first {choice}")
+        return [choice]
+
+
+
+def wayout2(moves):
+    ngroup = move_connected_group(moves)
     if ngroup == 1:
         aset = path_connected_set(g.me.head)
         aset = [p for p in aset if p != g.me.head]
