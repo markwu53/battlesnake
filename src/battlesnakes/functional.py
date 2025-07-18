@@ -483,6 +483,7 @@ def my_snake_is_shorter(moves):
             split_choice,
             wayout2,
             get_food_or_chase_tail,
+            prefer_no(on_border),
             #prefer_more_next_move,
             #prefer_middle_by_3,
             prefer_straight,
