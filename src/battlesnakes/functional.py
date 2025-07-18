@@ -483,8 +483,8 @@ def my_snake_is_shorter(moves):
             split_choice,
             wayout2,
             get_food_or_chase_tail,
-            prefer_more_next_move,
-            prefer_middle_by_3,
+            #prefer_more_next_move,
+            #prefer_middle_by_3,
             prefer_straight,
         ])(moves)
 
@@ -534,8 +534,8 @@ def snake_equal_length(moves):
             split_choice,
             wayout2,
             get_food_or_chase_tail,
-            prefer_more_next_move,
-            prefer_middle_by_3,
+            #prefer_more_next_move,
+            #prefer_middle_by_3,
             prefer_straight,
         ])(moves)
         return moves
@@ -1135,7 +1135,7 @@ def too_long(moves):
             (chase_tail),
             #prefer_more_next_move,
             #prefer_middle_by_3,
-            get_food,
+            #get_food,
             prefer_more_territory,
             prefer_straight,
         ])(moves)
@@ -1219,6 +1219,7 @@ def run():
     log = {'id': '9e93878d-1372-457d-a78d-f297c6c059af', 'turn': 206, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (9, 8), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (8, 3), (7, 3), (7, 4), (7, 5), (7, 6), (8, 6), (8, 7), (8, 8), (8, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 95, 'body': [(2, 2), (3, 2), (3, 3), (4, 3), (4, 2), (4, 1), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (4, 7), (3, 7), (3, 8), (3, 9)]}], 'food': [(0, 2), (2, 9)], 'experiment': 'No', 'decision_support': {'n_other': 1, 'allowed_moves': [(7, 10), (8, 9)], 'head_distance': 14, 'head_path_distance': 14, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (8, 9), 'next_move': 'down', 'time': '0.002s'}
     log = {'id': '322df58a-76e8-4ffe-8709-7613b54ed949', 'turn': 254, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(3,9), (2,9), (2, 8), (1, 8), (1, 9), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (1, 6), (1, 7), (2, 7), (3, 7), (4, 7), (4, 8), (4, 9), (5, 9), (6, 9), (7, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 87, 'body': [(8,8), (8,7), (8, 6), (8, 5), (8, 4), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8), (6, 8), (6, 7), (6, 6), (5, 6), (4, 6), (4, 5), (3, 5), (3, 6), (2, 6), (2, 5), (1, 5), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1)]}], 'food': [(5, 0), (9, 6)], 'experiment': 'No', 'decision_support': {'n_other': 1, 'allowed_moves': [(3, 8), (2, 9)], 'head_distance': 8, 'head_path_distance': 14, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (2, 9), 'next_move': 'up', 'time': '0.007s'}
     log = {'id': 'd71f4687-d93d-4b9c-bf8e-304a03557bc7', 'turn': 354, 'me': {'name': 'mark_snake', 'health': 20, 'body': [(10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (8, 1), (9, 1), (9, 2), (9, 3), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (4, 7), (3, 7), (2, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 94, 'body': [(2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6), (7, 5), (6, 5), (5, 5), (5, 4), (5, 3), (6, 3), (6, 4), (7, 4), (7, 3), (7, 2), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3), (1, 2)]}], 'food': [(1, 0), (9, 5), (9, 10)], 'experiment': 'No', 'decision_support': {'n_other': 1, 'allowed_moves': [(9, 8), (10, 9)], 'head_distance': 10, 'head_path_distance': 10, 'move_connected_group': 1}, 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (9, 8), 'next_move': 'left', 'time': '0.004s'}
+    log = {'id': 'd5f2361a-1cc4-4a49-a701-dbb079b81463', 'turn': 203, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(9, 8), (8, 8), (7, 8), (7, 9), (6, 9), (5, 9), (5, 8), (5, 7), (5, 6), (5, 5), (6, 5), (6, 6), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 73, 'body': [(1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2), (8, 2), (9, 2), (9, 3), (9, 4), (9, 5), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (9, 0), (8, 0), (8, 1)]}], 'food': [(1, 4), (1, 5), (0, 2)], 'experiment': 'No', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (9, 9), 'next_move': 'up', 'time': '0.002s'}
 
 
     game_state = init_from_log(log)
