@@ -456,11 +456,12 @@ def short_enough(moves):
 
 def not_long_enough(moves):
     if g.me.length <= 10:
+        print(moves)
         return sequential([
             dont_go_in_trap,
             avoid_collision,
             avoid_equal_collision,
-            avoid_multi_step_collision,
+            (avoid_multi_step_collision),
             kill_oppotunies,
             split_choice,
             (killer_near_not_long_enough),
