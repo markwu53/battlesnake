@@ -906,13 +906,13 @@ def replace_tail_path(moves):
         tail_moves = shortest_path_move(g.s.my_head, first_inflection_point)
         tail_moves = [a for a in tail_moves if a in moves]
         if len(tail_moves) != 0:
-            g.decision_path.append("replace tail path - direct")
+            g.decision_path.append(f"replace tail path - direct {first_inflection_point}")
             return tail_moves
     else:
         tail_moves = shortest_path_move(g.s.my_head, first_inflection_point)
         meander_moves = [a for a in moves if a not in tail_moves]
         if len(meander_moves) != 0:
-            g.decision_path.append("replace tail path - meander")
+            g.decision_path.append(f"replace tail path - meander {first_inflection_point}")
             return meander_moves
 
 def chase_my_tail(moves):
