@@ -889,6 +889,31 @@ def food4(tail):
                 return moves
     return fn
 
+def replace_tail_path(moves):
+    if g.s.my_length < 20:
+        return moves
+    tail_distances = [distance_pq(g.s.my_head, c) for c in reversed(g.me["body"][-10:])]
+    inflection_indexes = [i for i,d in enumerate(tail_distances[1:-1]) if d < tail_distances[i] and d < tail_distances[i+2]]
+    if len(inflection_indexes) == 0:
+        return moves
+    first_inflection_index = inflection_indexes[0]+1
+
+    #first inflection point is a fixed point on board
+    first_inflection_point = g.me["body"][-first_inflection_index]
+    if not path_connected(g.s.my_head, first_inflection_point):
+        return moves
+    if path_distance_pq(g.s.my_head, first_inflection_point) <= first_inflection_index:
+        tail_moves = shortest_path_move(g.s.my_head, first_inflection_point)
+        tail_moves = [a for a in tail_moves if a in moves]
+        if len(tail_moves) != 0:
+            return tail_moves
+    else:
+        tail_moves = shortest_path_move(g.s.my_head, first_inflection_point)
+        meander_moves = [a for a in moves if a not in tail_moves]
+        if len(meander_moves) != 0:
+            g.decision_path.append("replace tail path")
+            return meander_moves
+
 def chase_my_tail(moves):
     if path_distance_pq(g.s.other_head, g.s.my_tail) > path_distance_pq(g.s.my_head, g.s.my_tail):
         if distance_pq(g.s.my_head, g.s.my_tail) >= 1:
@@ -898,6 +923,7 @@ def chase_my_tail(moves):
                 return cases([
                     food1,
                     food4(g.s.my_tail),
+                    replace_tail_path,
                 ])(moves)
 
 def chase_other_tail_has_distance(moves):
