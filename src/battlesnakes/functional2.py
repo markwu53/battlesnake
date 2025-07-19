@@ -332,7 +332,7 @@ def special_experimenting_code(game_state):
     init_game(game_state)
     if not experiment_condition(): return False
 
-    g.log["experiment"] = "Yes"
+    g.log["module"] = "functional2"
     start_time = time.time()
     #g.e.localtime = time.localtime()
 
