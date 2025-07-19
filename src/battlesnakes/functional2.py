@@ -322,7 +322,9 @@ def experiment_condition():
     # mes = [snake for snake in g.snakes if snake.name == "mark_snake"]
     # if len(mes) >= 2: return True
     # return False
-    return len(g.others) > 1
+    if len(g.others) > 1: return True
+    if len(g.others) == 1 and g.me.length <= 10: return True
+    return False
 
 def special_experimenting_code(game_state):
     #if functional2.special_experimenting_code(game_state): return True
@@ -330,7 +332,7 @@ def special_experimenting_code(game_state):
     init_game(game_state)
     if not experiment_condition(): return False
 
-    g.log["experiment"] = "Yes"
+    g.log["module"] = "functional2"
     start_time = time.time()
     #g.e.localtime = time.localtime()
 
@@ -343,7 +345,6 @@ def special_experimenting_code(game_state):
     g.log["next_move"] = g.state["next_move"]
 
     end_time = time.time()
-    g.log["latency"] = g.state["you"]["latency"]
     g.log["time"] = f"{end_time-start_time:.3f}s"
 
     print(g.log)
@@ -435,6 +436,7 @@ def long_enough(moves):
             (split_choice),
             wayout,
             get_food_1_vs_n,
+            prefer_no(on_border),
             prefer_straight,
         ])(moves)
 
@@ -667,6 +669,7 @@ def wayout(moves):
     if ngroup != 1:
         return
     aset = path_connected_set(g.me.head)
+    aset = [p for p in aset if p != g.me.head]
     if len(aset) >= int(g.me.length * 1.2):
         return
 
@@ -913,7 +916,6 @@ def init_from_log(log):
             "name": snake["name"],
             "health": snake["health"],
             "body": reverse_coord(snake["body"]),
-            "latency": "0.010s",
         } for snake in [log["me"]] ][0]
 
     game_state = {
@@ -935,14 +937,6 @@ def run():
     log = {'id': '49650c4c-8b0b-40a8-be5a-4312fe526212', 'turn': 104, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(9, 3), (9, 2), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3)]}, 'others': [{'name': 'Frank The Tank', 'health': 100, 'body': [(8, 4), (7, 4), (6, 4), (6, 5), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9), (9, 9)]}, {'name': 'Kakemonsteret-v2', 'health': 92, 'body': [(3, 3), (3, 2), (2, 2), (2, 1), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 4), (1, 4), (1, 5)]}], 'food': [(10, 7)], 'experiment': 'Yes', 'decision_path': ['avoid collision'], 'next_coord': (10, 3), 'next_move': 'right', 'time': '0.001s'}
     log = {'id': 'ef5ac3ef-96d7-420a-8fa6-83f795f281b8', 'turn': 236, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(1, 3), (2, 3), (2, 2), (3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (9, 8), (9, 9), (8, 9), (8, 10), (7, 10)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 90, 'body': [(1, 5), (1, 4), (2, 4), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4)]}, {'name': 'Kakemonsteret-v2', 'health': 94, 'body': [(5, 5), (5, 4), (5, 3), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6), (6, 6), (7, 6), (7, 5), (7, 4), (7, 3), (8, 3), (8, 4)]}], 'food': [(9, 10)], 'experiment': 'Yes', 'decision_path': ['consider wayout', 'wayout point far enough', 'go to open space'], 'next_coord': (1, 2), 'next_move': 'down', 'time': '0.001s'}
     log = {'id': '3104d1b4-d02b-44ac-8cde-510183de0b65', 'turn': 85, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 100, 'body': [(4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 2)]}, {'name': 'Frank The Tank', 'health': 100, 'body': [(3, 4), (3, 5), (3, 6), (2, 6), (2, 5), (2, 4), (2, 3), (3, 3), (3, 2), (4, 2), (4, 2)]}, {'name': 'Kakemonsteret-v2', 'health': 84, 'body': [(7, 2), (8, 2), (8, 1), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6)]}], 'food': [(10, 8)], 'experiment': 'Yes', 'decision_path': ['split choice', 'no confinement - need further consideration'], 'next_coord': (5, 3), 'next_move': 'left', 'time': '0.002s'}
-    log = {'id': '88399949-e250-4b19-813b-d2cba8172542', 'turn': 40, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(8,10), (8,9), (7,9), (6,9), (5,9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 96, 'body': [(9,1), (9,2), (9,3), (9,4), (9,5), (8,5), (8,4), (8,3), (8,2)]}, {'name': 'Wim HU [dev]', 'health': 71, 'body': [(0,4), (0,3), (0,2), (0,1), (0,0), (1,0)]}, {'name': 'Frank The Tank', 'health': 99, 'body': [(10,8), (9,8), (9,7), (9,6), (8,6), (7,6), (6,6), (5,6), (5,7)]}], 'food': [(0, 0), (2, 0), (10, 9)], 'experiment': 'Yes', 'decision_path': ['killer near'], 'next_coord': (1, 9), 'next_move': 'up', 'latency': '150', 'time': '0.122s'}
-    log = {'id': '13db488f-3e6f-4729-994c-da5fd05f6abd', 'turn': 125, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(0, 5), (0, 6), (0, 7), (0, 8), (1, 8), (1, 7), (1, 6), (2, 6), (3, 6)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 96, 'body': [(6, 9), (6, 8), (6, 7), (6, 6), (6, 5), (5, 5), (5, 4), (5, 3), (4, 3), (3, 3), (2, 3), (2, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1)]}, {'name': 'Wim HU [dev]', 'health': 33, 'body': [(5, 2), (5, 1), (5, 0), (6, 0), (6, 1), (6, 2), (7, 2), (7, 1)]}, {'name': 'Frank The Tank', 'health': 87, 'body': [(8, 9), (7, 9), (7, 8), (7, 7), (7, 6), (7, 5), (8, 5), (9, 5), (9, 6), (9, 7), (9, 8)]}], 'food': [(0, 4)], 'experiment': 'Yes', 'decision_path': ['split choice', 'no confinement - consider space ahead'], 'next_coord': (1, 5), 'next_move': 'right', 'latency': '20', 'time': '0.085s'}
-    log = {'id': 'b5571207-5796-4bdf-961a-090d36a6ce55', 'turn': 126, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(10, 4), (10, 3), (9, 3), (8, 3), (8, 2), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (5, 1), (5, 2)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 86, 'body': [(0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (2, 1)]}, {'name': 'Frank The Tank', 'health': 86, 'body': [(6, 6), (7, 6), (7, 5), (8, 5), (9, 5), (9, 6), (8, 6), (8, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (4, 7), (4, 6), (4, 5), (3, 5)]}], 'food': [(9, 8)], 'experiment': 'Yes', 'decision_path': ['go back to off border'], 'next_coord': (9, 4), 'next_move': 'left', 'latency': '96', 'time': '0.001s'}
-    log = {'id': 'be685a01-7906-4c50-bf91-bc05336fad95', 'turn': 37, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(0, 3), (0, 2), (1, 2), (2, 2), (2, 1), (3, 1)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 95, 'body': [(8, 7), (7, 7), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (10, 8)]}, {'name': 'snakey_wakey', 'health': 76, 'body': [(5, 8), (5, 9), (6, 9), (6, 8), (6, 7)]}, {'name': 'Frank The Tank', 'health': 98, 'body': [(3, 2), (3, 3), (2, 3), (2, 4), (1, 4), (1, 5), (1, 6)]}], 'food': [(10, 2)], 'experiment': 'Yes', 'decision_path': [], 'next_coord': (1, 3), 'next_move': 'right', 'latency': '22', 'time': '0.000s'}
-    log = {'id': '64b8021b-eed7-458b-ae6e-de65da397d7f', 'turn': 80, 'me': {'name': 'mark_snake', 'health': 92, 'body': [(8, 2), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (8, 6), (8, 7), (8, 8)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 90, 'body': [(3, 9), (3, 8), (3, 7), (3, 6), (3, 5), (2, 5), (2, 6), (2, 7)]}, {'name': 'Würmchen', 'health': 72, 'body': [(1, 1), (2, 1), (3, 1), (3, 2), (3, 3), (2, 3)]}, {'name': 'suboptimal', 'health': 75, 'body': [(5, 1), (4, 1), (4, 2), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (8, 4)]}], 'food': [(6, 1)], 'experiment': 'Yes', 'decision_path': ['go to open space (5, 5)'], 'next_coord': (7, 2), 'next_move': 'left', 'latency': '26', 'time': '0.004s'}
-    log = {'id': '6a15c0d1-d86d-4ecc-8768-1b6d62442aa3', 'turn': 141, 'me': {'name': 'mark_snake', 'health': 80, 'body': [(5, 10), (6, 10), (7, 10), (8, 10), (8, 9), (9, 9), (9, 10), (10, 10), (10, 9), (10, 8), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 99, 'body': [(2, 7), (2, 8), (2, 9), (2, 10), (1, 10), (1, 9), (0, 9), (0, 8), (0, 7), (0, 6), (1, 6), (2, 6), (2, 5), (2, 4)]}, {'name': 'Wim HU [dev]', 'health': 90, 'body': [(10, 5), (9, 5), (9, 6), (10, 6), (10, 7), (9, 7), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (8, 0), (7, 0)]}], 'food': [(5, 7)], 'experiment': 'Yes', 'decision_path': [], 'next_coord': (4, 10), 'next_move': 'left', 'latency': '23', 'time': '0.003s'}
-    log = {'id': '4467f336-b936-43bc-aaaa-58b029ccbafc', 'turn': 128, 'me': {'name': 'mark_snake', 'health': 90, 'body': [(0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (6, 9), (6, 8), (6, 7), (7, 7)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 92, 'body': [(3, 9), (2, 9), (2, 8), (2, 7), (1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (0, 3), (0, 2), (1, 2), (2, 2)]}, {'name': 'Frank The Tank', 'health': 100, 'body': [(0, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (6, 0), (5, 0), (5, 0)]}], 'food': [(3, 8)], 'experiment': 'Yes', 'decision_path': ['split choice', 'has confined moves', 'both confined moves'], 'next_coord': (1, 8), 'next_move': 'right', 'latency': '21', 'time': '0.000s'}
-
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
