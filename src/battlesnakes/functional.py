@@ -505,6 +505,8 @@ def two_collision_points(moves):
                 pos = max(distance_to_border(avoid_point))
                 if pos > 2:
                     return [avoid_point]
+                if g.s.my_length >= 15:
+                    return [avoid_point]
 
 def equal_length_danger(moves):
     if g.e.head_distance == 2:
