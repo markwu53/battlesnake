@@ -518,7 +518,9 @@ def avoid_multi_step_collision(moves):
         if len(aa) == 0:
             return 1
         if all([path_distance_pq(g.s.other_head, p) == 2
-                or len(path_connected_set(p, g.occupied_cells[1]+[a])) <= 2
+                or (len(path_connected_set(p, g.occupied_cells[1]+[a])) <= 2
+                    and not path_connected(p, g.s.my_tail)
+                    and not path_connected(p, g.s.other_tail))
                 for p in aa]):
             return 2
         return 999
@@ -1395,6 +1397,7 @@ def run():
     log = {'id': 'c0dbbe47-7c63-445d-86da-82cbf308c5e8', 'turn': 254, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(4, 6), (3, 6), (2, 6), (1, 6), (0, 6), (0, 7), (0, 8), (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (6, 8), (6, 9), (5, 9), (4, 9), (3, 9), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (8, 9), (9, 9), (9, 8), (8, 8), (7, 8)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (9, 2), (9, 3), (8, 3), (8, 4), (8, 5), (7, 5), (6, 5), (6, 6), (5, 6), (5, 5), (5, 4), (6, 4), (6, 3), (5, 3), (4, 3), (3, 3), (3, 4), (4, 4)]}], 'food': [(8, 10), (7, 3), (6, 0)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(2, 5)]', 'go cut'], 'next_coord': (4, 5), 'next_move': 'down', 'time': '0.002s'}
     log = {'id': '96c2d6a7-0229-4ea6-bb95-71cf6fa83fdb', 'turn': 102, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(5, 9), (5, 10), (4, 10), (4, 9), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (2, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 97, 'body': [(6, 8), (7, 8), (8, 8), (9, 8), (9, 9), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (9, 6), (9, 7), (8, 7), (7, 7), (7, 6), (6, 6), (6, 5)]}], 'food': [(5, 0)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'cut can see my tail'], 'next_coord': (5, 8), 'next_move': 'down', 'time': '0.005s'}
     log = {'id': '96c2d6a7-0229-4ea6-bb95-71cf6fa83fdb', 'turn': 100, 'me': {'name': 'mark_snake', 'health': 91, 'body': [(4, 10), (4, 9), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (2, 2), (3, 2), (3, 3)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(8, 8), (9, 8), (9, 9), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (9, 6), (9, 7), (8, 7), (7, 7), (7, 6), (6, 6), (6, 5), (7, 5), (7, 4)]}], 'food': [(5, 0)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'cut can see my tail'], 'next_coord': (5, 10), 'next_move': 'right', 'time': '0.009s'}
+    log = {'id': '90d3251b-0204-4112-8932-9ffce91bf413', 'turn': 140, 'me': {'name': 'mark_snake', 'health': 76, 'body': [(4, 0), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(5, 5), (5, 4), (4, 4), (4, 5), (3, 5), (2, 5), (1, 5), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (3, 2), (2, 2), (1, 2), (1, 3), (2, 3)]}], 'food': [(3, 6), (0, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (3, 0), 'next_move': 'left', 'time': '0.001s'}
 
 
     game_state = init_from_log(log)
