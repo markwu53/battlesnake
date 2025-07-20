@@ -487,12 +487,14 @@ def coming_near():
 
 def killer_near(moves):
     if on_border(g.s.my_head):
-        if distance_pq(g.s.my_head, g.s.other_head) <= 6:
-            if distance_pq(g.s.my_head, g.s.other_head) == path_distance_pq(g.s.my_head, g.s.other_head):
-                return cases([
-                    killer_near_crawling,
-                    killer_near_heading_border,
-                ])(moves)
+        if distance_pq(g.s.my_head, g.s.other_head) == 6:
+            if path_distance_pq(g.s.my_head, g.s.other_head) == 6:
+                vdist = distance_vector_abs(g.s.my_head, g.s.other_head)
+                if vdist in [(3,3), (2,4), (4,2)]:
+                    return cases([
+                        killer_near_crawling,
+                        killer_near_heading_border,
+                    ])(moves)
 
 def killer_near_crawling(moves):
     if on_border(g.s.my_neck):
