@@ -30,6 +30,7 @@ class DecisionAux:
         self.other_territory = None
         self.equal_territory = None
         self.equal_border = None
+        self.other_connected_set = None
         self.moves_info = None
 
 class SnakeInfo:
@@ -442,9 +443,10 @@ def battle_1_vs_n(moves):
 def battle_1_vs_1(moves):
     if g.e.n_other == 1:
         g.decision_path.append("battle_1_vs_1")
-        equal_line()
         try:
             moves = cases([
+                equal_line,
+                kill_oppotunities,
                 my_snake_is_shorter, 
                 snake_equal_length, 
                 my_snake_is_longer,
@@ -878,7 +880,7 @@ def too_short_return(moves):
     if g.s.my_length < 15:
         return moves
 
-def equal_line():
+def equal_line(moves):
     my_connected_set = path_connected_layers(g.s.my_head)
     other_connected_set = path_connected_layers(g.s.other_head)
     my_connected_dict = {p:i for i,layer in enumerate(my_connected_set) for p in layer}
@@ -891,6 +893,7 @@ def equal_line():
     g.x.other_territory = other_territory
     g.x.equal_territory = equal_territory
     g.x.equal_border = equal_border
+    g.x.other_connected_set = other_connected_set
 
 def food1(moves):
     tail_moves = shortest_path_move(g.s.my_head, g.s.my_tail)
@@ -1058,17 +1061,71 @@ def wayout_from_myself(moves):
 
 def kill_oppotunities(moves):
     return cases([
-        enemy_has_only_one_move,
+        me_longer_enemy_has_only_one_move,
+        cut_opportunities,
     ])(moves)
 
-def enemy_has_only_one_move(moves):
-    if distance_pq(g.s.my_head, g.s.other_head) == 2:
-        other_moves = g.x.other_allowed_moves
-        if len(other_moves) <= 2:
-            g.decision_path.append("enemy is cornered")
-            moves = [a for a in moves if a in other_moves]
-            if len(moves) == 1:
-                return moves
+def cut_opportunities(moves):
+    #I'll cut enemy if I can
+    #conditions
+    #1. determine cut set
+    #1.1. if my snake is longer than enemy then the cut set is the equal border
+    #1.2. otherwise, the cut set is the set that adjacent to the equal territory on my side
+    #2. cut set is not too long
+    #3. cut set is close to my head
+    #4. with cut set, enemy head is not path connected to his tail or my tail
+    #5. the resulting cut space is small enough so that the enemy cannot escape
+
+    cut_set = g.x.equal_border 
+    if g.s.my_length <= g.s.other_length:
+        cut_set = [p for p in g.x.my_territory if any([q in g.x.equal_territory for q in adj_cells(p)])]
+
+    if len(cut_set) > 4:
+        return
+    max_cut_length = 8
+    max_dist = max([path_distance_pq(p, g.s.my_head) for p in cut_set])
+    if max_dist > max_cut_length:
+        g.decision_path.append("cut set is too far")
+        return
+    oset = path_connected_set(g.s.other_head, g.occupied_cells[0]+cut_set)
+    if g.s.other_tail in oset:
+        g.decision_path.append("cut set is connected to enemy tail")
+        return
+    if g.s.my_tail in oset:
+        g.decision_path.append("cut set is connected to my tail")
+        return
+    if len(oset) < g.s.other_length - 2:
+        g.decision_path.append("cut set is small enough")
+        return
+    g.decision_path.append("cut opportunities")
+    cut_paths = [[[g.s.my_head]]]
+    for _ in range(max_cut_length):
+        layer = [path+[p] for path in cut_paths[-1] for end in [path[-1]] for p in adj_cells(end) 
+                 if p not in g.occupied_cells[0] and p not in path]
+        if len(layer) == 0: break
+        cut_paths.append(layer)
+    cut_paths = [path for path in layer for layer in cut_paths if all([p in path for p in cut_set])]
+    if len(cut_paths) == 0:
+        g.decision_path.append("no cut paths")
+        return
+    cut_paths = [path for path in cut_paths for end in [path[-1]] if any([p not in oset for p in adj_cells(end)])]
+    if len(cut_paths) == 0:
+        g.decision_path.append("no cut paths that come back")
+        return
+    cut_paths = prefer_by_rank(lambda path: len(path))(cut_paths)
+    cut_moves = [path[1] for path in cut_paths]
+    g.decision_path.append("go cut")
+    return prefer_yes(lambda a: a in cut_moves)(moves)
+
+def me_longer_enemy_has_only_one_move(moves):
+    if g.s.my_length > g.s.other_length:
+        if distance_pq(g.s.my_head, g.s.other_head) == 2:
+            other_moves = g.x.other_allowed_moves
+            if len(other_moves) <= 2:
+                g.decision_path.append("enemy is cornered")
+                moves = [a for a in moves if a in other_moves]
+                if len(moves) == 1:
+                    return moves
 
 def not_too_long(moves):
     if g.s.my_length < 20:
@@ -1191,7 +1248,6 @@ def too_long(moves):
 def my_snake_is_longer(moves):
     if g.s.my_length > g.s.other_length:
         return cases([
-            kill_oppotunities,
             longer_but_not_enough,
             not_too_long,
             too_long,
