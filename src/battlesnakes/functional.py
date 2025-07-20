@@ -82,6 +82,28 @@ def get_adjacent_dir(p, q):
         return "up"
     return "down"
 
+def is_opposite_dir(dir1, dir2):
+    if dir1 == "up" and dir2 == "down":
+        return True
+    if dir1 == "down" and dir2 == "up":
+        return True
+    if dir1 == "left" and dir2 == "right":
+        return True
+    if dir1 == "right" and dir2 == "left":
+        return True
+    return False
+
+def is_perpendicular_dir(dir1, dir2):
+    if dir1 == "up" and dir2 in ["left", "right"]:
+        return True
+    if dir1 == "down" and dir2 in ["left", "right"]:
+        return True
+    if dir1 == "left" and dir2 in ["up", "down"]:
+        return True
+    if dir1 == "right" and dir2 in ["up", "down"]:
+        return True
+    return False
+
 def get_next_move(head_coord, next_head_coord):
     return get_adjacent_dir(head_coord, next_head_coord)
 
@@ -207,6 +229,12 @@ def distance_to_border(p):
     dx = min([x, g.state["board"]["width"]-x-1])
     dy = min([y, g.state["board"]["height"]-y-1])
     return (dx, dy)
+
+def distance_vector_abs(p, q):
+    x1,y1 = p
+    x2,y2 = q
+    dx,dy = x2-x1, y2-y1
+    return (abs(dx), abs(dy))
 
 def get_dir_number(p, q):
     assert(is_adjacent(p, q))
@@ -490,6 +518,11 @@ def single_collision_point(moves):
         if len(collision_points) == 1:
             g.decision_path.append("avoid single collision point")
             moves = prefer_no(lambda a: a in collision_points)(moves)
+            if distance_vector_abs(g.s.my_head, g.s.other_head) != (1,1):
+                if distance_to_border(g.s.my_head) == (1,1):
+                    if get_adjacent_dir(g.s.my_neck, g.s.my_head) == get_adjacent_dir(g.s.other_neck, g.s.other_head):
+                        g.decision_path.append("enemy is parallel following me")
+                        moves = prefer_no(lambda a: distance_vector_abs(a, g.s.other_head) in [(0,3), (3,0)])(moves)
             return moves
 
 def two_collision_points(moves):
@@ -1230,6 +1263,7 @@ def run():
     log = {'id': '5491bfff-1b23-46a6-83f5-5e3e7bb2ea70', 'turn': 273, 'me': {'name': 'mark_snake', 'health': 87, 'body': [(6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (7, 10), (6, 10), (5, 10), (5, 9), (4, 9), (4, 10), (3, 10), (3, 9), (3, 8)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 97, 'body': [(8, 7), (7, 7), (6, 7), (5, 7), (4, 7), (3, 7), (2, 7), (2, 8), (2, 9), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (0, 1), (0, 0), (1, 0), (2, 0), (2, 1), (3, 1), (3, 0), (4, 0)]}], 'food': [(9, 10), (0, 3), (9, 0), (10, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (7, 1), 'next_move': 'right', 'time': '0.011s'}
     log = {'id': '8dd5c19e-530b-45d2-be83-feeef12f0cc8', 'turn': 200, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(6, 0), (6, 1), (7, 1), (8, 1), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (8, 5), (7, 5), (7, 4), (7, 3), (6, 3), (5, 3), (5, 2), (5, 1), (4, 1)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 97, 'body': [(5, 9), (6, 9), (7, 9), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (1, 8), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0)]}], 'food': [(1, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'static can see other tail'], 'next_coord': (7, 0), 'next_move': 'right', 'time': '0.002s'}
     log = {'id': 'cf1fdf80-104d-4f32-8ed5-fe4cfb02cd90', 'turn': 219, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(6, 1), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1), (8, 2), (8, 3), (7, 3), (6, 3), (6, 4), (6, 5)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 92, 'body': [(5, 2), (5, 1), (5, 0), (4, 0), (3, 0), (2, 0), (2, 1), (3, 1), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (3, 5), (4, 5), (5, 5), (5, 6), (5, 7), (5, 8)]}], 'food': [(9, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'longer but not eough'], 'next_coord': (6, 2), 'next_move': 'up', 'time': '0.001s'}
+    log = {'id': '4b98d16a-5702-4960-b4a7-aa10d585abd4', 'turn': 234, 'me': {'name': 'mark_snake', 'health': 86, 'body': [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (2, 8), (3, 8), (3, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 88, 'body': [(3, 1), (3, 2), (4, 2), (4, 1), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (6, 3), (6, 4), (6, 5), (7, 5), (7, 4), (7, 3), (8, 3), (8, 4), (9, 4), (9, 3), (9, 2), (9, 1), (9, 0), (8, 0), (7, 0)]}], 'food': [(2, 0), (4, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point', 'food opportunity', 'go to food'], 'next_coord': (1, 0), 'next_move': 'down', 'time': '0.006s'}
 
 
     game_state = init_from_log(log)
