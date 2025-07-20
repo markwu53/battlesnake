@@ -1080,22 +1080,20 @@ def cut_opportunities(moves):
     if g.s.my_length <= g.s.other_length:
         cut_set = [p for p in g.x.my_territory if any([q in g.x.equal_territory for q in adj_cells(p)])]
 
+    if len(cut_set) == 0:
+        return
     if len(cut_set) > 4:
         return
     max_cut_length = 8
     max_dist = max([path_distance_pq(p, g.s.my_head) for p in cut_set])
     if max_dist > max_cut_length:
-        g.decision_path.append("cut set is too far")
         return
     oset = path_connected_set(g.s.other_head, g.occupied_cells[0]+cut_set)
     if g.s.other_tail in oset:
-        g.decision_path.append("cut set is connected to enemy tail")
         return
     if g.s.my_tail in oset:
-        g.decision_path.append("cut set is connected to my tail")
         return
-    if len(oset) < g.s.other_length - 2:
-        g.decision_path.append("cut set is small enough")
+    if len(oset) >= g.s.other_length - 2:
         return
     g.decision_path.append("cut opportunities")
     cut_paths = [[[g.s.my_head]]]
