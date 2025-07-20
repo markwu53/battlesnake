@@ -1173,8 +1173,6 @@ def cut_opportunities(moves):
     if len(cut_paths) == 0:
         g.decision_path.append("no cut paths all in my territory")
         return
-    print(len(cut_paths))
-    print(cut_paths)
     cut_paths = [path for path in cut_paths for end in [path[-1]] 
                  if any([p not in oset and p not in path and p not in g.occupied_cells[1] for p in adj_cells(end)])]
     if len(cut_paths) == 0:
