@@ -1145,6 +1145,8 @@ def cut_opportunities(moves):
     if len(cut_set) > 4:
         return
     if len(cut_set) == 1:
+        #cut_set is in a tunnel, maynot have path that can come back
+        #get a cut_set by retract back adjacent cells
         while True:
             new_cut_set = [q for p in cut_set for q in adj_cells(p) 
                            if q not in g.occupied_cells[0] 
