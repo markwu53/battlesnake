@@ -1095,14 +1095,14 @@ def cut_opportunities(moves):
         return
     if len(oset) >= g.s.other_length - 2:
         return
-    g.decision_path.append("cut opportunities")
+    g.decision_path.append(f"cut opportunities - {cut_set}")
     cut_paths = [[[g.s.my_head]]]
     for _ in range(max_cut_length):
         layer = [path+[p] for path in cut_paths[-1] for end in [path[-1]] for p in adj_cells(end) 
                  if p not in g.occupied_cells[0] and p not in path]
         if len(layer) == 0: break
         cut_paths.append(layer)
-    cut_paths = [path for path in layer for layer in cut_paths if all([p in path for p in cut_set])]
+    cut_paths = [path for layer in cut_paths for path in layer if all([p in path for p in cut_set])]
     if len(cut_paths) == 0:
         g.decision_path.append("no cut paths")
         return
@@ -1318,6 +1318,8 @@ def run():
     log = {'id': '8dd5c19e-530b-45d2-be83-feeef12f0cc8', 'turn': 200, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(6, 0), (6, 1), (7, 1), (8, 1), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (8, 5), (7, 5), (7, 4), (7, 3), (6, 3), (5, 3), (5, 2), (5, 1), (4, 1)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 97, 'body': [(5, 9), (6, 9), (7, 9), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (1, 8), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0)]}], 'food': [(1, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'static can see other tail'], 'next_coord': (7, 0), 'next_move': 'right', 'time': '0.002s'}
     log = {'id': 'cf1fdf80-104d-4f32-8ed5-fe4cfb02cd90', 'turn': 219, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(6, 1), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1), (8, 2), (8, 3), (7, 3), (6, 3), (6, 4), (6, 5)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 92, 'body': [(5, 2), (5, 1), (5, 0), (4, 0), (3, 0), (2, 0), (2, 1), (3, 1), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (3, 5), (4, 5), (5, 5), (5, 6), (5, 7), (5, 8)]}], 'food': [(9, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'longer but not eough'], 'next_coord': (6, 2), 'next_move': 'up', 'time': '0.001s'}
     log = {'id': '4b98d16a-5702-4960-b4a7-aa10d585abd4', 'turn': 234, 'me': {'name': 'mark_snake', 'health': 86, 'body': [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (2, 8), (3, 8), (3, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 88, 'body': [(3, 1), (3, 2), (4, 2), (4, 1), (4, 0), (5, 0), (5, 1), (5, 2), (5, 3), (6, 3), (6, 4), (6, 5), (7, 5), (7, 4), (7, 3), (8, 3), (8, 4), (9, 4), (9, 3), (9, 2), (9, 1), (9, 0), (8, 0), (7, 0)]}], 'food': [(2, 0), (4, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point', 'food opportunity', 'go to food'], 'next_coord': (1, 0), 'next_move': 'down', 'time': '0.006s'}
+    log = {'id': '878cedf9-f6df-415d-b73f-f0d1239f081e', 'turn': 159, 'me': {'name': 'mark_snake', 'health': 90, 'body': [(2, 7), (2, 6), (2, 5), (2, 4), (2, 3), (1, 3), (1, 2), (1, 1), (2, 1), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 98, 'body': [(4, 5), (3, 5), (3, 4), (3, 3), (4, 3), (4, 2), (5, 2), (6, 2), (6, 3), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (6, 9), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (9, 8), (8, 8)]}], 'food': [(9, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities', 'go cut'], 'next_coord': (3, 7), 'next_move': 'right', 'time': '0.007s'}
+    log = {'id': '878cedf9-f6df-415d-b73f-f0d1239f081e', 'turn': 160, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(3, 7), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3), (1, 3), (1, 2), (1, 1), (2, 1), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]}, 'others': [{'name': 'Frank The Tank', 'health': 97, 'body': [(4, 6), (4, 5), (3, 5), (3, 4), (3, 3), (4, 3), (4, 2), (5, 2), (6, 2), (6, 3), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (6, 9), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (9, 8)]}], 'food': [(9, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities', 'go cut'], 'next_coord': (4, 7), 'next_move': 'right', 'time': '0.004s'}
 
 
     game_state = init_from_log(log)
