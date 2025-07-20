@@ -435,6 +435,7 @@ def long_enough(moves):
             killer_near_long_enough,
             (split_choice),
             wayout,
+            cut_wayout,
             get_food_1_vs_n,
             prefer_no(on_border),
             prefer_straight,
@@ -664,8 +665,58 @@ def log_print(anything=None):
     id = g.state["game"]["id"]
     print(f"MARK_EXCEPTION, TURN: {turn}, id: {id}, {anything}")
 
+def cut_wayout(moves):
+    if g.x.ngroup == 1:
+        others = [snake for snake in g.others if path_distance_pq(snake.head, g.me.head) <= 6]
+        if len(others) == 1:
+            other = take_first(others)
+            if g.me.length >= other.length:
+                aset = path_connected_set(g.me.head)
+                aset = [a for a in aset if a != g.me.head]
+                aset = [a for a in aset if path_distance_pq(a, g.me.head) <= path_distance_pq(a, other.head)]
+                if len(aset) <= int(g.me.length * 1.2):
+                    #cut confined
+                    #meander
+                    g.decision_path.append("cut wayout")
+                    return meander(aset)(moves)
+
+def meander(aset):
+    def fn(moves):
+        calc = [ (snake, adj_set, snake.length - max(adj_set), max(adj_set), snake.body[max(adj_set)]) 
+            for snake in g.snakes
+            for adj_set in [[i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)])]]
+            if len(adj_set) != 0 ]
+        min_wayout = min([a[2] for a in calc])
+        calc = [a for a in calc if a[2] == min_wayout]
+        wayout_point = take_first(prefer_yes(lambda a: a[0].head == g.me.head)(calc))[4]
+
+        #meander
+        g.decision_path.append(f"meander to {wayout_point}")
+        far_points = prefer_by_score(lambda a: path_distance_pq(a, wayout_point))(moves)
+        if len(far_points) == 1:
+            return far_points
+
+        #then there are 2 points, cannot have 3
+        #and they are perpendicular, ie, one straight, one left or right
+        #and they have a common adjacent point
+        a,b = far_points
+        c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head]
+        if len(c) == 0:
+            log_print(far_points)
+            return far_points
+        c = c[0]
+        occupied = g.occupied_cells[0]+[c]
+        a_connection = path_connected(a, wayout_point, occupied)
+        b_connection = path_connected(b, wayout_point, occupied)
+        if not all([a_connection, b_connection]):
+            choice = a if not a_connection else b
+            g.decision_path.append(f"go first {choice}")
+            return [choice]
+    return fn
+
 def wayout(moves):
     ngroup = move_connected_group(moves)
+    g.x.ngroup = ngroup
     if ngroup != 1:
         return
     aset = path_connected_set(g.me.head)
@@ -673,38 +724,7 @@ def wayout(moves):
     if len(aset) >= int(g.me.length * 1.2):
         return
 
-    calc = [ (snake, adj_set, snake.length - max(adj_set), max(adj_set), snake.body[max(adj_set)]) 
-        for snake in g.snakes
-        for adj_set in [[i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)])]]
-        if len(adj_set) != 0 ]
-    min_wayout = min([a[2] for a in calc])
-    calc = [a for a in calc if a[2] == min_wayout]
-    wayout_point = take_first(prefer_yes(lambda a: a[0].head == g.me.head)(calc))[4]
-
-    #meander
-    g.decision_path.append(f"meander to {wayout_point}")
-    far_points = prefer_by_score(lambda a: path_distance_pq(a, wayout_point))(moves)
-    if len(far_points) == 1:
-        return far_points
-
-    #then there are 2 points, cannot have 3
-    #and they are perpendicular, ie, one straight, one left or right
-    #and they have a common adjacent point
-    a,b = far_points
-    c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head]
-    if len(c) == 0:
-        log_print(far_points)
-        return far_points
-    c = c[0]
-    occupied = g.occupied_cells[0]+[c]
-    a_connection = path_connected(a, wayout_point, occupied)
-    b_connection = path_connected(b, wayout_point, occupied)
-    if not all([a_connection, b_connection]):
-        choice = a if not a_connection else b
-        g.decision_path.append(f"go first {choice}")
-        return [choice]
-
-
+    return meander(aset)(moves)
 
 def wayout2(moves):
     ngroup = move_connected_group(moves)
@@ -940,6 +960,7 @@ def run():
     log = {'id': 'ef5ac3ef-96d7-420a-8fa6-83f795f281b8', 'turn': 236, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(1, 3), (2, 3), (2, 2), (3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (9, 8), (9, 9), (8, 9), (8, 10), (7, 10)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 90, 'body': [(1, 5), (1, 4), (2, 4), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4)]}, {'name': 'Kakemonsteret-v2', 'health': 94, 'body': [(5, 5), (5, 4), (5, 3), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (5, 7), (5, 6), (6, 6), (7, 6), (7, 5), (7, 4), (7, 3), (8, 3), (8, 4)]}], 'food': [(9, 10)], 'experiment': 'Yes', 'decision_path': ['consider wayout', 'wayout point far enough', 'go to open space'], 'next_coord': (1, 2), 'next_move': 'down', 'time': '0.001s'}
     log = {'id': '3104d1b4-d02b-44ac-8cde-510183de0b65', 'turn': 85, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 100, 'body': [(4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 2)]}, {'name': 'Frank The Tank', 'health': 100, 'body': [(3, 4), (3, 5), (3, 6), (2, 6), (2, 5), (2, 4), (2, 3), (3, 3), (3, 2), (4, 2), (4, 2)]}, {'name': 'Kakemonsteret-v2', 'health': 84, 'body': [(7, 2), (8, 2), (8, 1), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6)]}], 'food': [(10, 8)], 'experiment': 'Yes', 'decision_path': ['split choice', 'no confinement - need further consideration'], 'next_coord': (5, 3), 'next_move': 'left', 'time': '0.002s'}
     log = {'id': '94700155-0f20-482a-b882-0267239a9a0c', 'turn': 210, 'me': {'name': 'mark_snake', 'health': 87, 'body': [(4, 6), (4, 5), (4, 4), (5, 4), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (7, 8), (8, 8), (8, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 97, 'body': [(8, 0), (7, 0), (7, 1), (7, 2), (7, 3), (8, 3), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0)]}, {'name': 'snakey_wakey', 'health': 90, 'body': [(2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (2, 2), (3, 2), (3, 3), (3, 4), (3, 5), (2, 5), (1, 5), (1, 4), (1, 3)]}, {'name': 'soma-mini v1[standard]', 'health': 84, 'body': [(4, 8), (4, 9), (3, 9), (2, 9), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (1, 7), (2, 7), (3, 7)]}], 'food': [(0, 2), (6, 9), (2, 3)], 'module': 'functional2', 'decision_path': ['avoid collision'], 'next_coord': (5, 6), 'next_move': 'right', 'time': '0.005s'}
+    log = {'id': '0d7da7b2-c47e-435c-b80d-f48b7e5f66bc', 'turn': 115, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (1, 3), (1, 4), (1, 5), (1, 6), (2, 6), (2, 5), (2, 4), (2, 3)]}, 'others': [{'name': 'Würmchen', 'health': 15, 'body': [(8, 1), (8, 2), (8, 3), (7, 3), (6, 3), (6, 2)]}, {'name': 'snakey_wakey', 'health': 91, 'body': [(3, 4), (3, 5), (3, 6), (3, 7), (4, 7), (4, 6), (5, 6), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5)]}, {'name': 'Wim HU', 'health': 84, 'body': [(3, 8), (4, 8), (4, 9), (5, 9), (6, 9), (6, 8), (6, 7), (7, 7), (8, 7), (8, 6), (9, 6), (9, 7)]}], 'food': [(7, 2), (4, 2)], 'module': 'functional2', 'decision_path': [], 'next_coord': (1, 7), 'next_move': 'right', 'time': '0.002s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
