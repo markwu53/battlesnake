@@ -471,17 +471,16 @@ def avoid_collision(moves):
     return moves
 
 def coming_near():
-    killer = g.other
-    killer_next = [p for p in adj_cells(killer.head) if get_adjacent_dir(killer.neck, killer.head) == get_adjacent_dir(killer.head, p)]
+    killer_next = [p for p in adj_cells(g.s.other_head) if get_adjacent_dir(g.s.other_neck, g.s.my_head) == get_adjacent_dir(g.s.other_head, p)]
     killer_next = [p for p in killer_next if p not in g.occupied_cells[0]]
     if len(killer_next) == 0:
         return False
     killer_next = killer_next[0]
-    my_next = [p for p in adj_cells(g.me.head) if is_straight(p) and p not in g.occupied_cells[0]]
+    my_next = [p for p in adj_cells(g.s.my_head) if is_straight(p) and p not in g.occupied_cells[0]]
     if len(my_next) == 0:
         return False
     my_next = my_next[0]
-    if distance_pq(killer_next, my_next) < distance_pq(g.me.head, killer.head):
+    if distance_pq(killer_next, my_next) < distance_pq(g.s.my_head, g.s.other_head):
         return True
     return False
 
