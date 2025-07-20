@@ -83,6 +83,28 @@ def get_adjacent_dir(p, q):
         return "up"
     return "down"
 
+def is_opposite_dir(dir1, dir2):
+    if dir1 == "up" and dir2 == "down":
+        return True
+    if dir1 == "down" and dir2 == "up":
+        return True
+    if dir1 == "left" and dir2 == "right":
+        return True
+    if dir1 == "right" and dir2 == "left":
+        return True
+    return False
+
+def is_perpendicular_dir(dir1, dir2):
+    if dir1 == "up" and dir2 in ["left", "right"]:
+        return True
+    if dir1 == "down" and dir2 in ["left", "right"]:
+        return True
+    if dir1 == "left" and dir2 in ["up", "down"]:
+        return True
+    if dir1 == "right" and dir2 in ["up", "down"]:
+        return True
+    return False
+
 def get_next_move(head_coord, next_head_coord):
     return get_adjacent_dir(head_coord, next_head_coord)
 
@@ -428,6 +450,7 @@ def long_enough(moves):
     if g.me.length > 10:
         return sequential([
             dont_go_in_trap,
+            dont_go_in_a_forming_trap,
             avoid_collision,
             avoid_equal_collision,
             avoid_multi_step_collision,
@@ -485,6 +508,20 @@ def kill_oppotunies(moves):
         enemy_in_trap_move,
     ])(moves)
 
+def dont_go_in_a_forming_trap(moves):
+    others = [snake for snake in g.others if distance_pq(snake.head, g.me.head) == 2]
+    if len(others) == 1:
+        other = others[0]
+        adj_points = [p for p in adj_cells(g.me.head) if p in adj_cells(other.head)]
+        if len(adj_points) == 2:
+            collision_points = [p for p in adj_points if p in moves]
+            trap_point = [p for p in collision_points if len([q for q in adj_cells(p) if q in g.occupied_cells[1]]) == 1]
+            if len(trap_point) == 1:
+                trap_point = trap_point[0]
+                if not is_opposite_dir(get_adjacent_dir(g.me.head, trap_point), get_adjacent_dir(other.neck, other.head)):
+                    g.decision_path.append(f"forming trap {trap_point}")
+                    return prefer_no(lambda a: a == trap_point)(moves)
+
 def is_a_border_trap(a):
     if not on_border(a):
         return False
@@ -498,8 +535,21 @@ def is_a_border_trap(a):
                 return True
     return False
 
+def is_a_trap(a):
+    next_moves = [p for p in adj_cells(a) if p not in g.occupied_cells[1]]
+    if len(next_moves) != 1:
+        return False
+    adj_snakes = [snake for snake in g.others if any([is_adjacent(c, a) for c in snake.body[:-1]])]
+    if len(adj_snakes) == 0:
+        return False
+    adj_snakes = [(snake,i) for snake in adj_snakes for i,c in enumerate(snake.body) 
+        if is_adjacent(c, a) and c != snake.head]
+    if all([get_adjacent_dir(snake.body[i], snake.body[i-1]) == get_adjacent_dir(g.me.head, a) for snake,i in adj_snakes]):
+        return True
+    return False
+
 def dont_go_in_trap(moves):
-    trap = [a for a in moves if is_a_border_trap(a)]
+    trap = [a for a in moves if is_a_trap(a)]
     if len(trap) != 0:
         g.decision_path.append(f"don't go in trap {trap}")
         return prefer_no(lambda a: a in trap)(moves)
@@ -715,8 +765,7 @@ def meander(aset):
     return fn
 
 def wayout(moves):
-    ngroup = move_connected_group(moves)
-    g.x.ngroup = ngroup
+    ngroup = g.x.ngroup
     if ngroup != 1:
         return
     aset = path_connected_set(g.me.head)
@@ -802,43 +851,59 @@ def move_group(moves):
     ngroup = move_connected_group(moves)
     g.x.ngroup = ngroup
 
-def no_confinement(moves):
-    head_space = path_connected_set(g.me.head)
-    killers = [snake for snake in g.others if snake.length > g.me.length]
-    nonkillers = [snake for snake in g.others if snake.length <= g.me.length]
-    my_space = [a for a in head_space 
-        if all([path_distance_pq(a, g.me.head) < path_distance_pq(a, snake.head) for snake in killers]) ]
-    my_space = [a for a in my_space 
-        if all([path_distance_pq(a, g.me.head) <= path_distance_pq(a, snake.head) for snake in nonkillers]) ]
-    occupied = g.occupied_cells[0]+[a for a in head_space if a not in my_space]
-    def move_space(a):
-        return len(path_connected_set(a, occupied))
-    return prefer_by_score(move_space)(moves)
-
 def split_choice(moves):
     ngroup = g.x.ngroup
     if ngroup > 1:
         g.decision_path.append("split choice")
-        confined_moves = [a for a in moves if len(path_connected_set(a)) < g.me.length //2]
-        confined_moves = [a for a in confined_moves if not path_connected(a, g.me.tail)]
-        if len(confined_moves) == 0:
-            g.decision_path.append("no confinement - consider space ahead")
-            return no_confinement(moves)
+        return cases([
+            simple_confined_moves_info,
+            no_simple_confinement,
+            avoid_simple_confinement,
+            both_confined_moves,
+        ])(moves)
+    
+def simple_confined_moves_info(moves):
+    confined_moves = [a for a in moves if len(path_connected_set(a)) < g.me.length //2]
+    confined_moves = [a for a in confined_moves if not path_connected(a, g.me.tail)]
+    g.x.confined_moves = confined_moves
+
+def avoid_simple_confinement(moves):
+    confined_moves = g.x.confined_moves
+    good_moves = [a for a in moves if a not in confined_moves]
+    g.x.split_good_moves = good_moves
+    if len(confined_moves) != 0:
         g.decision_path.append("has confined moves")
-        good_moves = [a for a in moves if a not in confined_moves]
         if len(good_moves) != 0:
             g.decision_path.append("avoid confined moves")
             return good_moves
 
+def no_simple_confinement(moves):
+    confined_moves = g.x.confined_moves
+    if len(confined_moves) == 0:
+        g.decision_path.append("no simple confinement")
+        head_space = path_connected_set(g.me.head)
+        killers = [snake for snake in g.others if snake.length > g.me.length]
+        nonkillers = [snake for snake in g.others if snake.length <= g.me.length]
+        my_space = [a for a in head_space 
+            if all([path_distance_pq(a, g.me.head) < path_distance_pq(a, snake.head) for snake in killers]) ]
+        my_space = [a for a in my_space 
+            if all([path_distance_pq(a, g.me.head) <= path_distance_pq(a, snake.head) for snake in nonkillers]) ]
+        occupied = g.occupied_cells[0]+[a for a in head_space if a not in my_space]
+        def move_space(a):
+            return len(path_connected_set(a, occupied))
+        return prefer_by_score(move_space)(moves)
+
+def both_confined_moves(moves):
+    #prefer near tail
+    def tail_index(a):
+        aset = path_connected_set(a)
+        rank = min([ snake.length - max(adj_set)
+            for snake in g.snakes
+            for adj_set in [[i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)])]]
+            if len(adj_set) != 0 ])
+        return rank
+    if len(g.x.split_good_moves) == 0:
         g.decision_path.append("both confined moves")
-        #prefer near tail
-        def tail_index(a):
-            aset = path_connected_set(a)
-            rank = min([ snake.length - max(adj_set)
-                for snake in g.snakes
-                for adj_set in [[i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)])]]
-                if len(adj_set) != 0 ])
-            return rank
         return prefer_by_rank(tail_index)(moves)
 
 def avoid_collision(moves):
@@ -961,6 +1026,7 @@ def run():
     log = {'id': '3104d1b4-d02b-44ac-8cde-510183de0b65', 'turn': 85, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 100, 'body': [(4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 2)]}, {'name': 'Frank The Tank', 'health': 100, 'body': [(3, 4), (3, 5), (3, 6), (2, 6), (2, 5), (2, 4), (2, 3), (3, 3), (3, 2), (4, 2), (4, 2)]}, {'name': 'Kakemonsteret-v2', 'health': 84, 'body': [(7, 2), (8, 2), (8, 1), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6)]}], 'food': [(10, 8)], 'experiment': 'Yes', 'decision_path': ['split choice', 'no confinement - need further consideration'], 'next_coord': (5, 3), 'next_move': 'left', 'time': '0.002s'}
     log = {'id': '94700155-0f20-482a-b882-0267239a9a0c', 'turn': 210, 'me': {'name': 'mark_snake', 'health': 87, 'body': [(4, 6), (4, 5), (4, 4), (5, 4), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (7, 8), (8, 8), (8, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 97, 'body': [(8, 0), (7, 0), (7, 1), (7, 2), (7, 3), (8, 3), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0)]}, {'name': 'snakey_wakey', 'health': 90, 'body': [(2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (2, 2), (3, 2), (3, 3), (3, 4), (3, 5), (2, 5), (1, 5), (1, 4), (1, 3)]}, {'name': 'soma-mini v1[standard]', 'health': 84, 'body': [(4, 8), (4, 9), (3, 9), (2, 9), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (1, 7), (2, 7), (3, 7)]}], 'food': [(0, 2), (6, 9), (2, 3)], 'module': 'functional2', 'decision_path': ['avoid collision'], 'next_coord': (5, 6), 'next_move': 'right', 'time': '0.005s'}
     log = {'id': '0d7da7b2-c47e-435c-b80d-f48b7e5f66bc', 'turn': 115, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (1, 3), (1, 4), (1, 5), (1, 6), (2, 6), (2, 5), (2, 4), (2, 3)]}, 'others': [{'name': 'Würmchen', 'health': 15, 'body': [(8, 1), (8, 2), (8, 3), (7, 3), (6, 3), (6, 2)]}, {'name': 'snakey_wakey', 'health': 91, 'body': [(3, 4), (3, 5), (3, 6), (3, 7), (4, 7), (4, 6), (5, 6), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5)]}, {'name': 'Wim HU', 'health': 84, 'body': [(3, 8), (4, 8), (4, 9), (5, 9), (6, 9), (6, 8), (6, 7), (7, 7), (8, 7), (8, 6), (9, 6), (9, 7)]}], 'food': [(7, 2), (4, 2)], 'module': 'functional2', 'decision_path': [], 'next_coord': (1, 7), 'next_move': 'right', 'time': '0.002s'}
+    log = {'id': '3c112738-4775-4965-9d95-b7a53108fa6e', 'turn': 29, 'me': {'name': 'mark_snake', 'health': 79, 'body': [(7, 6), (7, 5), (7, 4), (7, 3), (7, 2)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 97, 'body': [(5, 8), (6, 8), (6, 9), (6, 10), (5, 10)]}, {'name': 'Wim HU', 'health': 83, 'body': [(3, 4), (3, 3), (3, 2), (3, 1), (3, 0)]}, {'name': 'suboptimal', 'health': 96, 'body': [(7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (9, 9), (9, 8), (9, 7)]}], 'food': [(4, 4), (5, 7), (3, 9)], 'module': 'functional2', 'decision_path': ['go to open space (5, 5)'], 'next_coord': (6, 6), 'next_move': 'left', 'time': '0.068s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
