@@ -1023,6 +1023,20 @@ def wayout_from_myself(moves):
         if len(moves) != 0:
             return moves
 
+def kill_oppotunities(moves):
+    return cases([
+        enemy_has_only_one_move,
+    ])(moves)
+
+def enemy_has_only_one_move(moves):
+    if distance_pq(g.s.my_head, g.s.other_head) == 2:
+        other_moves = g.x.other_allowed_moves
+        if len(other_moves) <= 2:
+            g.decision_path.append("enemy is cornered")
+            moves = [a for a in moves if a in other_moves]
+            if len(moves) == 1:
+                return moves
+
 def not_too_long(moves):
     if g.s.my_length < 20:
         moves = sequential([
@@ -1144,6 +1158,7 @@ def too_long(moves):
 def my_snake_is_longer(moves):
     if g.s.my_length > g.s.other_length:
         return cases([
+            kill_oppotunities,
             longer_but_not_enough,
             not_too_long,
             too_long,
