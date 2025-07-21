@@ -1,3 +1,1 @@
-
-a = round(2.54, 0)
-print(a)
+print((1,2) in None)
