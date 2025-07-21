@@ -486,27 +486,39 @@ def coming_near():
 
 def killer_near(moves):
     if on_border(g.s.my_head):
+        return cases([
+            killer_near_crawling,
+            killer_near_heading_border,
+        ])(moves)
+
+def killer_near_crawling(moves):
+    if on_border(g.s.my_neck):
+        if distance_pq(g.s.my_head, g.s.other_head) == 4:
+            if path_distance_pq(g.s.my_head, g.s.other_head) == 4:
+                vdist = distance_vector_abs(g.s.my_head, g.s.other_head)
+                if vdist in [(1,3), (3,1), (2,2)]:
+                    g.decision_path.append("killer near crawling")
+                    moves = prefer_no(on_border)(moves)
+                    if len(moves) != 0:
+                        return moves
         if distance_pq(g.s.my_head, g.s.other_head) == 6:
             if path_distance_pq(g.s.my_head, g.s.other_head) == 6:
                 vdist = distance_vector_abs(g.s.my_head, g.s.other_head)
                 if vdist in [(3,3), (2,4), (4,2)]:
-                    return cases([
-                        killer_near_crawling,
-                        killer_near_heading_border,
-                    ])(moves)
-
-def killer_near_crawling(moves):
-    if on_border(g.s.my_neck):
-        if coming_near():
-            g.decision_path.append("killer near crawling")
-            moves = prefer_no(on_border)(moves)
-            if len(moves) != 0:
-                return moves
+                    if coming_near():
+                        g.decision_path.append("killer near crawling")
+                        moves = prefer_no(on_border)(moves)
+                        if len(moves) != 0:
+                            return moves
 
 def killer_near_heading_border(moves):
     if not on_border(g.s.my_neck):
-        g.decision_path.append("killer near heading border")
-        return prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head))(moves)
+        if distance_pq(g.s.my_head, g.s.other_head) == 4:
+            if path_distance_pq(g.s.my_head, g.s.other_head) == 4:
+                vdist = distance_vector_abs(g.s.my_head, g.s.other_head)
+                if vdist in [(1,3), (3,1), (2,2)]:
+                    g.decision_path.append("killer near heading border")
+                    return prefer_by_score(lambda a: path_distance_pq(a, g.s.other_head))(moves)
 
 def avoid_multi_step_collision(moves):
     if g.s.my_length >= g.s.other_length:
@@ -1407,6 +1419,7 @@ def run():
     log = {'id': '2431781c-2d03-492b-9fc1-d2ee7fe7c2ef', 'turn': 211, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(8, 1), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 94, 'body': [(1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (2, 10), (3, 10), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9)]}], 'food': [(0, 7), (1, 10), (7, 4), (0, 8)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(2, 0)]', 'no cut paths that come back', 'shorter', 'food opportunity', 'go to food'], 'next_coord': (7, 1), 'next_move': 'left', 'time': '0.008s'}
     log = {'id': '8231d37f-24f0-49cf-a133-065ace587a14', 'turn': 378, 'me': {'name': 'mark_snake', 'health': 76, 'body': [(2, 10), (3, 10), (3, 9), (3, 8), (3, 7), (3, 6), (4, 6), (5, 6), (5, 5), (5, 4), (5, 3), (5, 2), (5, 1), (6, 1), (6, 2), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (6, 7), (5, 7), (4, 7), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (8, 5), (8, 4)]}, 'others': [{'name': 'Snakeformatika', 'health': 96, 'body': [(0, 10), (1, 10), (1, 9), (2, 9), (2, 8), (2, 7), (2, 6), (1, 6), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (2, 4), (2, 3), (3, 3)]}], 'food': [(9, 1), (10, 10), (10, 1), (9, 9), (7, 9), (10, 5), (8, 9), (10, 6), (1, 1), (0, 4), (3, 2), (6, 3)], 'module': 'functional', 'decision_path': [], 'next_coord': (3, 10), 'next_move': 'right', 'time': '0.000s'}
     log = {'id': '8231d37f-24f0-49cf-a133-065ace587a14', 'turn': 377, 'me': {'name': 'mark_snake', 'health': 77, 'body': [(3, 10), (3, 9), (3, 8), (3, 7), (3, 6), (4, 6), (5, 6), (5, 5), (5, 4), (5, 3), (5, 2), (5, 1), (6, 1), (6, 2), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (6, 7), (5, 7), (4, 7), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3)]}, 'others': [{'name': 'Snakeformatika', 'health': 97, 'body': [(1, 10), (1, 9), (2, 9), (2, 8), (2, 7), (2, 6), (1, 6), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3)]}], 'food': [(9, 1), (10, 10), (10, 1), (9, 9), (7, 9), (10, 5), (8, 9), (10, 6), (1, 1), (0, 4), (3, 2), (6, 3)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'enemy is cornered'], 'next_coord': (2, 10), 'next_move': 'left', 'time': '0.001s'}
+    log = {'id': '37afb5e6-0a73-493d-9b30-9830ba2b7e28', 'turn': 216, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(0, 4), (1, 4), (1, 3), (2, 3), (2, 2), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (9, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 95, 'body': [(3, 5), (3, 4), (3, 3), (4, 3), (4, 2), (5, 2), (5, 3), (5, 4), (4, 4), (4, 5), (5, 5), (6, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7), (6, 7), (5, 7), (5, 6), (4, 6), (3, 6), (2, 6), (1, 6), (1, 5)]}], 'food': [(7, 3), (1, 10), (6, 3)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'cut can see my tail'], 'next_coord': (0, 5), 'next_move': 'up', 'time': '0.007s'}
 
 
 
