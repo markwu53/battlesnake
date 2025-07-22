@@ -1180,6 +1180,7 @@ def cut_opportunities(moves):
         return
     if len(cut_set) > 4:
         return
+    """
     if len(cut_set) == 1:
         #cut_set is in a tunnel, maynot have path that can come back
         #get a cut_set by retract back adjacent cells
@@ -1187,6 +1188,7 @@ def cut_opportunities(moves):
             new_cut_set = grow_back(cut_set)
             if len(new_cut_set) != 1: break
             cut_set = new_cut_set
+    """
 
     max_cut_length = 8
     max_dist = max([path_distance_pq(p, g.s.my_head) for p in cut_set])
@@ -1457,6 +1459,8 @@ def run():
     log = {'id': '1d78373b-6022-423e-99d6-41579484cc90', 'turn': 160, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(9, 5), (10, 5), (10, 4), (10, 3), (9, 3), (9, 2), (9, 1), (8, 1), (7, 1), (6, 1), (6, 0), (5, 0), (5, 1), (5, 2), (6, 2), (7, 2), (8, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 95, 'body': [(2, 0), (3, 0), (4, 0), (4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (2, 2), (3, 2), (3, 3), (4, 3), (4, 4), (4, 5), (5, 5), (5, 4), (6, 4), (6, 5), (7, 5), (7, 6), (8, 6), (9, 6)]}], 'food': [(1, 10), (2, 10), (10, 9), (2, 8), (9, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'static can see my tail', 'food opportunity'], 'next_coord': (8, 5), 'next_move': 'left', 'time': '0.013s'}
     log = {'id': '78a31acc-5250-46b1-aa5c-d2ab7726a51e', 'turn': 105, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(8, 3), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (6, 7), (5, 7), (4, 7), (4, 8), (4, 9)]}, 'others': [{'name': 'Frank The Tank', 'health': 100, 'body': [(9, 0), (8, 0), (7, 0), (7, 1), (6, 1), (6, 2), (5, 2), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3), (0, 3), (0, 4), (1, 4), (1, 4)]}], 'food': [(7, 2)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(8, 2), (9, 3), (10, 3)]', 'no cut paths all in my territory', 'shorter', 'food opportunity', 'go to food (7, 2)'], 'next_coord': (8, 2), 'next_move': 'down', 'time': '0.011s'}
     log = {'id': '364ff6c2-f287-416a-bc3f-12486c7d2a87', 'turn': 261, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(9, 4), (9, 3), (9, 2), (9, 1), (9, 0), (8, 0), (8, 1), (8, 2), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 98, 'body': [(10, 9), (9, 9), (9, 10), (8, 10), (8, 9), (8, 8), (8, 7), (8, 6), (7, 6), (6, 6), (6, 7), (6, 8), (5, 8), (5, 9), (5, 10), (4, 10), (4, 9), (3, 9), (2, 9), (1, 9), (1, 10), (0, 10)]}], 'food': [(9, 7), (9, 8)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(10, 5), (9, 6)]', 'no cut paths that come back', 'shorter', 'food opportunity', 'go to food (9, 7)'], 'next_coord': (9, 5), 'next_move': 'up', 'time': '0.010s'}
+    log = {'id': '638501f1-7f21-457c-8e1f-16f678c9e854', 'turn': 122, 'me': {'name': 'mark_snake', 'health': 85, 'body': [(4, 6), (4, 7), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (9, 6), (10, 6), (10, 5)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(3, 7), (3, 8), (2, 8), (1, 8), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (5, 2), (6, 2), (7, 2)]}], 'food': [(3, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(4, 5), (4, 4)]', 'go cut'], 'next_coord': (4, 5), 'next_move': 'down', 'time': '0.087s'}
+    log = {'id': '638501f1-7f21-457c-8e1f-16f678c9e854', 'turn': 123, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(4, 5), (4, 6), (4, 7), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (9, 6), (10, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 98, 'body': [(3, 6), (3, 7), (3, 8), (2, 8), (1, 8), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (5, 2), (6, 2)]}], 'food': [(3, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(5, 4)]', 'go cut'], 'next_coord': (5, 5), 'next_move': 'right', 'time': '0.406s'}
 
 
 
