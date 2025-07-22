@@ -460,6 +460,11 @@ def battle_1_vs_1(moves):
 
 def push_to_equal_border(moves):
     targets = prefer_by_rank(lambda p: path_distance_pq(p, g.s.other_head))(g.x.equal_border)
+    if len(targets) == 0:
+        return
+    distance = path_distance_pq(g.s.my_head, take_first(targets))
+    if distance >= 4:
+        return
     g.decision_path.append(f"push to equal border {targets}")
     moves = [a for p in targets for a in shortest_path_move(g.s.my_head, p) if a in moves]
     if len(moves) != 0:
@@ -792,7 +797,7 @@ def split_choice(moves):
         g.decision_path.append("split choice")
         return cases([
             simple_confined_moves_info,
-            no_simple_confinement,
+            (no_simple_confinement),
             avoid_simple_confinement,
             both_confined_moves,
         ])(moves)
@@ -824,7 +829,12 @@ def no_simple_confinement(moves):
         occupied = g.occupied_cells[0]+[a for a in head_space if a not in my_space]
         def move_space(a):
             return len(path_connected_set(a, occupied))
-        return prefer_by_score(move_space)(moves)
+        distinct = list(set([move_space(a) for a in moves]))
+        if len(distinct) == 2:
+            m,n = sorted(distinct)
+            if n > int(1.5 * m):
+                g.decision_path.append("one has substantial bigger space")
+                return prefer_by_score(move_space)(moves)
 
 def both_confined_moves(moves):
     #prefer near tail
@@ -1580,6 +1590,7 @@ def run():
     log = {'id': 'b7766863-f220-4b5e-b18e-4e6f8421af79', 'turn': 274, 'me': {'name': 'mark_snake', 'health': 63, 'body': [(2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2), (8, 2), (9, 2), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 86, 'body': [(3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (10, 8), (10, 9), (10, 10), (9, 10), (9, 9), (8, 9), (7, 9), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (2, 7)]}], 'food': [(2, 3)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point', 'add food waypoint (2, 3)'], 'next_coord': (2, 3), 'next_move': 'up', 'time': '0.007s'}
     log = {'id': 'f05e014c-41d3-4fa4-a012-4a0844799019', 'turn': 183, 'me': {'name': 'mark_snake', 'health': 73, 'body': [(0, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (4, 1), (5, 1), (5, 0), (6, 0), (7, 0), (7, 1), (8, 1), (8, 2), (8, 3), (8, 4)]}, 'others': [{'name': 'Frank The Tank', 'health': 88, 'body': [(1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (4, 4), (4, 5), (3, 5), (2, 5), (2, 6), (3, 6), (4, 6), (5, 6), (5, 7), (4, 7), (4, 8), (3, 8), (3, 7), (2, 7), (1, 7), (1, 6), (1, 5)]}], 'food': [(4, 10), (0, 7), (0, 10), (7, 4), (7, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (1, 1), 'next_move': 'right', 'time': '0.002s'}
     log = {'id': 'aff4d6fb-0284-47bb-8eee-3ea47e60c01c', 'turn': 155, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(3,10), (2, 10), (2, 9), (2, 8), (2, 7), (2, 6), (3, 6), (4, 6), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(1,10), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (3, 1), (2, 1), (2, 2), (3, 2)]}], 'food': [(9, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point'], 'next_coord': (3, 10), 'next_move': 'right', 'time': '0.000s'}
+    log = {'id': 'e43a0975-ed22-45f2-84dc-b339ed444c85', 'turn': 251, 'me': {'name': 'mark_snake', 'health': 81, 'body': [(10, 5), (9, 5), (8, 5), (7, 5), (6, 5), (5, 5), (4, 5), (4, 6), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (2, 8), (2, 7), (2, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 93, 'body': [(0, 5), (1, 5), (2, 5), (3, 5), (3, 4), (4, 4), (4, 3), (3, 3), (2, 3), (2, 2), (3, 2), (4, 2), (5, 2), (5, 3), (5, 4), (6, 4), (7, 4), (8, 4), (8, 3), (7, 3), (6, 3), (6, 2), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (1, 4), (0, 4)]}], 'food': [(5, 8), (10, 7)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'split choice', 'no simple confinement'], 'next_coord': (10, 4), 'next_move': 'down', 'time': '0.004s'}
 
 
 
