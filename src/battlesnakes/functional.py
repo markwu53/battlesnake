@@ -1244,7 +1244,6 @@ def cut_opportunities(moves):
         g.decision_path.append("cut is done")
         return
     if has_cut:
-        for i,path in enumerate(cut_paths): print(i, path)
         cut_paths = prefer_by_rank(lambda path: len(path))(cut_paths)
         cut_moves = [path[1] for path in cut_paths]
         g.decision_path.append("go cut")
@@ -1327,7 +1326,6 @@ def meander2(who):
         a,b = far_points
         c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head]
         if len(c) == 0:
-            log_print(far_points)
             return far_points
         c = c[0]
         occupied = g.occupied_cells[0]+[c]
