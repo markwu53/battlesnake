@@ -562,7 +562,8 @@ def get_food(moves):
         food_good_dd = [(f, path_distance_pq(f, g.s.my_head), path_distance_pq(f, g.s.other_head)) for f in food_good_d]
         food_good = [(f, d1) for f,d1,d2 in food_good_dd if 
                      (d1 < d2)
-                     or (4 < d1 < 999 and d1 == d2)
+                     or (d1 == d2 and g.s.my_length < g.s.other_length and 4 < d1 < 999)
+                     or (d1 == d2 and g.s.my_length >= g.s.other_length)
                      ]
         g.e.food_good = food_good
         if len(food_good) != 0:
