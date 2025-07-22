@@ -594,8 +594,8 @@ def my_snake_is_shorter(moves):
             prefer_no(on_border),
             #prefer_more_next_move,
             #prefer_middle_by_3,
-            #prefer_straight,
             push_to_equal_border,
+            prefer_straight,
         ])(moves)
 
 def single_collision_point(moves):
@@ -639,8 +639,8 @@ def longer_but_not_enough(moves):
             (split_choice),
             wayout2,
             get_food,
-            #prefer_straight,
             push_to_equal_border,
+            prefer_straight,
         ])(moves)
         return moves
 
@@ -1342,8 +1342,8 @@ def not_too_long(moves):
             get_food,
             #prefer_more_next_move,
             #prefer_middle_by_3,
-            #prefer_straight,
             push_to_equal_border,
+            prefer_straight,
         ])(moves)
         return moves
 
@@ -1490,8 +1490,8 @@ def too_long(moves):
             #prefer_middle_by_3,
             #get_food,
             #prefer_more_territory,
-            #prefer_straight,
             push_to_equal_border,
+            prefer_straight,
         ])(moves)
         return moves
 
