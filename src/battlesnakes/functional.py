@@ -462,7 +462,7 @@ def battle_1_vs_1(moves):
 def avoid_collision(moves):
     moves = cases([
         single_collision_point,
-        two_collision_points,
+        (two_collision_points),
         (avoid_multi_step_collision),
     ])(moves)
     return moves
@@ -1240,7 +1240,11 @@ def cut_opportunities(moves):
         has_cut = True
         break
 
+    if len(cut_set) == 0:
+        g.decision_path.append("cut is done")
+        return
     if has_cut:
+        for i,path in enumerate(cut_paths): print(i, path)
         cut_paths = prefer_by_rank(lambda path: len(path))(cut_paths)
         cut_moves = [path[1] for path in cut_paths]
         g.decision_path.append("go cut")
@@ -1290,9 +1294,50 @@ def wayout2(moves):
     #if path_connected(g.s.my_head, g.s.other_head): return moves
     g.decision_path.append("confined")
     return cases([
-        wayout("me"),
-        wayout("other"),
+        meander2("me"),
+        meander2("other"),
     ])(moves)
+
+def log_print(anything=None):
+    turn = g.state["turn"]
+    id = g.state["game"]["id"]
+    print(f"MARK_EXCEPTION, TURN: {turn}, id: {id}, {anything}")
+
+def meander2(who):
+    def fn(moves):
+        aset = path_connected_set(g.s.my_head)
+        aset = [p for p in aset if p != g.s.my_head]
+        calc = [ (snake, adj_set, len(snake["body"]) - max(adj_set), max(adj_set), snake["body"][max(adj_set)]) 
+            for snake in [g.me if who == "me" else g.other]
+            for adj_set in [[i for i,c in enumerate(snake["body"]) if any([p in aset for p in adj_cells(c)])]]
+            if len(adj_set) != 0 ]
+        min_wayout = min([a[2] for a in calc])
+        calc = [a for a in calc if a[2] == min_wayout]
+        wayout_point = take_first(prefer_yes(lambda a: a[0]["body"][0] == g.s.my_head)(calc))[4]
+
+        #meander
+        g.decision_path.append(f"meander to {wayout_point}")
+        far_points = prefer_by_score(lambda a: path_distance_pq(a, wayout_point))(moves)
+        if len(far_points) == 1:
+            return far_points
+
+        #then there are 2 points, cannot have 3
+        #and they are perpendicular, ie, one straight, one left or right
+        #and they have a common adjacent point
+        a,b = far_points
+        c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head]
+        if len(c) == 0:
+            log_print(far_points)
+            return far_points
+        c = c[0]
+        occupied = g.occupied_cells[0]+[c]
+        a_connection = path_connected(a, wayout_point, occupied)
+        b_connection = path_connected(b, wayout_point, occupied)
+        if not all([a_connection, b_connection]):
+            choice = a if not a_connection else b
+            g.decision_path.append(f"go first {choice}")
+            return [choice]
+    return fn
 
 def wayout(who):
     def fn(moves):
@@ -1309,6 +1354,7 @@ def wayout(who):
             wayout_point = g.other["body"][max_index]
             required_steps = g.s.other_length - max_index - 1
 
+        g.decision_path.append(f"wayout on {who} at {wayout_point}")
         if len(aset) < required_steps:
             g.decision_path.append(f"no wayout on {who}: {len(aset)} < {required_steps}")
             return
@@ -1339,9 +1385,9 @@ def wayout(who):
                 if len(path)-len(food_in_path)>required_steps]
         moves = list({path[1] for path in paths})
         if len(moves) == 0:
-            g.decision_path.append("no calculated wayout on {who}")
+            g.decision_path.append(f"no calculated wayout on {who}")
             return
-        g.decision_path.append("calculated wayout on {who}")
+        g.decision_path.append(f"calculated wayout on {who}")
         return moves
     return fn
 
@@ -1461,6 +1507,12 @@ def run():
     log = {'id': '364ff6c2-f287-416a-bc3f-12486c7d2a87', 'turn': 261, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(9, 4), (9, 3), (9, 2), (9, 1), (9, 0), (8, 0), (8, 1), (8, 2), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 98, 'body': [(10, 9), (9, 9), (9, 10), (8, 10), (8, 9), (8, 8), (8, 7), (8, 6), (7, 6), (6, 6), (6, 7), (6, 8), (5, 8), (5, 9), (5, 10), (4, 10), (4, 9), (3, 9), (2, 9), (1, 9), (1, 10), (0, 10)]}], 'food': [(9, 7), (9, 8)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(10, 5), (9, 6)]', 'no cut paths that come back', 'shorter', 'food opportunity', 'go to food (9, 7)'], 'next_coord': (9, 5), 'next_move': 'up', 'time': '0.010s'}
     log = {'id': '638501f1-7f21-457c-8e1f-16f678c9e854', 'turn': 122, 'me': {'name': 'mark_snake', 'health': 85, 'body': [(4, 6), (4, 7), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (9, 6), (10, 6), (10, 5)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(3, 7), (3, 8), (2, 8), (1, 8), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (5, 2), (6, 2), (7, 2)]}], 'food': [(3, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(4, 5), (4, 4)]', 'go cut'], 'next_coord': (4, 5), 'next_move': 'down', 'time': '0.087s'}
     log = {'id': '638501f1-7f21-457c-8e1f-16f678c9e854', 'turn': 123, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(4, 5), (4, 6), (4, 7), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (9, 6), (10, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 98, 'body': [(3, 6), (3, 7), (3, 8), (2, 8), (1, 8), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (5, 2), (6, 2)]}], 'food': [(3, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(5, 4)]', 'go cut'], 'next_coord': (5, 5), 'next_move': 'right', 'time': '0.406s'}
+    log = {'id': '31b22526-9854-4ff8-bbe3-190ed1fff1bb', 'turn': 211, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(10,3), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (6, 9), (5, 9), (4, 9)]}, 'others': [{'name': 'Frank The Tank', 'health': 86, 'body': [(8,1), (8, 2), (7, 2), (7, 1), (7, 0), (6, 0), (6, 1), (5, 1), (4, 1), (4, 2), (3, 2), (2, 2), (1, 2), (1, 3), (0, 3), (0, 4), (1, 4), (1, 5)]}], 'food': [(9, 0), (0, 2)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (10, 3), 'next_move': 'right', 'time': '0.002s'}
+    log = {'id': '2eff021a-b0d2-495c-81db-a93240bd30e1', 'turn': 254, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6)]}, 'others': [{'name': 'snakey_wakey', 'health': 92, 'body': [(9, 5), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (4, 7), (4, 6), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)]}], 'food': [(2, 1), (8, 1), (10, 5)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid point is safe'], 'next_coord': (8, 7), 'next_move': 'up', 'time': '0.003s'}
+    log = {'id': '2eff021a-b0d2-495c-81db-a93240bd30e1', 'turn': 255, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(8, 7), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7)]}, 'others': [{'name': 'snakey_wakey', 'health': 100, 'body': [(10, 5), (9, 5), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (4, 7), (4, 6), (4, 5), (5, 5), (6, 5), (7, 5), (7, 5)]}], 'food': [(2, 1), (8, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'confined', 'confine too big, meander'], 'next_coord': (9, 7), 'next_move': 'right', 'time': '0.004s'}
+    log = {'id': '2eff021a-b0d2-495c-81db-a93240bd30e1', 'turn': 261, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(10, 9), (9, 9), (8, 9), (8, 8), (9, 8), (9, 7), (8, 7), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10)]}, 'others': [{'name': 'snakey_wakey', 'health': 94, 'body': [(9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (9, 5), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (4, 7)]}], 'food': [(2, 1), (8, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (10, 8), 'next_move': 'down', 'time': '0.001s'}
+    log = {'id': '2eff021a-b0d2-495c-81db-a93240bd30e1', 'turn': 256, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(9, 7), (8, 7), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (2, 9), (1, 9), (1, 8)]}, 'others': [{'name': 'snakey_wakey', 'health': 99, 'body': [(10, 4), (10, 5), (9, 5), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (4, 7), (4, 6), (4, 5), (5, 5), (6, 5), (7, 5)]}], 'food': [(2, 1), (8, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'confined', 'calculated wayout on {who}'], 'next_coord': (9, 8), 'next_move': 'up', 'time': '0.005s'}
+
 
 
 
