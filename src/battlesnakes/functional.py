@@ -1376,9 +1376,10 @@ def meander2(who):
         aset = path_connected_set(g.s.my_head)
         aset = [p for p in aset if p != g.s.my_head]
         calc = [ (snake, adj_set, len(snake["body"]) - max(adj_set), max(adj_set), snake["body"][max(adj_set)]) 
-            for snake in [g.me if who == "me" else g.other]
+            for snake in [g.me, g.other]
             for adj_set in [[i for i,c in enumerate(snake["body"]) if any([p in aset for p in adj_cells(c)])]]
             if len(adj_set) != 0 ]
+        print(calc)
         min_wayout = min([a[2] for a in calc])
         calc = [a for a in calc if a[2] == min_wayout]
         wayout_point = take_first(prefer_yes(lambda a: a[0]["body"][0] == g.s.my_head)(calc))[4]
@@ -1578,6 +1579,7 @@ def run():
     log = {'id': '53413aad-ea69-4b13-8b2b-8dc636355fd6', 'turn': 171, 'me': {'name': 'mark_snake', 'health': 69, 'body': [(7, 4), (8, 4), (9, 4), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (9, 8), (9, 9), (9, 10), (8, 10), (7, 10), (7, 9), (8, 9), (8, 8), (8, 7), (9, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 100, 'body': [(5, 2), (5, 3), (4, 3), (3, 3), (2, 3), (2, 4), (2, 5), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (2, 9), (2, 10), (3, 10), (3, 9), (4, 9), (5, 9), (6, 9), (6, 8), (6, 7), (6, 6), (7, 6), (8, 6), (8, 6)]}], 'food': [(7, 0), (3, 8), (2, 8), (5, 7)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'food opportunity', 'go to food (7, 0)'], 'next_coord': (7, 3), 'next_move': 'down', 'time': '0.008s'}
     log = {'id': 'b7766863-f220-4b5e-b18e-4e6f8421af79', 'turn': 274, 'me': {'name': 'mark_snake', 'health': 63, 'body': [(2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2), (8, 2), (9, 2), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 86, 'body': [(3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (10, 8), (10, 9), (10, 10), (9, 10), (9, 9), (8, 9), (7, 9), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (2, 7)]}], 'food': [(2, 3)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point', 'add food waypoint (2, 3)'], 'next_coord': (2, 3), 'next_move': 'up', 'time': '0.007s'}
     log = {'id': 'f05e014c-41d3-4fa4-a012-4a0844799019', 'turn': 183, 'me': {'name': 'mark_snake', 'health': 73, 'body': [(0, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (4, 1), (5, 1), (5, 0), (6, 0), (7, 0), (7, 1), (8, 1), (8, 2), (8, 3), (8, 4)]}, 'others': [{'name': 'Frank The Tank', 'health': 88, 'body': [(1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (4, 4), (4, 5), (3, 5), (2, 5), (2, 6), (3, 6), (4, 6), (5, 6), (5, 7), (4, 7), (4, 8), (3, 8), (3, 7), (2, 7), (1, 7), (1, 6), (1, 5)]}], 'food': [(4, 10), (0, 7), (0, 10), (7, 4), (7, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (1, 1), 'next_move': 'right', 'time': '0.002s'}
+    log = {'id': 'aff4d6fb-0284-47bb-8eee-3ea47e60c01c', 'turn': 155, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(3,10), (2, 10), (2, 9), (2, 8), (2, 7), (2, 6), (3, 6), (4, 6), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(1,10), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (3, 1), (2, 1), (2, 2), (3, 2)]}], 'food': [(9, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point'], 'next_coord': (3, 10), 'next_move': 'right', 'time': '0.000s'}
 
 
 
