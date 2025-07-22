@@ -758,7 +758,6 @@ def meander(aset):
         a,b = far_points
         c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head]
         if len(c) == 0:
-            log_print(far_points)
             return far_points
         c = c[0]
         occupied = g.occupied_cells[0]+[c]
@@ -805,7 +804,6 @@ def wayout2(moves):
                     a,b = far_points
                     c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head]
                     if len(c) == 0:
-                        log_print(far_points)
                         return far_points
                     c = c[0]
                     occupied = g.occupied_cells[0]+[c]
