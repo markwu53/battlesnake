@@ -632,7 +632,7 @@ def longer_but_not_enough(moves):
     if g.s.my_length > g.s.other_length and g.s.my_length - g.s.other_length <= 5:
         g.decision_path.append("longer but not eough")
         moves = sequential([
-            split_choice,
+            (split_choice),
             wayout2,
             get_food,
             #prefer_straight,
@@ -740,7 +740,7 @@ def fallout(moves):
     ])(moves)
 
 def split_choice_batch_1(moves):
-    moves = [a for a in moves if a in (
+    ok_moves = (
             (static_see_my_tail(moves) or [])
             +(static_see_other_tail(moves) or [])
             +((cut_see_my_tail)(moves) or [])
@@ -748,7 +748,9 @@ def split_choice_batch_1(moves):
             +(cut_see_other_tail(moves) or [])
             +(cut_can_reach_other_tail(moves) or [])
             +(static_spacious(moves) or [])
-    )]
+    )
+    print(ok_moves)
+    moves = [a for a in moves if a in ok_moves]
     if len(moves) != 0: 
         return moves
 
@@ -767,19 +769,72 @@ def split_choice_batch_2(moves):
     if len(moves) != 0: 
         return moves
 
-def split_choice(moves):
+def split_choice2(moves):
     return (cases([
         no_split_return,
         #too_short_return,
         #there is a split
         #favor easy choice
         connected_set_info,
-        split_choice_batch_1,
+        (split_choice_batch_1),
         cut_info,
         split_choice_batch_2,
         (cut_just_see_other_tail),
         (fallout),
     ]))(moves)
+
+def split_choice(moves):
+    ngroup = move_connected_group(moves)
+    if ngroup > 1:
+        g.decision_path.append("split choice")
+        return cases([
+            simple_confined_moves_info,
+            no_simple_confinement,
+            avoid_simple_confinement,
+            both_confined_moves,
+        ])(moves)
+    
+def simple_confined_moves_info(moves):
+    confined_moves = [a for a in moves if len(path_connected_set(a)) < g.s.my_length //2]
+    confined_moves = [a for a in confined_moves if not path_connected(a, g.s.my_tail)]
+    g.x.confined_moves = confined_moves
+
+def avoid_simple_confinement(moves):
+    confined_moves = g.x.confined_moves
+    good_moves = [a for a in moves if a not in confined_moves]
+    g.x.split_good_moves = good_moves
+    if len(confined_moves) != 0:
+        g.decision_path.append("has confined moves")
+        if len(good_moves) != 0:
+            g.decision_path.append("avoid confined moves")
+            return good_moves
+
+def no_simple_confinement(moves):
+    confined_moves = g.x.confined_moves
+    if len(confined_moves) == 0:
+        g.decision_path.append("no simple confinement")
+        head_space = path_connected_set(g.s.my_head)
+        if g.s.my_length <= g.s.other_length:
+            my_space = g.x.my_territory
+        else:
+            my_space = g.x.my_territory+g.x.equal_territory
+        occupied = g.occupied_cells[0]+[a for a in head_space if a not in my_space]
+        def move_space(a):
+            return len(path_connected_set(a, occupied))
+        return prefer_by_score(move_space)(moves)
+
+def both_confined_moves(moves):
+    #prefer near tail
+    def tail_index(a):
+        aset = path_connected_set(a)
+        rank = min([ len(snake["body"]) - max(adj_set)
+            for snake in [g.me, g.other]
+            for adj_set in [[i for i,c in enumerate(snake["body"]) if any([p in aset for p in adj_cells(c)])]]
+            if len(adj_set) != 0 ])
+        return rank
+    if len(g.x.split_good_moves) == 0:
+        g.decision_path.append("both confined moves")
+        return prefer_by_rank(tail_index)(moves)
 
 def cut_can_reach_other_tail(moves):
     occupied = g.occupied_cells[0]+g.x.other_territory
@@ -1334,7 +1389,7 @@ def meander2(who):
         #and they are perpendicular, ie, one straight, one left or right
         #and they have a common adjacent point
         a,b = far_points
-        c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.me.head]
+        c = [c for c in adj_cells(a) if c in adj_cells(b) and c != g.s.my_head]
         if len(c) == 0:
             return far_points
         c = c[0]
@@ -1515,6 +1570,7 @@ def run():
     log = {'id': '2eff021a-b0d2-495c-81db-a93240bd30e1', 'turn': 256, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(9, 7), (8, 7), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (2, 9), (1, 9), (1, 8)]}, 'others': [{'name': 'snakey_wakey', 'health': 99, 'body': [(10, 4), (10, 5), (9, 5), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (4, 7), (4, 6), (4, 5), (5, 5), (6, 5), (7, 5)]}], 'food': [(2, 1), (8, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'confined', 'calculated wayout on {who}'], 'next_coord': (9, 8), 'next_move': 'up', 'time': '0.005s'}
     log = {'id': '6b541965-ef2b-4dbc-917d-af64c0c08c61', 'turn': 142, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(5, 9), (5, 8), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (9, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 84, 'body': [(2, 2), (1, 2), (1, 3), (0, 3), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (4, 2), (5, 2), (5, 1), (6, 1), (7, 1), (8, 1), (8, 2), (7, 2), (6, 2), (6, 3), (5, 3), (4, 3), (3, 3)]}], 'food': [(3, 0)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (6, 9), 'next_move': 'right', 'time': '0.007s'}
     log = {'id': '6b541965-ef2b-4dbc-917d-af64c0c08c61', 'turn': 142, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(5, 9), (5, 8), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (9, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 84, 'body': [(2, 2), (1, 2), (1, 3), (0, 3), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (4, 2), (5, 2), (5, 1), (6, 1), (7, 1), (8, 1), (8, 2), (7, 2), (6, 2), (6, 3), (5, 3), (4, 3), (3, 3)]}], 'food': [(3, 0)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (6, 9), 'next_move': 'right', 'time': '0.007s'}
+    log = {'id': 'c4870e53-9472-4050-944c-ef6dd43cea73', 'turn': 63, 'me': {'name': 'mark_snake', 'health': 93, 'body': [(2, 3), (2, 4), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (2, 9), (3, 9), (4, 9)]}, 'others': [{'name': 'Frank The Tank', 'health': 86, 'body': [(3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4)]}], 'food': [(2, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(3, 3), (2, 2), (4, 3), (5, 3)]', 'longer but not eough', 'cut can see my tail', 'cut see other tail', 'cut can see my tail', 'cut see other tail', 'cut can see my tail', 'cut see other tail'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.152s'}
 
 
 
