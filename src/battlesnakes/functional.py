@@ -643,6 +643,7 @@ def longer_but_not_enough(moves):
             (split_choice),
             wayout2,
             get_food,
+            (chase_tail),
             push_to_equal_border,
             prefer_straight,
         ])(moves)
@@ -1114,7 +1115,7 @@ def replace_tail_path(moves):
             return tail_moves
     else:
         tail_moves = shortest_path_move(g.s.my_head, first_inflection_point)
-        meander_moves = [a for a in moves if a not in tail_moves]
+        meander_moves = [a for a in moves if a not in tail_moves and path_connected(a, g.s.my_tail)]
         if len(meander_moves) != 0:
             g.decision_path.append(f"replace tail path - meander")
             return meander_moves
@@ -1226,7 +1227,8 @@ def wayout_from_myself(moves):
 
 def kill_oppotunities(moves):
     return cases([
-        me_longer_enemy_has_only_one_move,
+        #me_longer_enemy_has_only_one_move,
+        enemy_is_backed_type_1_collision,
         cut_opportunities,
     ])(moves)
 
@@ -1325,9 +1327,21 @@ def cut_opportunities(moves):
         g.decision_path.append("go cut")
         return prefer_yes(lambda a: a in cut_moves)(moves)
 
+def enemy_is_backed_type_1_collision(moves):
+    if g.s.my_length > g.s.other_length:
+        if distance_pq(g.s.my_head, g.s.other_head) == 2:
+            collision = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
+            if len(collision) == 1:
+                if len(g.x.other_allowed_moves) <= 2:
+                    g.decision_path.append("enemy is backed")
+                    return collision
+
 def me_longer_enemy_has_only_one_move(moves):
     if g.s.my_length > g.s.other_length:
         if distance_pq(g.s.my_head, g.s.other_head) == 2:
+            occupied = g.occupied_cells[0]+g.x.my_territory+g.x.equal_territory
+            oset = path_connected_set(g.s.other_head, occupied)
+
             other_moves = g.x.other_allowed_moves
             if len(other_moves) == 1:
                 g.decision_path.append("enemy is cornered")
@@ -1576,14 +1590,6 @@ def init_from_log(log):
     return game_state
 
 def run():
-    log = {'id': '638501f1-7f21-457c-8e1f-16f678c9e854', 'turn': 122, 'me': {'name': 'mark_snake', 'health': 85, 'body': [(4, 6), (4, 7), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (9, 6), (10, 6), (10, 5)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(3, 7), (3, 8), (2, 8), (1, 8), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (5, 2), (6, 2), (7, 2)]}], 'food': [(3, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(4, 5), (4, 4)]', 'go cut'], 'next_coord': (4, 5), 'next_move': 'down', 'time': '0.087s'}
-    log = {'id': '638501f1-7f21-457c-8e1f-16f678c9e854', 'turn': 123, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(4, 5), (4, 6), (4, 7), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 7), (8, 6), (9, 6), (10, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 98, 'body': [(3, 6), (3, 7), (3, 8), (2, 8), (1, 8), (1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 4), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (5, 2), (6, 2)]}], 'food': [(3, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(5, 4)]', 'go cut'], 'next_coord': (5, 5), 'next_move': 'right', 'time': '0.406s'}
-    log = {'id': '31b22526-9854-4ff8-bbe3-190ed1fff1bb', 'turn': 211, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(10,3), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (6, 9), (5, 9), (4, 9)]}, 'others': [{'name': 'Frank The Tank', 'health': 86, 'body': [(8,1), (8, 2), (7, 2), (7, 1), (7, 0), (6, 0), (6, 1), (5, 1), (4, 1), (4, 2), (3, 2), (2, 2), (1, 2), (1, 3), (0, 3), (0, 4), (1, 4), (1, 5)]}], 'food': [(9, 0), (0, 2)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (10, 3), 'next_move': 'right', 'time': '0.002s'}
-    log = {'id': '2eff021a-b0d2-495c-81db-a93240bd30e1', 'turn': 254, 'me': {'name': 'mark_snake', 'health': 96, 'body': [(8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6)]}, 'others': [{'name': 'snakey_wakey', 'health': 92, 'body': [(9, 5), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (4, 7), (4, 6), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5)]}], 'food': [(2, 1), (8, 1), (10, 5)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid point is safe'], 'next_coord': (8, 7), 'next_move': 'up', 'time': '0.003s'}
-    log = {'id': '2eff021a-b0d2-495c-81db-a93240bd30e1', 'turn': 255, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(8, 7), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7)]}, 'others': [{'name': 'snakey_wakey', 'health': 100, 'body': [(10, 5), (9, 5), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (4, 7), (4, 6), (4, 5), (5, 5), (6, 5), (7, 5), (7, 5)]}], 'food': [(2, 1), (8, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'confined', 'confine too big, meander'], 'next_coord': (9, 7), 'next_move': 'right', 'time': '0.004s'}
-    log = {'id': '2eff021a-b0d2-495c-81db-a93240bd30e1', 'turn': 261, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(10, 9), (9, 9), (8, 9), (8, 8), (9, 8), (9, 7), (8, 7), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10)]}, 'others': [{'name': 'snakey_wakey', 'health': 94, 'body': [(9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (9, 5), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (4, 7)]}], 'food': [(2, 1), (8, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (10, 8), 'next_move': 'down', 'time': '0.001s'}
-    log = {'id': '2eff021a-b0d2-495c-81db-a93240bd30e1', 'turn': 256, 'me': {'name': 'mark_snake', 'health': 94, 'body': [(9, 7), (8, 7), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (2, 9), (1, 9), (1, 8)]}, 'others': [{'name': 'snakey_wakey', 'health': 99, 'body': [(10, 4), (10, 5), (9, 5), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (4, 8), (4, 7), (4, 6), (4, 5), (5, 5), (6, 5), (7, 5)]}], 'food': [(2, 1), (8, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'confined', 'calculated wayout on {who}'], 'next_coord': (9, 8), 'next_move': 'up', 'time': '0.005s'}
-    log = {'id': '6b541965-ef2b-4dbc-917d-af64c0c08c61', 'turn': 142, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(5, 9), (5, 8), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (9, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 84, 'body': [(2, 2), (1, 2), (1, 3), (0, 3), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (4, 2), (5, 2), (5, 1), (6, 1), (7, 1), (8, 1), (8, 2), (7, 2), (6, 2), (6, 3), (5, 3), (4, 3), (3, 3)]}], 'food': [(3, 0)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (6, 9), 'next_move': 'right', 'time': '0.007s'}
     log = {'id': '6b541965-ef2b-4dbc-917d-af64c0c08c61', 'turn': 142, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(5, 9), (5, 8), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (9, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 84, 'body': [(2, 2), (1, 2), (1, 3), (0, 3), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (4, 2), (5, 2), (5, 1), (6, 1), (7, 1), (8, 1), (8, 2), (7, 2), (6, 2), (6, 3), (5, 3), (4, 3), (3, 3)]}], 'food': [(3, 0)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (6, 9), 'next_move': 'right', 'time': '0.007s'}
     log = {'id': 'c4870e53-9472-4050-944c-ef6dd43cea73', 'turn': 63, 'me': {'name': 'mark_snake', 'health': 93, 'body': [(2, 3), (2, 4), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (2, 9), (3, 9), (4, 9)]}, 'others': [{'name': 'Frank The Tank', 'health': 86, 'body': [(3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4)]}], 'food': [(2, 1)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'cut opportunities - [(3, 3), (2, 2), (4, 3), (5, 3)]', 'longer but not eough', 'cut can see my tail', 'cut see other tail', 'cut can see my tail', 'cut see other tail', 'cut can see my tail', 'cut see other tail'], 'next_coord': (3, 3), 'next_move': 'right', 'time': '0.152s'}
     log = {'id': '53413aad-ea69-4b13-8b2b-8dc636355fd6', 'turn': 171, 'me': {'name': 'mark_snake', 'health': 69, 'body': [(7, 4), (8, 4), (9, 4), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (9, 8), (9, 9), (9, 10), (8, 10), (7, 10), (7, 9), (8, 9), (8, 8), (8, 7), (9, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 100, 'body': [(5, 2), (5, 3), (4, 3), (3, 3), (2, 3), (2, 4), (2, 5), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (2, 9), (2, 10), (3, 10), (3, 9), (4, 9), (5, 9), (6, 9), (6, 8), (6, 7), (6, 6), (7, 6), (8, 6), (8, 6)]}], 'food': [(7, 0), (3, 8), (2, 8), (5, 7)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'food opportunity', 'go to food (7, 0)'], 'next_coord': (7, 3), 'next_move': 'down', 'time': '0.008s'}
@@ -1591,6 +1597,7 @@ def run():
     log = {'id': 'f05e014c-41d3-4fa4-a012-4a0844799019', 'turn': 183, 'me': {'name': 'mark_snake', 'health': 73, 'body': [(0, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (4, 1), (5, 1), (5, 0), (6, 0), (7, 0), (7, 1), (8, 1), (8, 2), (8, 3), (8, 4)]}, 'others': [{'name': 'Frank The Tank', 'health': 88, 'body': [(1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (4, 4), (4, 5), (3, 5), (2, 5), (2, 6), (3, 6), (4, 6), (5, 6), (5, 7), (4, 7), (4, 8), (3, 8), (3, 7), (2, 7), (1, 7), (1, 6), (1, 5)]}], 'food': [(4, 10), (0, 7), (0, 10), (7, 4), (7, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter'], 'next_coord': (1, 1), 'next_move': 'right', 'time': '0.002s'}
     log = {'id': 'aff4d6fb-0284-47bb-8eee-3ea47e60c01c', 'turn': 155, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(3,10), (2, 10), (2, 9), (2, 8), (2, 7), (2, 6), (3, 6), (4, 6), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(1,10), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (3, 1), (2, 1), (2, 2), (3, 2)]}], 'food': [(9, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point'], 'next_coord': (3, 10), 'next_move': 'right', 'time': '0.000s'}
     log = {'id': 'e43a0975-ed22-45f2-84dc-b339ed444c85', 'turn': 251, 'me': {'name': 'mark_snake', 'health': 81, 'body': [(10, 5), (9, 5), (8, 5), (7, 5), (6, 5), (5, 5), (4, 5), (4, 6), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (2, 8), (2, 7), (2, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 93, 'body': [(0, 5), (1, 5), (2, 5), (3, 5), (3, 4), (4, 4), (4, 3), (3, 3), (2, 3), (2, 2), (3, 2), (4, 2), (5, 2), (5, 3), (5, 4), (6, 4), (7, 4), (8, 4), (8, 3), (7, 3), (6, 3), (6, 2), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (1, 4), (0, 4)]}], 'food': [(5, 8), (10, 7)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'split choice', 'no simple confinement'], 'next_coord': (10, 4), 'next_move': 'down', 'time': '0.004s'}
+    log = {'id': '889308ce-aab9-4d27-9db9-c4b9bb6099d3', 'turn': 215, 'me': {'name': 'mark_snake', 'health': 83, 'body': [(8, 3), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (8, 9), (8, 8), (9, 8), (9, 7), (8, 7), (7, 7), (6, 7), (6, 6), (7, 6), (8, 6), (9, 6)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 66, 'body': [(7, 2), (7, 3), (6, 3), (6, 2), (6, 1), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (7, 8), (7, 9), (7, 10), (6, 10)]}], 'food': [(7, 1), (2, 10)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'enemy is cornered'], 'next_coord': (8, 2), 'next_move': 'down', 'time': '0.001s'}
 
 
 
