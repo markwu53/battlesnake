@@ -1,1 +1,2 @@
-print((1,2) in None)
+A = ("Hello" "World")
+print(A)

@@ -1308,9 +1308,12 @@ def cut_opportunities(moves):
             cut_set = grow_back(cut_set)
             continue
         cut_paths = [path for path in cut_paths for end in [path[-1]] for occupied in [g.occupied_cells[0]+path]
-                    if any([p not in oset and p not in path and p not in g.occupied_cells[1] 
-                    and len(path_connected_set(p, occupied)) > len(path_connected_set(g.s.other_head, occupied))
-                            for p in adj_cells(end) ])
+                    if any([
+                        p not in oset 
+                        and p not in path 
+                        and p not in g.occupied_cells[1] 
+                        and len(path_connected_set(p, occupied)) > len(path_connected_set(g.s.other_head, occupied))
+                        for p in adj_cells(end) ])
                     ]
         if len(cut_paths) == 0:
             #g.decision_path.append("no cut paths that come back")
@@ -1334,8 +1337,10 @@ def enemy_is_backed_distance_2(moves):
             collision = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
             if len(collision) == 1:
                 if len(g.x.other_allowed_moves) <= 2:
-                    g.decision_path.append("enemy is backed")
-                    return collision
+                    kill_move = [a for a in moves if a in collision]
+                    if len(kill_move) != 0:
+                        g.decision_path.append("enemy is backed")
+                        return collision
 
 def enemy_is_backed_distance_4(moves):
     if g.s.my_length <= g.s.other_length:
@@ -1626,6 +1631,7 @@ def run():
     log = {'id': 'aff4d6fb-0284-47bb-8eee-3ea47e60c01c', 'turn': 155, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(3,10), (2, 10), (2, 9), (2, 8), (2, 7), (2, 6), (3, 6), (4, 6), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(1,10), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (5, 1), (4, 1), (3, 1), (2, 1), (2, 2), (3, 2)]}], 'food': [(9, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point'], 'next_coord': (3, 10), 'next_move': 'right', 'time': '0.000s'}
     log = {'id': 'e43a0975-ed22-45f2-84dc-b339ed444c85', 'turn': 251, 'me': {'name': 'mark_snake', 'health': 81, 'body': [(10, 5), (9, 5), (8, 5), (7, 5), (6, 5), (5, 5), (4, 5), (4, 6), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (2, 8), (2, 7), (2, 6)]}, 'others': [{'name': 'Frank The Tank', 'health': 93, 'body': [(0, 5), (1, 5), (2, 5), (3, 5), (3, 4), (4, 4), (4, 3), (3, 3), (2, 3), (2, 2), (3, 2), (4, 2), (5, 2), (5, 3), (5, 4), (6, 4), (7, 4), (8, 4), (8, 3), (7, 3), (6, 3), (6, 2), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (1, 4), (0, 4)]}], 'food': [(5, 8), (10, 7)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'split choice', 'no simple confinement'], 'next_coord': (10, 4), 'next_move': 'down', 'time': '0.004s'}
     log = {'id': '889308ce-aab9-4d27-9db9-c4b9bb6099d3', 'turn': 215, 'me': {'name': 'mark_snake', 'health': 83, 'body': [(8, 3), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (8, 9), (8, 8), (9, 8), (9, 7), (8, 7), (7, 7), (6, 7), (6, 6), (7, 6), (8, 6), (9, 6)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 66, 'body': [(7, 2), (7, 3), (6, 3), (6, 2), (6, 1), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (6, 8), (7, 8), (7, 9), (7, 10), (6, 10)]}], 'food': [(7, 1), (2, 10)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'enemy is cornered'], 'next_coord': (8, 2), 'next_move': 'down', 'time': '0.001s'}
+    log = {'id': '60c957de-8bd0-480d-8c53-99b1f6cd366b', 'turn': 148, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (5, 0), (4, 0), (3, 0), (2, 0), (2, 1), (3, 1), (4, 1), (4, 2), (5, 2), (6, 2), (7, 2), (8, 2), (9, 2), (9, 2)]}, 'others': [{'name': 'Frank The Tank', 'health': 91, 'body': [(9, 3), (8, 3), (7, 3), (7, 4), (6, 4), (6, 3), (5, 3), (5, 4), (4, 4), (4, 5), (5, 5), (5, 6), (5, 7), (6, 7), (6, 6), (6, 5), (7, 5), (8, 5)]}], 'food': [(10, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'enemy is backed'], 'next_coord': (9, 2), 'next_move': 'up', 'time': '0.002s'}
 
 
 
