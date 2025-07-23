@@ -1228,7 +1228,8 @@ def wayout_from_myself(moves):
 def kill_oppotunities(moves):
     return cases([
         #me_longer_enemy_has_only_one_move,
-        enemy_is_backed_type_1_collision,
+        enemy_is_backed_distance_2,
+        enemy_is_backed_distance_4,
         cut_opportunities,
     ])(moves)
 
@@ -1327,7 +1328,7 @@ def cut_opportunities(moves):
         g.decision_path.append("go cut")
         return prefer_yes(lambda a: a in cut_moves)(moves)
 
-def enemy_is_backed_type_1_collision(moves):
+def enemy_is_backed_distance_2(moves):
     if g.s.my_length > g.s.other_length:
         if distance_pq(g.s.my_head, g.s.other_head) == 2:
             collision = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
@@ -1336,6 +1337,33 @@ def enemy_is_backed_type_1_collision(moves):
                     g.decision_path.append("enemy is backed")
                     return collision
 
+def enemy_is_backed_distance_4(moves):
+    if g.s.my_length <= g.s.other_length:
+        return
+    if distance_pq(g.s.my_head, g.s.other_head) != 4:
+        return
+    if path_distance_pq(g.s.my_head, g.s.other_head) != 4:
+        return
+
+    if len(g.x.other_allowed_moves) > 2:
+        return
+    #enemy is backed by a wall
+
+    #coming
+    if not all([distance_pq(a, g.s.my_head) == 3 for a in g.x.other_allowed_moves]):
+        return
+
+    if len(g.x.other_allowed_moves) == 1:
+        e = take_first(g.x.other_allowed_moves)
+        kill_moves = [a for a in moves if distance_vector_abs(a, e) in [(0,2), (2,0)]]
+        if len(kill_moves) != 0:
+            return kill_moves
+    
+    if len(g.x.other_allowed_moves) == 2:
+        kill_moves = [a for a in moves if distance_vector_abs(a, g.s.other_head) in [(1,2), (2,1)]]
+        if len(kill_moves) != 0:
+            return kill_moves
+    
 def me_longer_enemy_has_only_one_move(moves):
     if g.s.my_length > g.s.other_length:
         if distance_pq(g.s.my_head, g.s.other_head) == 2:
