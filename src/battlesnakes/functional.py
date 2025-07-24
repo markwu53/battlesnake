@@ -1346,11 +1346,16 @@ def enemy_is_backed_distance_2(moves):
         if distance_pq(g.s.my_head, g.s.other_head) == 2:
             collision = [p for p in adj_cells(g.s.my_head) if p in adj_cells(g.s.other_head)]
             if len(collision) == 1:
-                if len(g.x.other_allowed_moves) <= 2:
-                    kill_move = [a for a in moves if a in collision]
-                    if len(kill_move) != 0:
-                        g.decision_path.append("enemy is backed")
-                        return collision
+                if len(g.x.other_allowed_moves) == 1:
+                    g.decision_path.append("kill!")
+                    return collision
+                if len(g.x.other_allowed_moves) == 2:
+                    a,b = g.x.other_allowed_moves
+                    if path_distance_pq(a, b) == 2:
+                        kill_move = [a for a in moves if a in collision]
+                        if len(kill_move) != 0:
+                            g.decision_path.append("enemy is backed")
+                            return collision
 
 def enemy_is_backed_distance_4(moves):
     if g.s.my_length <= g.s.other_length:
@@ -1645,6 +1650,7 @@ def run():
     log = {'id': 'da40e7ab-c5ae-4691-a172-2fee860010db', 'turn': 331, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(8, 1), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (1, 8), (2, 8), (3, 8), (3, 7), (3, 6), (3, 5), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8)]}, 'others': [{'name': 'suboptimal', 'health': 76, 'body': [(8, 9), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (2, 9), (3, 9), (4, 9), (4, 8), (5, 8), (6, 8), (6, 9)]}], 'food': [(8, 3), (0, 10)], 'module': 'functional', 'decision_path': ['battle_1_vs_1'], 'next_coord': (9, 1), 'next_move': 'right', 'time': '0.005s'}
     log = {'id': 'da40e7ab-c5ae-4691-a172-2fee860010db', 'turn': 335, 'me': {'name': 'mark_snake', 'health': 95, 'body': [(10, 3), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (1, 8), (2, 8), (3, 8), (3, 7), (3, 6), (3, 5), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4)]}, 'others': [{'name': 'suboptimal', 'health': 72, 'body': [(8, 5), (8, 6), (8, 7), (8, 8), (8, 9), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (2, 9), (3, 9), (4, 9)]}], 'food': [(8, 3), (0, 10)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'push to equal border [(8, 3), (10, 5), (9, 4)]'], 'next_coord': (10, 4), 'next_move': 'up', 'time': '0.017s'}
     log = {'id': '43d218e6-49b7-4ace-85fd-7774aca2f832', 'turn': 237, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(3, 0), (4, 0), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (8, 8), (8, 9), (8, 10), (7, 10), (7, 9), (7, 8), (7, 7), (7, 6), (7, 6)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 87, 'body': [(0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (1, 10), (2, 10), (2, 9), (2, 8), (1, 8), (1, 7), (1, 6), (2, 6), (3, 6), (3, 5), (2, 5), (2, 4), (1, 4), (1, 3), (1, 2), (0, 2)]}], 'food': [(5, 10), (1, 0)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'add food waypoint (1, 0)'], 'next_coord': (2, 0), 'next_move': 'left', 'time': '0.043s'}
+    log = {'id': 'd7c26c5a-add1-45e6-8e69-a61e2baba11f', 'turn': 144, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(0, 8), (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (5, 7), (5, 6), (5, 5), (5, 4), (5, 3), (5, 2), (6, 2), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 2)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 98, 'body': [(0, 6), (1, 6), (1, 7), (2, 7), (2, 6), (2, 5), (1, 5), (1, 4), (2, 4), (2, 3), (2, 2), (3, 2), (3, 3), (4, 3), (4, 4), (3, 4)]}], 'food': [(2, 0), (8, 3)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'enemy is backed'], 'next_coord': (0, 7), 'next_move': 'down', 'time': '0.001s'}
 
 
 
