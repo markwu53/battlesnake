@@ -1234,6 +1234,7 @@ def kill_oppotunities(moves):
         #me_longer_enemy_has_only_one_move,
         enemy_is_backed_distance_2,
         enemy_is_backed_distance_4,
+        enemy_is_backed_distance_6,
         cut_opportunities,
     ])(moves)
 
@@ -1358,7 +1359,6 @@ def enemy_is_backed_distance_2(moves):
                     return collision
                 if len(g.x.other_allowed_moves) == 2:
                     a,b = g.x.other_allowed_moves
-                    print("backed")
                     if path_distance_pq(a, b) == 2:
                         kill_move = [a for a in moves if a in collision]
                         if len(kill_move) != 0:
@@ -1397,7 +1397,39 @@ def enemy_is_backed_distance_4(moves):
         if len(kill_moves) != 0:
             g.decision_path.append("try squeeze enemy")
             return kill_moves
+
+def enemy_is_backed_distance_6(moves):
+    if g.s.my_length <= g.s.other_length:
+        return
+    if distance_pq(g.s.my_head, g.s.other_head) != 6:
+        return
+    if path_distance_pq(g.s.my_head, g.s.other_head) != 6:
+        return
+
+    if len(g.x.other_allowed_moves) > 2:
+        return
+    #enemy is backed by a wall
+
+    #coming
+    if not all([distance_pq(a, g.s.my_head) == 5 for a in g.x.other_allowed_moves]):
+        return
+
+    if len(g.x.other_allowed_moves) == 1:
+        e = take_first(g.x.other_allowed_moves)
+        kill_moves = [a for a in moves if distance_vector_abs(a, e) in [(1,3), (3,1)]]
+        if len(kill_moves) != 0:
+            g.decision_path.append("try squeeze enemy")
+            return kill_moves
     
+    if len(g.x.other_allowed_moves) == 2:
+        straight = [a for a in g.x.other_allowed_moves if get_adjacent_dir(g.s.other_head, a) == get_adjacent_dir(g.s.other_neck, g.s.other_head)]
+        if len(straight) != 0:
+            straight = take_first(straight)
+            kill_moves = [a for a in moves if min(distance_vector_abs(a, straight)) ==1 ]
+            if len(kill_moves) != 0:
+                g.decision_path.append("try squeeze enemy")
+                return kill_moves
+
 def me_longer_enemy_has_only_one_move(moves):
     if g.s.my_length > g.s.other_length:
         if distance_pq(g.s.my_head, g.s.other_head) == 2:
@@ -1665,8 +1697,7 @@ def run():
     log = {'id': 'fa7e4e9d-73fd-4011-b4bd-4532541059ff', 'turn': 126, 'me': {'name': 'mark_snake', 'health': 79, 'body': [(9, 9), (9, 8), (9, 7), (9, 6), (9, 5), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 88, 'body': [(7, 5), (7, 4), (7, 3), (8, 3), (9, 3), (9, 2), (8, 2), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (4, 1), (5, 1), (5, 2), (6, 2), (6, 1)]}], 'food': [(10, 3), (8, 10)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'food opportunity', 'go to food (8, 10)'], 'next_coord': (9, 10), 'next_move': 'up', 'time': '0.012s'}
     log = {'id': '0103aeb4-8690-4989-87c9-fb5291571022', 'turn': 212, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(6, 6), (6, 5), (7, 5), (7, 4), (8, 4), (9, 4), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (9, 9), (9, 8), (9, 7), (8, 7), (8, 8), (8, 9), (7, 9), (6, 9), (6, 8)]}, 'others': [{'name': 'Frank The Tank', 'health': 91, 'body': [(5, 5), (5, 4), (5, 3), (6, 3), (6, 2), (6, 1), (5, 1), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (2, 8), (3, 8), (4, 8), (4, 7), (3, 7), (2, 7), (2, 6), (3, 6)]}], 'food': [(5, 7), (9, 6), (3, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point', 'add food waypoint (5, 7)', 'push to equal border [(5, 6)]'], 'next_coord': (5, 6), 'next_move': 'left', 'time': '0.013s'}
     log = {'id': 'b991941f-3e58-4cc7-9195-ae846b75b9f1', 'turn': 254, 'me': {'name': 'mark_snake', 'health': 86, 'body': [(9, 3), (8, 3), (7, 3), (7, 4), (6, 4), (5, 4), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0), (3, 0), (3, 1), (4, 1)]}, 'others': [{'name': 'Snakeformatika', 'health': 70, 'body': [(10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (8, 1)]}], 'food': [(8, 8), (3, 8), (10, 5)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'split choice', 'no simple confinement', 'chase tail (8, 1)'], 'next_coord': (9, 2), 'next_move': 'down', 'time': '0.008s'}
-
-
+    log = {'id': '03319342-5259-4b66-974f-c9d65a34cd3e', 'turn': 255, 'me': {'name': 'mark_snake', 'health': 98, 'body': [(3, 4), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9)]}, 'others': [{'name': 'Snakeformatika', 'health': 73, 'body': [(0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (2, 9), (1, 9), (1, 8), (2, 8), (2, 7), (1, 7)]}], 'food': [(0, 3), (7, 7), (1, 5), (2, 5), (8, 8), (8, 7), (1, 0), (8, 6)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'add food waypoint (2, 5)', 'push to equal border [(2, 6)]'], 'next_coord': (3, 5), 'next_move': 'up', 'time': '0.024s'}
 
 
     game_state = init_from_log(log)
