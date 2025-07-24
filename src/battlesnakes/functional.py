@@ -760,7 +760,6 @@ def split_choice_batch_1(moves):
             +(cut_can_reach_other_tail(moves) or [])
             +(static_spacious(moves) or [])
     )
-    print(ok_moves)
     moves = [a for a in moves if a in ok_moves]
     if len(moves) != 0: 
         return moves
@@ -1519,7 +1518,6 @@ def meander2(who):
             for snake in [g.me, g.other]
             for adj_set in [[i for i,c in enumerate(snake["body"]) if any([p in aset for p in adj_cells(c)])]]
             if len(adj_set) != 0 ]
-        print(calc)
         min_wayout = min([a[2] for a in calc])
         calc = [a for a in calc if a[2] == min_wayout]
         wayout_point = take_first(prefer_yes(lambda a: a[0]["body"][0] == g.s.my_head)(calc))[4]
