@@ -1240,6 +1240,16 @@ def grow_back(cut_set):
                         and path_distance_pq(g.s.other_head, q) > path_distance_pq(g.s.other_head, p)]))
     return new_cut_set
 
+def single_grow_set(head, occupied):
+    result = []
+    while True:
+        moves = [a for a in adj_cells(head) if a not in occupied]
+        if len(moves) != 1: break
+        result += moves
+        occupied += moves
+        head = take_first(moves)
+    return result
+
 def cut_opportunities(moves):
     #I'll cut enemy if I can
     #conditions
@@ -1273,12 +1283,14 @@ def cut_opportunities(moves):
     max_dist = max([path_distance_pq(p, g.s.my_head) for p in cut_set])
     if max_dist > max_cut_length:
         return
-    oset = path_connected_set(g.s.other_head, g.occupied_cells[0]+cut_set)
+    occupied = g.occupied_cells[0]+cut_set
+    oset = path_connected_set(g.s.other_head, occupied)
     if g.s.other_tail in oset:
         return
     if g.s.my_tail in oset:
         return
-    if len(oset) >= g.s.other_length - 2:
+    remove_set = single_grow_set(g.s.other_head, occupied)
+    if len(oset)-len(remove_set) >= int(g.s.other_length * 1.1):
         return
     g.decision_path.append(f"cut opportunities - {cut_set}")
 

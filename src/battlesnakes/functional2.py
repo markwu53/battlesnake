@@ -715,6 +715,10 @@ def me_at_off_border(moves):
                 if coming_near(killer):
                     g.decision_path.append("don't go border")
                     return prefer_no(on_border)(moves)
+        else:
+            move_away = lambda a: len([snake for snake in real_killers
+                if path_distance_pq(a, snake.head) > path_distance_pq(g.me.head, snake.head) ])
+            return prefer_by_score(move_away)(moves)
 
 def log_print(anything=None):
     turn = g.state["turn"]
@@ -1034,10 +1038,10 @@ def run():
     log = {'id': '7a0129ad-a8ea-427f-869c-a8281d54fcec', 'turn': 153, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(4, 9), (4, 10), (5, 10), (6, 10), (6, 9), (7, 9), (7, 8), (6, 8), (5, 8), (5, 7), (6, 7), (7, 7), (7, 6), (6, 6), (5, 6), (4, 6)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 73, 'body': [(2, 3), (2, 4), (3, 4), (3, 3), (4, 3), (4, 4), (5, 4), (5, 3), (5, 2)]}, {'name': 'rustiger', 'health': 82, 'body': [(10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (8, 9), (9, 9), (9, 8), (9, 7), (9, 6), (9, 5), (8, 5), (7, 5)]}, {'name': 'Snakeformatika', 'health': 96, 'body': [(2, 7), (2, 6), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10)]}], 'food': [(8, 6), (9, 2)], 'module': 'functional2', 'decision_path': ["don't go in trap [(4, 8)]"], 'next_coord': (5, 9), 'next_move': 'right', 'time': '0.000s'}
     log = {'id': '27f2baaf-30e2-4314-8173-b5fbe5cc403b', 'turn': 52, 'me': {'name': 'mark_snake', 'health': 52, 'body': [(9, 7), (10, 7), (10, 8), (9, 8)]}, 'others': [{'name': 'snakey_wakey', 'health': 90, 'body': [(1, 7), (2, 7), (3, 7), (3, 6), (4, 6), (4, 5), (4, 4), (4, 3), (5, 3), (6, 3)]}, {'name': 'Snakeformatika', 'health': 92, 'body': [(0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10)]}, {'name': 'Hovering Hobbs', 'health': 88, 'body': [(7, 5), (7, 6), (7, 7), (7, 8), (6, 8), (5, 8)]}], 'food': [(6, 1), (0, 3), (10, 6)], 'module': 'functional2', 'decision_path': ['killer near', 'go to food'], 'next_coord': (9, 6), 'next_move': 'down', 'time': '0.010s'}
     log = {'id': '06c3573a-c6b9-45c2-b5f0-8505719d89fc', 'turn': 130, 'me': {'name': 'mark_snake', 'health': 93, 'body': [(9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (5, 0), (4, 0), (3, 0), (3, 1), (2, 1)]}, 'others': [{'name': 'snakey_wakey', 'health': 59, 'body': [(7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (4, 5), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6)]}, {'name': 'rustiger', 'health': 96, 'body': [(1, 3), (1, 2), (2, 2), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8)]}], 'food': [(5, 10), (8, 0)], 'module': 'functional2', 'decision_path': ['killer near', 'go to food'], 'next_coord': (9, 0), 'next_move': 'down', 'time': '0.008s'}
+    log = {'id': 'cca6536b-7bd7-4438-9a43-9aa493fd9fb4', 'turn': 72, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 6)]}, 'others': [{'name': 'Fairy Rust', 'health': 100, 'body': [(4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (10, 9), (10, 8), (10, 7), (9, 7), (9, 7)]}, {'name': 'MattIPv6', 'health': 76, 'body': [(4, 8), (4, 7), (4, 6), (4, 5), (4, 4), (5, 4), (6, 4)]}, {'name': 'Beholder', 'health': 95, 'body': [(3, 5), (2, 5), (2, 4), (3, 4), (3, 3), (3, 2), (2, 2), (2, 1)]}], 'food': [(0, 2)], 'module': 'functional2', 'decision_path': ['killer near'], 'next_coord': (1, 8), 'next_move': 'up', 'time': '0.178s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
 
 if __name__ == "__main__":
     run()
-
