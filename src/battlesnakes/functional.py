@@ -534,13 +534,17 @@ def avoid_multi_step_collision(moves):
         aa = [p for p in adj_cells(a) if p not in g.occupied_cells[1]]
         if len(aa) == 0:
             return 1
-        if all([path_distance_pq(g.s.other_head, p) == 2
-                or (len(path_connected_set(p, occupied)) <= 2
+
+        if all([
+            path_distance_pq(g.s.other_head, p) == 2 
+            or (len(path_connected_set(p, occupied)) <= 2
                     and not path_connected(p, g.s.my_tail, occupied)
-                    and not path_connected(p, g.s.other_tail, occupied))
+                    and not path_connected(p, g.s.other_tail, occupied))    
+            or (len(adj_p) == 1 and path_distance_pq(g.s.other_head, take_first(adj_p)) == 3)
                 for p in aa
-                for occupied in [g.occupied_cells[1]+[a]]
-                ]):
+                for occupied in [g.occupied_cells[1]+[a]] 
+                for adj_p in [[q for q in adj_cells(p) if q not in occupied]]
+        ]):
             return 2
         return 999
 
@@ -1654,6 +1658,7 @@ def run():
     log = {'id': '43d218e6-49b7-4ace-85fd-7774aca2f832', 'turn': 237, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(3, 0), (4, 0), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (8, 8), (8, 9), (8, 10), (7, 10), (7, 9), (7, 8), (7, 7), (7, 6), (7, 6)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 87, 'body': [(0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (1, 10), (2, 10), (2, 9), (2, 8), (1, 8), (1, 7), (1, 6), (2, 6), (3, 6), (3, 5), (2, 5), (2, 4), (1, 4), (1, 3), (1, 2), (0, 2)]}], 'food': [(5, 10), (1, 0)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'add food waypoint (1, 0)'], 'next_coord': (2, 0), 'next_move': 'left', 'time': '0.043s'}
     log = {'id': 'd7c26c5a-add1-45e6-8e69-a61e2baba11f', 'turn': 144, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(0, 8), (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (5, 7), (5, 6), (5, 5), (5, 4), (5, 3), (5, 2), (6, 2), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 2)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 98, 'body': [(0, 6), (1, 6), (1, 7), (2, 7), (2, 6), (2, 5), (1, 5), (1, 4), (2, 4), (2, 3), (2, 2), (3, 2), (3, 3), (4, 3), (4, 4), (3, 4)]}], 'food': [(2, 0), (8, 3)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'enemy is backed'], 'next_coord': (0, 7), 'next_move': 'down', 'time': '0.001s'}
     log = {'id': 'c4cea78e-0d69-45a4-965b-21cf9dfebd8a', 'turn': 70, 'me': {'name': 'mark_snake', 'health': 90, 'body': [(6, 8), (7, 8), (7, 7), (7, 6), (8, 6), (9, 6), (9, 5), (9, 4), (9, 3), (9, 2), (8, 2)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 100, 'body': [(6, 10), (6, 9), (7, 9), (7, 10), (8, 10), (8, 9), (9, 9), (9, 8), (9, 7), (9, 7)]}], 'food': [(4, 10), (10, 4)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'kill!'], 'next_coord': (6, 9), 'next_move': 'up', 'time': '0.002s'}
+    log = {'id': '3d047b02-b44f-440c-b057-2102e374196d', 'turn': 236, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (1, 2), (1, 3), (1, 4), (1, 5), (2, 5), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (2, 9), (2, 8), (1, 8), (0, 8), (0, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 82, 'body': [(4, 4), (5, 4), (5, 3), (6, 3), (7, 3), (7, 4), (7, 5), (6, 5), (5, 5), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (5, 9), (5, 8), (6, 8), (6, 7), (6, 6), (7, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2)]}], 'food': [(3, 10)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'push to equal border [(3, 3)]'], 'next_coord': (3, 2), 'next_move': 'up', 'time': '0.011s'}
 
 
 
