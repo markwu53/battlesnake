@@ -1363,8 +1363,9 @@ def enemy_is_backed_distance_2(moves):
                                 g.decision_path.append("enemy is backed")
                                 return collision
                     if len(g.x.other_allowed_moves) == 3:
-                        g.decision_path.append("squeeze one more step")
-                        return collision
+                        if distance_vector_abs(g.s.my_head, g.s.other_head) in [(0,2), (2,0)]:
+                            g.decision_path.append("squeeze one more step")
+                            return collision
 
 def enemy_is_backed_distance_4(moves):
     if g.s.my_length <= g.s.other_length:
