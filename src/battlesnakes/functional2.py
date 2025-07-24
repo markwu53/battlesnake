@@ -619,11 +619,19 @@ def prefer_more_next_moves(moves):
         return len(next_moves)
     return prefer_by_score(n_next_moves)(moves)
 
+def can_come_near(snake):
+    return any([a for a in adj_cells(snake.head) 
+                if a not in g.occupied_cells[0] 
+                and distance_pq(a, g.me.head) < distance_pq(snake.head, g.me.head)])
+
 def killer_near(moves):
     if min(distance_to_border(g.me.head)) < 2:
-        killers = [snake for snake in g.others if snake.length > g.me.length and distance_pq(snake.head, g.me.head) <= 6]
+        killers = [snake for snake in g.others 
+                   if snake.length > g.me.length and distance_pq(snake.head, g.me.head) <= 6]
         if len(killers) != 0:
-            real_killers = [snake for snake in killers if path_distance_pq(snake.head, g.me.head) <= 10]
+            real_killers = [snake for snake in killers for d in [distance_pq(g.me.head, snake.head)]
+                            if path_distance_pq(snake.head, g.me.head, g.occupied_cells[d//2-1]) == d
+                            and can_come_near(snake) ]
             if len(real_killers) != 0:
                 g.decision_path.append("killer near")
                 g.x.real_killers = real_killers
@@ -655,7 +663,7 @@ def killer_near_long_enough(moves):
                and distance_pq(snake.head, g.me.head) == path_distance_pq(snake.head, g.me.head)
                ]
     if len(killers) != 0:
-        if any([coming_near(killer) for killer in killers]):
+        if any([can_come_near(killer) for killer in killers]):
             g.decision_path.append("go back to off border")
             return prefer_no(on_border)(moves)
 
@@ -690,35 +698,13 @@ def heading_border(moves):
             moves = prefer_by_score(lambda a: path_distance_pq(a, killer.head))(moves)
             return moves
 
-def coming_near(killer):
-    killer_next = [p for p in adj_cells(killer.head) if get_adjacent_dir(killer.neck, killer.head) == get_adjacent_dir(killer.head, p)]
-    killer_next = [p for p in killer_next if p not in g.occupied_cells[0]]
-    if len(killer_next) == 0:
-        return False
-    killer_next = killer_next[0]
-    my_next = [p for p in adj_cells(g.me.head) if is_straight(p) and p not in g.occupied_cells[0]]
-    if len(my_next) == 0:
-        return False
-    my_next = my_next[0]
-    if distance_pq(killer_next, my_next) < distance_pq(g.me.head, killer.head):
-        return True
-    return False
-
 def me_at_off_border(moves):
     if off_border_1(g.me.head):
         real_killers = g.x.real_killers
-        if len(real_killers) == 1:
-            killer = real_killers[0]
-            dist1 = distance_pq(g.me.head, killer.head)
-            dist2 = path_distance_pq(g.me.head, killer.head)
-            if dist1 <= 4 and dist1 == dist2:
-                if coming_near(killer):
-                    g.decision_path.append("don't go border")
-                    return prefer_no(on_border)(moves)
-        else:
-            move_away = lambda a: len([snake for snake in real_killers
-                if path_distance_pq(a, snake.head) > path_distance_pq(g.me.head, snake.head) ])
-            return prefer_by_score(move_away)(moves)
+        g.decision_path.append("don't go border and move away")
+        move_away = lambda a: len([snake for snake in real_killers
+            if path_distance_pq(a, snake.head) > path_distance_pq(g.me.head, snake.head) ])
+        return prefer_by_score(move_away)(prefer_no(on_border)(moves))
 
 def log_print(anything=None):
     turn = g.state["turn"]
@@ -965,6 +951,7 @@ def avoid_multi_step_collision(moves):
             return 1
         if all([any([path_distance_pq(snake.head, p) == 2 for snake in killers])
                 or len(path_connected_set(p, g.occupied_cells[1]+[a])) <= 2
+                or distance_to_border(p) in [(0,0), (0,1), (1,0)]
                 for p in aa]):
             return 2
         return 999
@@ -1039,6 +1026,7 @@ def run():
     log = {'id': '27f2baaf-30e2-4314-8173-b5fbe5cc403b', 'turn': 52, 'me': {'name': 'mark_snake', 'health': 52, 'body': [(9, 7), (10, 7), (10, 8), (9, 8)]}, 'others': [{'name': 'snakey_wakey', 'health': 90, 'body': [(1, 7), (2, 7), (3, 7), (3, 6), (4, 6), (4, 5), (4, 4), (4, 3), (5, 3), (6, 3)]}, {'name': 'Snakeformatika', 'health': 92, 'body': [(0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10)]}, {'name': 'Hovering Hobbs', 'health': 88, 'body': [(7, 5), (7, 6), (7, 7), (7, 8), (6, 8), (5, 8)]}], 'food': [(6, 1), (0, 3), (10, 6)], 'module': 'functional2', 'decision_path': ['killer near', 'go to food'], 'next_coord': (9, 6), 'next_move': 'down', 'time': '0.010s'}
     log = {'id': '06c3573a-c6b9-45c2-b5f0-8505719d89fc', 'turn': 130, 'me': {'name': 'mark_snake', 'health': 93, 'body': [(9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (5, 0), (4, 0), (3, 0), (3, 1), (2, 1)]}, 'others': [{'name': 'snakey_wakey', 'health': 59, 'body': [(7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (4, 5), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6)]}, {'name': 'rustiger', 'health': 96, 'body': [(1, 3), (1, 2), (2, 2), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8)]}], 'food': [(5, 10), (8, 0)], 'module': 'functional2', 'decision_path': ['killer near', 'go to food'], 'next_coord': (9, 0), 'next_move': 'down', 'time': '0.008s'}
     log = {'id': 'cca6536b-7bd7-4438-9a43-9aa493fd9fb4', 'turn': 72, 'me': {'name': 'mark_snake', 'health': 99, 'body': [(1, 7), (0, 7), (0, 6), (0, 5), (1, 5), (1, 6)]}, 'others': [{'name': 'Fairy Rust', 'health': 100, 'body': [(4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (10, 9), (10, 8), (10, 7), (9, 7), (9, 7)]}, {'name': 'MattIPv6', 'health': 76, 'body': [(4, 8), (4, 7), (4, 6), (4, 5), (4, 4), (5, 4), (6, 4)]}, {'name': 'Beholder', 'health': 95, 'body': [(3, 5), (2, 5), (2, 4), (3, 4), (3, 3), (3, 2), (2, 2), (2, 1)]}], 'food': [(0, 2)], 'module': 'functional2', 'decision_path': ['killer near'], 'next_coord': (1, 8), 'next_move': 'up', 'time': '0.178s'}
+    log = {'id': '59b5051d-f9dd-4b58-81ff-ae010f44364d', 'turn': 39, 'me': {'name': 'mark_snake', 'health': 89, 'body': [(2, 1), (3, 1), (3, 0), (4, 0), (5, 0), (5, 1)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 92, 'body': [(8, 1), (8, 2), (8, 3), (8, 4), (7, 4), (7, 5), (7, 6), (7, 7)]}, {'name': 'Jeremy', 'health': 100, 'body': [(0, 3), (1, 3), (2, 3), (3, 3), (3, 4), (3, 5), (3, 6), (4, 6), (4, 6)]}, {'name': 'Wim HU', 'health': 63, 'body': [(9, 4), (9, 5), (9, 6), (9, 7)]}], 'food': [(1, 1), (0, 0), (8, 0), (1, 8)], 'module': 'functional2', 'decision_path': ['killer near'], 'next_coord': (2, 0), 'next_move': 'down', 'time': '0.012s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
