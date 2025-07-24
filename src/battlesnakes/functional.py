@@ -1090,9 +1090,11 @@ def food4(tail):
             food4 = foods
             if len(food4) != 0:
                 min_sn = min([sn for f,sn,m in food4])
-                f,sn,moves = take_first([(f,sn,m) for f,sn,m in food4 if sn == min_sn])
-                g.decision_path.append(f"add food waypoint {f}")
-                return moves
+                f,sn,food_moves = take_first([(f,sn,m) for f,sn,m in food4 if sn == min_sn])
+                food_moves = [a for a in food_moves if a in moves]
+                if len(food_moves) != 0:
+                    g.decision_path.append(f"add food waypoint {f}")
+                    return food_moves
     return fn
 
 def replace_tail_path(moves):
@@ -1660,6 +1662,8 @@ def run():
     log = {'id': 'fa8959d9-f41f-4e93-af93-cb89ee68765b', 'turn': 120, 'me': {'name': 'mark_snake', 'health': 86, 'body': [(9, 7), (8, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (1, 9), (1, 8), (1, 7), (2, 7), (3, 7), (4, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 97, 'body': [(10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5)]}], 'food': [(10, 7), (9, 4)], 'module': 'functional', 'decision_path': ['battle_1_vs_1'], 'next_coord': (9, 6), 'next_move': 'down', 'time': '0.001s'}
     log = {'id': 'fa8959d9-f41f-4e93-af93-cb89ee68765b', 'turn': 122, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(10, 6), (9, 6), (9, 7), (8, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (1, 9), (1, 8), (1, 7), (2, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'body': [(8, 4), (9, 4), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (1, 4)]}], 'food': [(10, 7)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'longer but not eough', 'split choice', 'no simple confinement', 'one has substantial bigger space'], 'next_coord': (10, 7), 'next_move': 'up', 'time': '0.004s'}
     log = {'id': 'fa8959d9-f41f-4e93-af93-cb89ee68765b', 'turn': 121, 'me': {'name': 'mark_snake', 'health': 85, 'body': [(9, 6), (9, 7), (8, 7), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (1, 9), (1, 8), (1, 7), (2, 7), (3, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 100, 'body': [(9, 4), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (1, 2), (1, 3), (1, 4), (1, 4)]}], 'food': [(10, 7)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'longer but not eough', 'food opportunity', 'go to food (10, 7)'], 'next_coord': (10, 6), 'next_move': 'right', 'time': '0.007s'}
+    log = {'id': 'fa7e4e9d-73fd-4011-b4bd-4532541059ff', 'turn': 126, 'me': {'name': 'mark_snake', 'health': 79, 'body': [(9, 9), (9, 8), (9, 7), (9, 6), (9, 5), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7)]}, 'others': [{'name': 'Frank The Tank', 'health': 88, 'body': [(7, 5), (7, 4), (7, 3), (8, 3), (9, 3), (9, 2), (8, 2), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (4, 1), (5, 1), (5, 2), (6, 2), (6, 1)]}], 'food': [(10, 3), (8, 10)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'food opportunity', 'go to food (8, 10)'], 'next_coord': (9, 10), 'next_move': 'up', 'time': '0.012s'}
+    log = {'id': '0103aeb4-8690-4989-87c9-fb5291571022', 'turn': 212, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(6, 6), (6, 5), (7, 5), (7, 4), (8, 4), (9, 4), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (9, 9), (9, 8), (9, 7), (8, 7), (8, 8), (8, 9), (7, 9), (6, 9), (6, 8)]}, 'others': [{'name': 'Frank The Tank', 'health': 91, 'body': [(5, 5), (5, 4), (5, 3), (6, 3), (6, 2), (6, 1), (5, 1), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (2, 8), (3, 8), (4, 8), (4, 7), (3, 7), (2, 7), (2, 6), (3, 6)]}], 'food': [(5, 7), (9, 6), (3, 9)], 'module': 'functional', 'decision_path': ['battle_1_vs_1', 'shorter', 'avoid single collision point', 'add food waypoint (5, 7)', 'push to equal border [(5, 6)]'], 'next_coord': (5, 6), 'next_move': 'left', 'time': '0.013s'}
 
 
 
