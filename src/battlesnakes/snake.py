@@ -18,9 +18,26 @@ def info() -> typing.Dict:
         "tail": "flake",  # TODO: Choose tail
     }
 
+def dummy(game_state):
+    snake_ids = [s["id"] for s in game_state["board"]["snakes"]]
+    my_id = game_state["you"]["id"]
+    if my_id == snake_ids[0]:
+        snake_name = "mark_snake_A"
+        color = "#FF0000"
+    else:
+        snake_name = "mark_snake_B"
+        color = "#00BB00"
+
+    return {
+        "name": snake_name,
+        "color": color,
+    }    
+
 # start is called when your Battlesnake begins a game
 def start(game_state: typing.Dict):
-    print("GAME START")
+    id = game_state["game"]["id"]
+    names = [snake["name"] for snake in game_state["board"]["snakes"]]
+    print(f"GAME START {id} {names}")
 
 
 # end is called when your Battlesnake finishes a game
