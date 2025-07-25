@@ -14,17 +14,19 @@ def main(game_state):
     #g.e.localtime = time.localtime()
 
     decision()
-    g.state["next_move"] = get_adjacent_dir(g.me.head, g.next_coord)
+    next_move = get_adjacent_dir(g.me.head, g.next_coord)
 
     #g.log["decision_support"] = {k:v for k,v in g.e.__dict__.items() if v is not None}
     g.log["decision_path"] = g.decision_path
     g.log["next_coord"] = g.next_coord
-    g.log["next_move"] = g.state["next_move"]
+    g.log["next_move"] = next_move
 
     end_time = time.time()
     g.log["time"] = f"{end_time-start_time:.3f}s"
 
     print(g.log)
+
+    game_state["next_move"] = next_move
     return True
 
 def entry_condition():
