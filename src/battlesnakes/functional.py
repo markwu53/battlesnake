@@ -807,7 +807,7 @@ def split_choice(moves):
     
 def simple_confined_moves_info(moves):
     confined_moves = [a for a in moves
-                    if len(path_connected_set(a)) < g.s.my_length //2
+                    if len(path_connected_set(a)) < g.s.my_length
                     and not path_connected(a, g.s.my_tail)
                     and not path_connected(a, g.s.other_tail)
                     ]
@@ -823,7 +823,7 @@ def cut_confined_moves_info(moves):
     confined_moves = [a for a in moves
                       if path_connected(a, g.s.other_head)
                       for aset in [path_connected_set(a, occupied)]
-                      if len(aset) < g.s.my_length //2
+                      if len(aset) < g.s.my_length
                       and not path_connected(a, g.s.my_tail, occupied)
                       and not path_connected(a, g.s.other_tail, occupied)
                       ]
@@ -840,6 +840,7 @@ def avoid_confinement(moves):
             g.decision_path.append("both good moves")
         return good_moves
 
+#unused
 def no_simple_confinement(moves):
     confined_moves = g.x.confined_moves
     if len(confined_moves) == 0:
