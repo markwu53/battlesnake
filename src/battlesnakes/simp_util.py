@@ -330,6 +330,7 @@ def init_game(game_state):
     snake.neck = snake.body[1]
     snake.tail = snake.body[-1]
     g.me = snake
+    g.log["you"] = game_state["you"]
 
     g.snakes = []
 
