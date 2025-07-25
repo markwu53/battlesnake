@@ -57,9 +57,41 @@ def decision():
         return
 
     #allowed_moves must be 2 or 3
-    moves = (g.x.allowed_moves)
+    moves = sequential([
+        kill_oppotunities,
+        avoid_danger,
+        get_food,
+        other_considerations,
+    ])(g.x.allowed_moves)
     g.next_coord = take_first(moves)
 
+def kill_oppotunities(moves):
+    return cases([
+        collision_kill,
+    ])(moves)
+
+def collision_kill(moves):
+    others = [snake for snake in g.others if snake.length < g.me.length]
+    others = [snake for snake in others if distance_pq(snake.head, g.me.head) == 2]
+
+def avoid_danger(moves):
+    return sequential([
+        collision_danger,
+    ])(moves)
+
+def collision_danger(moves):
+    killers = [snake for snake in g.others if snake.length > g.me.length]
+    nonkillers = [snake for snake in g.others if snake.length == g.me.length]
+    killer_collision_points = [a for a in moves for snake in killers if is_adjacent(a, snake.head)]
+    nonkiller_collision_points = [a for a in moves for snake in nonkillers if is_adjacent(a, snake.head)]
+    return prefer_no(lambda a: a in nonkiller_collision_points)(
+        prefer_no(lambda a: a in killer_collision_points)(moves))
+
+def get_food(moves):
+    pass
+
+def other_considerations(moves):
+    pass
 
 ######################################################
 # testing
