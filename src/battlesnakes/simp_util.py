@@ -15,6 +15,7 @@ class DecisionAux:
     def __init__(self):
         self.allowed_moves = None
         self.other_allowed_moves = None
+        self.occupied_cells = None
 
 class Game:
     def __init__(self):
@@ -171,7 +172,7 @@ def is_straight(p):
 
 def path_distance_pq(p, q, occupied=None):
     if occupied is None:
-        occupied = g.occupied_cells[0]
+        occupied = g.x.occupied_cells[0]
     #remove q from occupied otherwise there is no path
     occupied = [p for p in occupied if p != q]
     layers = path_connected_layers(p, occupied)
@@ -182,7 +183,7 @@ def path_distance_pq(p, q, occupied=None):
 
 def path_connected_layers(p, occupied=None):
     if occupied is None:
-        occupied = g.occupied_cells[0]
+        occupied = g.x.occupied_cells[0]
     #remove p from occupied
     occupied = [q for q in occupied if q != p]
     layers = [set([p])]
@@ -194,13 +195,13 @@ def path_connected_layers(p, occupied=None):
 
 def path_connected_set(p, occupied=None):
     if occupied is None:
-        occupied = g.occupied_cells[0]
+        occupied = g.x.occupied_cells[0]
     layers = path_connected_layers(p, occupied)
     return set([q for layer in layers for q in layer])
 
 def path_connected(p, q, occupied=None):
     if occupied is None:
-        occupied = g.occupied_cells[0]
+        occupied = g.x.occupied_cells[0]
     occupied = [x for x in occupied if x != q]
     return q in path_connected_set(p, occupied)
 
@@ -208,7 +209,7 @@ def shortest_path_move(p, q, occupied=None):
     if is_adjacent(p, q):
         return [q]
     if occupied is None:
-        occupied = g.occupied_cells[0]
+        occupied = g.x.occupied_cells[0]
     occupied = [c for c in occupied if c != q]
     if q in path_connected_set(p, occupied):
         dist = path_distance_pq(p, q, occupied)
@@ -266,7 +267,7 @@ def take_first(moves):
     return moves[0]
 
 def score_more_next_move(p):
-    moves = [a for a in adj_cells(p) if a not in g.occupied_cells[1]]
+    moves = [a for a in adj_cells(p) if a not in g.x.occupied_cells[1]]
     return len(moves)
 
 def score_more_room(p):
