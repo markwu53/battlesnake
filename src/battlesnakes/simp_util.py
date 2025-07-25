@@ -319,6 +319,18 @@ def init_game(game_state):
     game_state["you"]["var"] = g
     g.state = game_state
 
+    snake = Snake()
+    s = game_state["you"]
+    snake.name = s["name"]
+    snake.body = get_coord(s["body"])
+    snake.health = s["health"]
+    snake.id = s["id"]
+    snake.length = len(snake.body)
+    snake.head = snake.body[0]
+    snake.neck = snake.body[1]
+    snake.tail = snake.body[-1]
+    g.me = snake
+
     g.snakes = []
 
     for s in game_state["board"]["snakes"]:
@@ -333,7 +345,6 @@ def init_game(game_state):
         snake.tail = snake.body[-1]
         g.snakes.append(snake)
 
-    g.me = [snake for snake in g.snakes for c in [game_state["you"]["body"][0]] if snake.head == (c["x"], c["y"])][0]
     g.others = [snake for snake in g.snakes if snake.head != g.me.head]
 
     g.decision_path = []
