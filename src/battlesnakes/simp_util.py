@@ -33,7 +33,7 @@ class Game:
 # global Game variable
 ######################################################
 
-g = Game()
+g = None
 
 ######################################################
 # utility functions
@@ -314,6 +314,8 @@ def print_after(f):
 
 def init_game(game_state):
     global g
+    g = Game()
+    game_state["you"]["var"] = g
     g.state = game_state
 
     g.snakes = []
