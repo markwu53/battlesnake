@@ -316,7 +316,7 @@ def print_after(f):
 def init_game(game_state):
     global g
     g = Game()
-    game_state["you"]["var"] = g
+    game_state["var"] = g
     g.state = game_state
 
     snake = Snake()

@@ -6,7 +6,7 @@ g = None
 def main(game_state):
     global g
     init_game(game_state)
-    g = game_state["you"]["var"]
+    g = game_state["var"]
     if not entry_condition(): return False
 
     g.log["module"] = "simp"
