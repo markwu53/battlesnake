@@ -25,8 +25,8 @@ class Game:
         self.snakes = None
         self.food = None
         self.next_coord = None
-        self.log = {}
-        self.decision_path = []
+        self.log = None
+        self.decision_path = None
         self.x = DecisionAux()
 
 ######################################################
@@ -333,6 +333,7 @@ def init_game(game_state):
     g.me = [snake for snake in g.snakes for c in [game_state["you"]["body"][0]] if snake.head == (c["x"], c["y"])][0]
     g.others = [snake for snake in g.snakes if snake.head != g.me.head]
 
+    g.decision_path = []
     if len(g.others) == 0:
         g.decision_path.append("only myself")
     elif len(g.others) == 1:
@@ -343,6 +344,7 @@ def init_game(game_state):
 
     g.food = get_coord(game_state["board"]["food"])
 
+    g.log = {}
     g.log["id"] = game_state["game"]["id"]
     g.log["turn"] = game_state["turn"]
     g.log["me"] = g.me.dict()
