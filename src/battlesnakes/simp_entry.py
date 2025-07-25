@@ -21,7 +21,6 @@ def main(game_state):
     g.log["next_coord"] = g.next_coord
     g.log["next_move"] = next_move
     g.log["allowed_moves"] = g.x.allowed_moves
-    g.log["you"] = game_state["you"]["body"]
 
     end_time = time.time()
     g.log["time"] = f"{end_time-start_time:.3f}s"
