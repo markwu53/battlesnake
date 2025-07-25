@@ -88,7 +88,13 @@ def collision_danger(moves):
         prefer_no(lambda a: a in killer_collision_points)(moves))
 
 def get_food(moves):
-    pass
+    food_near = [f for f in g.food if distance_pq(f, g.me.head) <= 8]
+    food_good = [f for f in food_near if path_connected(f, g.me.head) and all([path_distance_pq(f, g.me.head) < path_distance_pq(f, snake.head) for snake in g.others])]
+    if len(food_good) != 0:
+        food_better = prefer_by_rank(lambda f: path_distance_pq(f, g.me.head))(food_good)
+        food_target = take_first(food_better)
+        food_moves = shortest_path_move(g.me.head, food_target)
+        return prefer_yes(lambda a: a in food_moves)(moves)
 
 def other_considerations(moves):
     pass
