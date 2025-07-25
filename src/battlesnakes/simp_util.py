@@ -320,6 +320,7 @@ def init_game(game_state):
     g.state = game_state
 
     snake = Snake()
+    g.me = snake
     s = game_state["you"]
     snake.name = s["name"]
     snake.body = get_coord(s["body"])
@@ -329,8 +330,6 @@ def init_game(game_state):
     snake.head = snake.body[0]
     snake.neck = snake.body[1]
     snake.tail = snake.body[-1]
-    g.me = snake
-    g.log["you"] = game_state["you"]
 
     g.snakes = []
 
@@ -365,4 +364,5 @@ def init_game(game_state):
     g.log["me"] = g.me.dict()
     g.log["others"] = [snake.dict() for snake in g.others]
     g.log["food"] = g.food
+    g.log["you"] = game_state["you"]
     
