@@ -31,13 +31,11 @@ def main(game_state):
     return True
 
 def entry_condition():
-    return True
     if len(g.snakes) == 1:
         return True
     if len(g.snakes) > 1:
         if all([snake.name == "mark_snake" for snake in g.others]):
             return True
-    print("not in this module")
     return False
 
 def decision():
