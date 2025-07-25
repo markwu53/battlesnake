@@ -20,6 +20,7 @@ def main(game_state):
     g.log["decision_path"] = g.decision_path
     g.log["next_coord"] = g.next_coord
     g.log["next_move"] = next_move
+    g.log["allowed_moves"] = g.x.allowed_moves
 
     end_time = time.time()
     g.log["time"] = f"{end_time-start_time:.3f}s"
