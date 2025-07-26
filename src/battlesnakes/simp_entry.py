@@ -396,10 +396,14 @@ def main(game_state):
         others = [snake for snake in g.others if snake.length < g.me.length]
         others = [snake for snake in others if distance_pq(snake.head, g.me.head) == 2]
 
+    def ____AVOID_DANGER____():
+        pass
+
     def avoid_danger(moves):
         return sequential([
             confinement_danger,
             trap_danger,
+            forming_trap_danger,
             collision_danger,
             two_step_collision,
         ])(moves)
@@ -437,6 +441,19 @@ def main(game_state):
             g.decision_path.append(f"trap {trap}")
             return prefer_not_in(trap)(moves)
 
+    def forming_trap_danger(moves):
+        others = [snake for snake in g.others if distance_pq(snake.head, g.me.head) == 2]
+        if len(others) == 1:
+            other = others[0]
+            adj_points = [p for p in adj_cells(g.me.head) if p in adj_cells(other.head)]
+            if len(adj_points) == 2:
+                collision_points = [p for p in adj_points if p in moves]
+                trap_point = [p for p in collision_points if len([q for q in adj_cells(p) if q in g.x.occupied_cells[1]]) == 1]
+                if len(trap_point) == 1:
+                    if not is_opposite_dir(get_adjacent_dir(g.me.head, trap_point[0]), get_adjacent_dir(other.neck, other.head)):
+                        g.decision_path.append(f"forming trap {trap_point}")
+                        return prefer_not_in(trap_point)(moves)
+
     def collision_danger(moves):
         if not any([distance_pq(snake.head, g.me.head) == 2 for snake in g.others]):
             return
@@ -462,6 +479,9 @@ def main(game_state):
             return len(step2_safe) == 0
         return prefer_no(collision)(moves)
 
+    def ____SPLIT_CHOICES____():
+        pass
+
     def move_connected_group(moves):
         if len(moves) == 1:
             return 1
@@ -477,9 +497,6 @@ def main(game_state):
                 return 2
             return 1
         log_print("move_connected_group")
-
-    def ____SPLIT_CHOICES____():
-        pass
 
     def split_choice(moves):
         ngroup = move_connected_group(moves)
