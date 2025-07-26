@@ -381,6 +381,7 @@ def main(game_state):
             kill_oppotunities,
             avoid_danger,
             split_choice,
+            wayout,
             get_food,
             other_considerations,
         ])(g.x.allowed_moves)
@@ -560,6 +561,41 @@ def main(game_state):
         confined = [a for a in moves if room(a) <= int(g.me.length * 0.8)]
         g.decision_path.append(f"avoid confined: {confined}")
         return prefer_not_in(confined)(moves)
+
+    def ____WAYOUT____():
+        pass
+
+    def wayout(moves):
+        ngroup = move_connected_group(moves)
+        if ngroup != 1:
+            return
+
+        return cases([
+            wayout_see_one_tail,
+        ])(moves)
+
+    def wayout_see_one_tail(moves):
+        aset = path_connected_set(g.me.head)
+        if len(aset) >= int(g.me.length * 1.2):
+            return
+        snakes = [snake for snake in g.others if path_connected(g.me.head, snake.tail)]
+        if len(snakes) != 1:
+            return
+        snake = take_first(snakes)
+        if snake.length > g.me.length:
+            #this case is to prevent a smaller snake try to confine me
+            return
+        waypoints = [(c,d) 
+                     for i,c in enumerate(snake.body) if path_connected(g.me.head, c) 
+                     for d in [abs(path_distance_pq(g.me.head, c) + i - snake.length)]
+                        ]
+        waypoints = [c for c,d in waypoints if d == min([d for c,d in waypoints])]
+        waypoint = take_first(waypoints)
+        g.decision_path.append(f"wayout tail shortcut {waypoint}")
+        return shortest_path_move(g.me.head, waypoint)
+
+    def ____GET_FOOD____():
+        pass
 
     def get_food(moves):
         food_near = [f for f in g.food if distance_pq(f, g.me.head) <= 8]
