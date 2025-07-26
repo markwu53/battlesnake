@@ -290,6 +290,12 @@ def main(game_state):
     def prefer_no(check):
         return prefer_yes(lambda a: not check(a))
 
+    def prefer_in(aset):
+        return prefer_yes(lambda a: a in aset)
+    
+    def prefer_not_in(aset):
+        return prefer_no(lambda a: a in aset)
+
     def prefer_by_score(score):
         def fn(moves):
             moves = [(a, score(a)) for a in moves]
@@ -313,6 +319,11 @@ def main(game_state):
             print(moves)
             return moves
         return fn
+
+    def log_print(anything=None):
+        turn = g.state["turn"]
+        id = g.state["game"]["id"]
+        print(f"MARK_EXCEPTION, TURN: {turn}, id: {id}, {anything}")
 
     ######################################################
 
@@ -346,6 +357,7 @@ def main(game_state):
         moves = sequential([
             kill_oppotunities,
             avoid_danger,
+            split_choice,
             get_food,
             other_considerations,
         ])(g.x.allowed_moves)
@@ -391,6 +403,64 @@ def main(game_state):
             step2_safe = [p for p in step2 if p not in collision and p not in collision2]
             return len(step2_safe) == 0
         return prefer_no(collision)(moves)
+
+    def move_connected_group(moves):
+        if len(moves) == 1:
+            return 1
+        elif len(moves) == 2:
+            a,b = moves
+            if path_distance_pq(a, b) >= 4:
+                return 2
+            return 1
+        elif len(moves) == 3:
+            straight = [a for a in moves if is_straight(a)][0]
+            others = [a for a in moves if a != straight]
+            if any([path_distance_pq(a, straight) > 2 for a in others]):
+                return 2
+            return 1
+        log_print("move_connected_group")
+
+    def split_choice(moves):
+        g.x.ngroup = move_connected_group(moves)
+        if g.x.ngroup == 1:
+            return
+        return cases([
+            split_1vn,
+        ])(moves)
+
+    def split_1vn(moves):
+        if len(g.others) <= 1:
+            return
+        return cases([
+            split_1vn_short,
+            split_1vn_medium,
+            split_1vn_long,
+        ])(moves)
+
+    def split_1vn_short(moves):
+        if g.me.length <= 6:
+            return moves
+
+    def split_1vn_medium(moves):
+        if g.me.length <= 10:
+            g.decision_path.append("split length medium")
+            return moves
+
+    def split_1vn_long(moves):
+        if g.me.length <= 10:
+            return
+        g.decision_path.append("split long")
+        return sequential([
+            split_avoid_dead_end,
+        ])(moves)
+
+    def split_avoid_dead_end(moves):
+        def room(a):
+            aset = path_connected_set(a)
+            return len(aset)
+        confined = [a for a in moves if room(a) <= int(g.me.length * 0.8)]
+        g.decision_path.append(f"avoid confined: {confined}")
+        return prefer_not_in(confined)(moves)
 
     def get_food(moves):
         food_near = [f for f in g.food if distance_pq(f, g.me.head) <= 8]
