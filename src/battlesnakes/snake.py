@@ -25,7 +25,6 @@ def start(game_state: typing.Dict):
     print(f"GAME START {id} {names}")
 
 
-
 # end is called when your Battlesnake finishes a game
 def end(game_state: typing.Dict):
     print("GAME OVER\n")
