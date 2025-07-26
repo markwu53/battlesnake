@@ -552,18 +552,70 @@ def main(game_state):
             return
         g.decision_path.append("split long")
         return sequential([
-            split_avoid_deadend,
+            #remove absolute danger split
+            (split_avoid_deadend),
+
+            #1vn focus on survival, prefer easy and surely wayout
+            cases([
+                no_cut_can_reach_other_tail,
+            ]),
         ])(moves)
 
-    def split_avoid_deadend(moves):
-        def room(a):
+    def no_cut_can_reach_other_tail(moves):
+        no_cut_moves = [a for a in moves if not any([path_connected(a, snake.head) for snake in g.others])]
+        if len(no_cut_moves) == 0:
+            return
+        def wayout(a):
             aset = path_connected_set(a)
-            return len(aset)
-        confined = [a for a in moves if room(a) <= int(g.me.length * 0.8)]
-        if len(confined) != 0:
-            moves = [a for a in moves if a not in confined]
+            snakes = [snake for snake in g.others if any([p in aset for c in snake.body for p in adj_cells(c)])]
+            if len(snakes) == 1:
+                snake = take_first(snakes)
+                max_index = max([i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)]) ])
+                required_steps = snake.length - max_index
+                if required_steps < len(aset):
+                    return True
+            return False
+        wayout_moves = [a for a in moves if wayout(a)]
+        if len(wayout_moves) != 0:
+            g.decision_path.append("split choose wayout on the other")
+            return wayout_moves
+
+    def split_avoid_deadend(moves):
+        #this only avoid absolute danger
+        def danger(a):
+            aset = path_connected_set(a)
+            if any([path_connected(a, snake.tail) for snake in g.snakes]):
+                return False
+
+            #wayout on myself
+            max_index = max([i for i,c in enumerate(g.me.body) if any([p in aset for p in adj_cells(c)]) ])
+            required_steps = g.me.length - max_index
+            if required_steps < len(aset):
+                return False
+
+            if len(snakes) == 0:
+                #only myself and required steps more than wiggle room
+                return True
+
+            snakes = [snake for snake in g.others if any([p in aset for c in snake.body for p in adj_cells(c)])]
+            if len(snakes) > 1:
+                #too complicated
+                return False
+            if len(snakes) == 1:
+                snake = take_first(snakes)
+            
+            #wayout on others
+            max_index = max([i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)]) ])
+            required_steps = snake.length - max_index
+            if required_steps >= len(aset):
+                return True
+            return False
+
+        danger_moves = [a for a in moves if danger(a)]
+        if len(danger_moves) != 0:
+            moves = [a for a in moves if a not in danger_moves]
             if len(moves) != 0:
-                g.decision_path.append(f"avoid deadend: {confined}")
+                g.decision_path.append(f"split avoid absolute danger: {danger_moves}")
                 return moves
 
     def ____WAYOUT____():
@@ -749,6 +801,7 @@ if __name__ == "__main__":
     log = {'id': '51dc66f7-b664-4b68-a3e8-39f3d129b024', 'turn': 136, 'me': {'name': 'mark_snake_test RED', 'health': 97, 'body': [(4, 0), (3, 0), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (0, 7), (0, 8), (0, 9), (1, 9)]}, 'others': [{'name': 'mark_snake_test GREEN', 'health': 83, 'body': [(10, 8), (9, 8), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7)]}], 'food': [(9, 2)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (5, 0), 'next_move': 'right', 'allowed_moves': [(5, 0), (4, 1)], 'time': '0.001s'}
     log = {'id': '9dd43272-e5c3-482f-906d-e7b7f1734298', 'turn': 91, 'me': {'name': 'mark_snake_test BLUE', 'health': 100, 'body': [(8, 5), (8, 4), (9, 4), (10, 4), (10, 3), (9, 3), (8, 3), (8, 2), (9, 2), (10, 2), (10, 1), (9, 1), (9, 0), (9, 0)]}, 'others': [{'name': 'mark_snake', 'health': 96, 'body': [(2, 1), (2, 0), (1, 0), (0, 0), (0, 1), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5)]}, {'name': 'mark_snake_test GREEN', 'health': 49, 'body': [(7, 8), (6, 8), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (1, 9)]}, {'name': 'mark_snake_test RED', 'health': 98, 'body': [(9, 6), (9, 7), (9, 8), (9, 9), (8, 9)]}], 'food': [(7, 7)], 'module': 'simp', 'decision_path': ['1vn', 'split long', 'avoid confined: []'], 'next_coord': (9, 5), 'next_move': 'right', 'allowed_moves': [(9, 5), (7, 5), (8, 6)], 'time': '0.011s'}
     log = {'id': 'a25bff64-e6a2-4f30-a2f6-dfa7c4ff234f', 'turn': 69, 'me': {'name': 'mark_snake_test RED', 'health': 93, 'body': [(5, 6), (6, 6), (7, 6), (8, 6), (8, 7), (8, 8), (8, 9), (7, 9), (7, 8), (7, 7)]}, 'others': [{'name': 'mark_snake', 'health': 100, 'body': [(4, 5), (3, 5), (3, 4), (3, 3), (4, 3), (4, 3)]}, {'name': 'mark_snake_test GREEN', 'health': 69, 'body': [(4, 7), (5, 7), (5, 8), (5, 9), (4, 9), (3, 9), (2, 9)]}, {'name': 'mark_snake_test BLUE', 'health': 93, 'body': [(2, 7), (1, 7), (1, 8), (1, 9), (1, 10), (0, 10), (0, 9)]}], 'food': [(8, 10)], 'module': 'simp', 'decision_path': ['1vn', 'split length medium', 'avoid confined: []', 'try to go to open space'], 'next_coord': (4, 6), 'next_move': 'left', 'time': '0.007s'}
+    log = {'id': '26140136-e6ac-45b7-abf9-4938e61cad78', 'turn': 176, 'me': {'name': 'mark_snake_test BLUE', 'health': 81, 'body': [(0, 6), (0, 5), (0, 4), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (5, 8), (4, 8), (4, 7), (4, 6)]}, 'others': [{'name': 'mark_snake', 'health': 98, 'body': [(3, 7), (2, 7), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 98, 'body': [(10, 8), (10, 7), (9, 7), (8, 7), (7, 7), (7, 6), (7, 5), (7, 4), (8, 4), (9, 4), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (3, 1)]}], 'food': [(3, 8)], 'module': 'simp', 'decision_path': ['1vn', 'split long', 'try to go to open space', 'go to open space (2, 6)'], 'next_coord': (1, 6), 'next_move': 'right', 'time': '0.004s'}
 
     game_state = init_from_log(log)
     main(game_state)
