@@ -398,9 +398,44 @@ def main(game_state):
 
     def avoid_danger(moves):
         return sequential([
+            confinement_danger,
+            trap_danger,
             collision_danger,
             two_step_collision,
         ])(moves)
+
+    def confinement_danger(moves):
+        def confined(a):
+            aset = path_connected_set(a)
+            if len(aset) <= 3:
+                if not any([path_connected(a, snake.tail) for snake in g.snakes]):
+                    return True
+            return False
+        confined_set = [a for a in moves if confined(a)]
+        if len(confined_set) != 0:
+            good_set = [a for a in moves if a not in confined_set]
+            if len(good_set) != 0:
+                g.decision_path.append(f"confined move {confined_set}")
+                return good_set
+
+    def is_a_border_trap(a):
+        if not on_border(a):
+            return False
+        for snake in g.others:
+            for i,c in enumerate(snake.body):
+                if c == snake.tail and snake.health != 100: continue
+                if not is_adjacent(c, a): continue
+                if on_border(c): continue
+                b = snake.body[i-1]
+                if get_adjacent_dir(g.me.neck, g.me.head) == get_adjacent_dir(c, b):
+                    return True
+        return False
+
+    def trap_danger(moves):
+        trap = [a for a in moves if is_a_border_trap(a)]
+        if len(trap) != 0:
+            g.decision_path.append(f"trap {trap}")
+            return prefer_not_in(trap)(moves)
 
     def collision_danger(moves):
         if not any([distance_pq(snake.head, g.me.head) == 2 for snake in g.others]):
