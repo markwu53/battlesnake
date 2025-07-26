@@ -426,10 +426,31 @@ def main(game_state):
             return
         return cases([
             split_1vn,
+            split_1v1,
+        ])(moves)
+
+    def split_1v1(moves):
+        if len(g.others) != 1:
+            return
+        return cases([
+            split_1v1_short,
+            split_1v1_long,
+        ])(moves)
+    
+    def split_1v1_short(moves):
+        if g.me.length <= 8:
+            return moves
+
+    def split_1v1_long(moves):
+        if g.me.length <= 8:
+            return
+        g.decision_path.append("this needs careful classification")
+        return sequential([
+            split_avoid_dead_end,
         ])(moves)
 
     def split_1vn(moves):
-        if len(g.others) <= 1:
+        if len(g.others) == 1:
             return
         return cases([
             split_1vn_short,
