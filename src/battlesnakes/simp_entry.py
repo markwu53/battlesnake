@@ -548,7 +548,7 @@ def main(game_state):
             return split_avoid_deadend(moves)
 
     def split_avoid_deadend(moves):
-        pass
+        return prefer_no(roughly_deadend)(moves)
 
     def split_1vn_long(moves):
         if g.me.length <= 10:
@@ -559,66 +559,72 @@ def main(game_state):
 
             #1vn focus on survival, prefer easy and surely wayout
             cases([
-                no_cut_can_see_my_tail,
-                no_cut_can_see_other_tail,
-                no_cut_can_reach_my_tail,
-                no_cut_can_reach_other_tail,
+                no_cut_can_see_tail,
+                no_cut_can_reach_tail,
             ]),
         ])(moves)
 
-    def split_avoid_absolute_danger(moves):
-        pass
-
-    def no_cut_can_see_my_tail(moves):
-        moves = [a for a in moves 
-                 if not any([path_connected(a, snake.head) for snake in g.others]) 
-                 and path_connected(a, g.me.tail)]
+    def no_cut_can_see_tail(moves):
+        moves = [a for a in moves if 1==1
+                 or no_cut_can_see_my_tail(a)
+                 or no_cut_can_see_other_tail(a)
+                 ]
         if len(moves) != 0:
-            g.decision_path.append("split choose my tail")
+            g.decision_path.append("split no cut can see tail")
             return moves
 
-    def no_cut_can_see_other_tail(moves):
-        moves = [a for a in moves 
-                 if not any([path_connected(a, snake.head) for snake in g.others]) 
-                 and any([path_connected(a, snake.tail) for snake in g.others])]
+    def no_cut_can_reach_tail(moves):
+        moves = [a for a in moves if 1==1
+                 or no_cut_can_reach_my_tail(a)
+                 or no_cut_can_reach_other_tail(a)
+                 ]
         if len(moves) != 0:
-            g.decision_path.append("split choose other tail")
+            g.decision_path.append("split no cut can reach tail")
             return moves
 
-    def no_cut_can_reach_my_tail(moves):
-        no_cut_moves = [a for a in moves if not any([path_connected(a, snake.head) for snake in g.others])]
-        if len(no_cut_moves) == 0:
-            return
-        def wayout(a):
-            aset = path_connected_set(a)
-            max_index = max([i for i,c in enumerate(g.me.body) if any([p in aset for p in adj_cells(c)]) ])
-            required_steps = g.me.length - max_index
-            if required_steps < len(aset):
-                return True
+    def roughly_deadend(a):
+        if any([path_connected(a, snake.tail) for snake in g.snakes]):
             return False
-        wayout_moves = [a for a in moves if wayout(a)]
-        if len(wayout_moves) != 0:
-            g.decision_path.append("split choose wayout on me")
-            return wayout_moves
+        aset = path_connected_set(a)
+        if len(aset) < int(g.me.length * 0.8):
+            return True
+        return False
+    
+    def no_cut_can_see_my_tail(a):
+        if any([path_connected(a, snake.head) for snake in g.snakes]):
+            return False
+        return path_connected(a, g.me.tail)
 
-    def no_cut_can_reach_other_tail(moves):
-        no_cut_moves = [a for a in moves if not any([path_connected(a, snake.head) for snake in g.others])]
-        if len(no_cut_moves) == 0:
-            return
-        def wayout(a):
-            aset = path_connected_set(a)
-            snakes = [snake for snake in g.others if any([p in aset for c in snake.body for p in adj_cells(c)])]
-            if len(snakes) == 1:
-                snake = take_first(snakes)
+    def no_cut_can_see_other_tail(a):
+        if any([path_connected(a, snake.head) for snake in g.snakes]):
+            return False
+        return any([path_connected(a, snake.tail) for snake in g.others])
+
+    def no_cut_can_reach_my_tail(a):
+        if any([path_connected(a, snake.head) for snake in g.snakes]):
+            return False
+        aset = path_connected_set(a)
+        max_index = max([i for i,c in enumerate(g.me.body) if any([p in aset for p in adj_cells(c)]) ])
+        required_steps = g.me.length - max_index
+        if required_steps < len(aset):
+            return True
+        return False
+    
+    def no_cut_can_reach_other_tail(a):
+        if any([path_connected(a, snake.head) for snake in g.snakes]):
+            return False
+        aset = path_connected_set(a)
+        adj_snakes = [snake for snake in g.others if any([p in aset for c in snake.body for p in adj_cells(c)])]
+        if len(adj_snakes) != 0:
+            for snake in adj_snakes:
                 max_index = max([i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)]) ])
                 required_steps = snake.length - max_index
                 if required_steps < len(aset):
                     return True
-            return False
-        wayout_moves = [a for a in moves if wayout(a)]
-        if len(wayout_moves) != 0:
-            g.decision_path.append("split choose wayout on the other")
-            return wayout_moves
+        return False
+
+    def split_avoid_absolute_danger(moves):
+        pass
 
     def ____WAYOUT____():
         pass
