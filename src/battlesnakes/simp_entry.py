@@ -310,8 +310,6 @@ def main(game_state):
         return prefer_by_score(n_next_moves)(moves)
 
     def prefer_open_space(moves):
-        if g.x.ngroup != 1: return
-
         aset = path_connected_set(g.me.head)
         killers = [snake for snake in g.others if snake.length > g.me.length]
         nonkillers = [snake for snake in g.others if snake.length <= g.me.length]
@@ -449,8 +447,8 @@ def main(game_state):
         pass
 
     def split_choice(moves):
-        g.x.ngroup = move_connected_group(moves)
-        if g.x.ngroup == 1:
+        ngroup = move_connected_group(moves)
+        if ngroup == 1:
             return
         return cases([
             split_1vn,
@@ -535,6 +533,12 @@ def main(game_state):
 
     def crowd_prefer_open_space(moves):
         if len(g.others) >= 2:
+            g.decision_path.append("try to go to open space")
+            return split_prefer_open_space(moves)
+
+    def split_prefer_open_space(moves):
+        ngroup = move_connected_group(moves)
+        if ngroup >= 1:
             return prefer_open_space(moves)
 
     def ________GAME_ENTRY________():
