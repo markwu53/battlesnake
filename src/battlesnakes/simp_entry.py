@@ -305,7 +305,7 @@ def main(game_state):
 
     def prefer_more_next_moves(moves):
         def n_next_moves(a):
-            next_moves = [p for p in adj_cells(a) if p not in g.occupied_cells[1]]
+            next_moves = [p for p in adj_cells(a) if p not in g.x.occupied_cells[1]]
             return len(next_moves)
         return prefer_by_score(n_next_moves)(moves)
 
