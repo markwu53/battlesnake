@@ -593,11 +593,10 @@ def main(game_state):
             if required_steps < len(aset):
                 return False
 
+            snakes = [snake for snake in g.others if any([p in aset for c in snake.body for p in adj_cells(c)])]
             if len(snakes) == 0:
                 #only myself and required steps more than wiggle room
                 return True
-
-            snakes = [snake for snake in g.others if any([p in aset for c in snake.body for p in adj_cells(c)])]
             if len(snakes) > 1:
                 #too complicated
                 return False
