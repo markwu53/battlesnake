@@ -24,19 +24,6 @@ def start(game_state: typing.Dict):
     names = [snake["name"] for snake in game_state["board"]["snakes"]]
     print(f"GAME START {id} {names}")
 
-    snake_ids = [s["id"] for s in game_state["board"]["snakes"]]
-    my_id = game_state["you"]["id"]
-    if my_id == snake_ids[0]:
-        snake_name = "mark_snake_A"
-        color = "#FF0000"
-    else:
-        snake_name = "mark_snake_B"
-        color = "#00BB00"
-
-    return {
-        "name": snake_name,
-        "color": color,
-    }    
 
 
 # end is called when your Battlesnake finishes a game
