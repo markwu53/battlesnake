@@ -459,6 +459,7 @@ def main(game_state):
             aset = path_connected_set(a)
             return len(aset)
         confined = [a for a in moves if room(a) <= int(g.me.length * 0.8)]
+        g.decision_path.append(f"avoid confined: {confined}")
         return prefer_not_in(confined)(moves)
 
     def get_food(moves):
