@@ -303,6 +303,15 @@ def main(game_state):
             return moves
         return fn
 
+    def prefer_more_next_moves(moves):
+        def n_next_moves(a):
+            next_moves = [p for p in adj_cells(a) if p not in g.occupied_cells[1]]
+            return len(next_moves)
+        return prefer_by_score(n_next_moves)(moves)
+
+    def prefer_straight(moves):
+        return prefer_yes(is_straight)(moves)
+
     def id(moves):
         return moves
 
@@ -468,7 +477,7 @@ def main(game_state):
     def split_1vn_medium(moves):
         if g.me.length <= 10:
             g.decision_path.append("split length medium")
-            return moves
+            return split_avoid_dead_end(moves)
 
     def split_1vn_long(moves):
         if g.me.length <= 10:
@@ -495,8 +504,17 @@ def main(game_state):
             food_moves = shortest_path_move(g.me.head, food_target)
             return prefer_yes(lambda a: a in food_moves)(moves)
 
-    def other_considerations(moves):
+    def ____OTHER_CONSIDERATIONS____():
         pass
+
+    def other_considerations(moves):
+        return cases([
+            short_prefer_more_move,
+        ])(moves)
+
+    def short_prefer_more_move(moves):
+        if g.me.length <= 8:
+            return prefer_more_next_moves(moves)
 
     def ________GAME_ENTRY________():
         pass
