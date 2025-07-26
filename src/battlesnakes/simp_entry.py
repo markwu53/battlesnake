@@ -547,6 +547,9 @@ def main(game_state):
             g.decision_path.append("split length medium")
             return split_avoid_deadend(moves)
 
+    def split_avoid_deadend(moves):
+        pass
+
     def split_1vn_long(moves):
         if g.me.length <= 10:
             return
