@@ -420,6 +420,9 @@ def main(game_state):
             return 1
         log_print("move_connected_group")
 
+    def ____SPLIT_CHOICES____():
+        pass
+
     def split_choice(moves):
         g.x.ngroup = move_connected_group(moves)
         if g.x.ngroup == 1:
@@ -531,6 +534,8 @@ def main(game_state):
     def entry_condition():
         if len(g.snakes) == 1:
             return True
+        if g.me.name == "mark_snake": 
+            return False
         if any(["mark_snake_test" in snake.name for snake in g.snakes]):
             return True
         if len([snake for snake in g.snakes if snake.name == "mark_snake"]) >= 2:
