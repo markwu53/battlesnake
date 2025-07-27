@@ -70,7 +70,8 @@ def special_experimenting_code(game_state):
     def experiment_condition():
         if g.me["name"] == "mark_snake":
             if len(g.others) == 1:
-                return True
+                if g.s.my_length > 10:
+                    return True
         return False
 
     def init_game(game_state):
