@@ -1,2 +1,3 @@
-A = ("Hello" "World")
-print(A)
+a = [1,2,3,4,5]
+b = [1,2,2,4]
+print(a[:4] == b)
