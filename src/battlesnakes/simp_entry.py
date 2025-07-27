@@ -442,9 +442,15 @@ def main(game_state):
     def multi_killer_near(moves):
         killers = [snake for snake in g.others if snake.length > g.me.length 
                    if path_distance_pq(snake.head, g.me.head) <= 6 ]
+        def move_away_score(a):
+            return len([snake for snake in killers 
+                        if path_distance_pq(a, snake.head) > path_distance_pq(g.me.head, snake.head)])
         if len(killers) >= 2:
             g.decision_path.append(f"multi killer {len(killers)}")
-            return prefer_no(on_border)(moves)
+            distv = distance_to_border(g.me.head)
+            if min(distv) <= 1:
+                return prefer_no(on_border)(moves)
+            return prefer_by_score(move_away_score)(moves)
 
     def no_killer_return(moves):
         killers = [snake for snake in g.others if snake.length > g.me.length if distance_pq(snake.head, g.me.head) <= 6]
@@ -459,7 +465,7 @@ def main(game_state):
                 for end in [path[-1]]
                 for nhead in adj_cells(end)
                 if nhead not in path
-                and nhead not in g.x.occupied_cells[0]
+                and nhead not in g.x.occupied_cells[i]
             ]
             layers.append(layer)
         return layers
@@ -892,6 +898,7 @@ if __name__ == "__main__":
     log = {'id': '734ab5c5-331c-4d77-ba25-3eb76f954e5b', 'turn': 19, 'me': {'name': 'mark_snake_test BLUE', 'health': 90, 'body': [(10, 3), (10, 2), (10, 1), (9, 1), (8, 1)]}, 'others': [{'name': 'mark_snake', 'health': 99, 'body': [(0, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]}, {'name': 'Frank The Tank', 'health': 100, 'body': [(9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (5, 4)]}, {'name': 'Kakemonsteret-v2', 'health': 86, 'body': [(6, 9), (6, 8), (6, 7), (5, 7), (4, 7)]}], 'food': [(4, 3)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (9, 3), 'next_move': 'left', 'time': '0.004s'}
     log = {'id': '8157dce7-71a0-4936-9ea6-fa5fab7a66b2', 'turn': 41, 'me': {'name': 'mark_snake_test GREEN', 'health': 88, 'body': [(1, 8), (1, 9), (2, 9), (3, 9), (4, 9)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 78, 'body': [(0, 3), (1, 3), (2, 3), (2, 2), (2, 1)]}, {'name': 'Kakemonsteret-v2', 'health': 100, 'body': [(1, 4), (2, 4), (3, 4), (4, 4), (4, 3), (4, 2), (4, 2)]}, {'name': 'Frank The Tank', 'health': 96, 'body': [(3, 6), (3, 7), (3, 8), (4, 8), (4, 7), (4, 6), (5, 6), (6, 6), (7, 6), (7, 5), (7, 4)]}], 'food': [(0, 7)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (1, 7), 'next_move': 'down', 'time': '0.009s'}
     log = {'id': '59fa0eb0-3e21-4bbc-b33e-895240feec7e', 'turn': 138, 'me': {'name': 'mark_snake_test GREEN', 'health': 3, 'body': [(2, 0), (2, 1), (1, 1), (1, 2), (0, 2), (0, 1)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 96, 'body': [(0, 8), (0, 7), (0, 6), (0, 5), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10)]}, {'name': 'Kakemonsteret-v2', 'health': 90, 'body': [(10, 0), (9, 0), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3), (7, 4), (8, 4), (9, 4), (9, 5), (8, 5), (8, 6), (8, 7)]}, {'name': 'Frank The Tank', 'health': 22, 'body': [(6, 2), (6, 1), (5, 1), (5, 2), (4, 2), (4, 1), (3, 1), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5)]}], 'food': [(10, 1)], 'module': 'simp', 'decision_path': ['1vn', 'multi-step collision [((1, 0), 3)]'], 'next_coord': (3, 0), 'next_move': 'right', 'time': '0.000s'}
+    log = {'id': 'd6551135-823a-4018-9fe8-d7b43ef091f4', 'turn': 86, 'me': {'name': 'mark_snake_test BLUE', 'health': 47, 'body': [(8, 8), (8, 7), (8, 6), (9, 6), (9, 5)]}, 'others': [{'name': 'mark_snake_test GREEN', 'health': 100, 'body': [(10, 2), (9, 2), (8, 2), (7, 2), (7, 1), (7, 0), (6, 0), (5, 0), (4, 0), (4, 1), (4, 2), (4, 3), (4, 3)]}, {'name': 'Kakemonsteret-v2', 'health': 83, 'body': [(5, 9), (5, 8), (5, 7), (4, 7), (4, 8), (4, 9), (4, 10), (3, 10)]}, {'name': 'Frank The Tank', 'health': 86, 'body': [(6, 6), (5, 6), (4, 6), (3, 6), (3, 5), (2, 5), (2, 4), (2, 3)]}], 'food': [(7, 6), (10, 10)], 'module': 'simp', 'decision_path': ['1vn', 'multi-step collision [((7, 8), 2)]', 'multi killer 2'], 'next_coord': (8, 9), 'next_move': 'up', 'time': '0.010s'}
 
     game_state = init_from_log(log)
     main(game_state)
