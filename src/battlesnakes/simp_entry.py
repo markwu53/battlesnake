@@ -464,7 +464,6 @@ def main(game_state):
         if len(killers) >= 2:
             g.decision_path.append(f"multi killer {len(killers)}")
             distv = distance_to_border(g.me.head)
-            for a in moves: print(a, move_away_score(a))
             if min(distv) <= 1:
                 return prefer_by_score(move_away_score)(prefer_no(on_border)(moves))
             return prefer_by_score(move_away_score)(moves)
