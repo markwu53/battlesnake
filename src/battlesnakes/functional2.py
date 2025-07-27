@@ -136,6 +136,7 @@ def special_experimenting_code(game_state):
             battle_1_vs_n,
             id, #cases at entry point ends by id to close possible None return
         ])(g.e.allowed_moves)
+
         g.next_coord = take_first(moves)
 
 
@@ -456,10 +457,10 @@ def special_experimenting_code(game_state):
     def short_enough(moves):
         if g.me.length <= 6:
             return sequential([
-                dont_go_in_trap,
+                (dont_go_in_trap),
                 avoid_collision,
                 avoid_equal_collision,
-                avoid_multi_step_collision,
+                (avoid_multi_step_collision),
                 (killer_near),
                 split_choice,
                 #wayout,
@@ -701,7 +702,7 @@ def special_experimenting_code(game_state):
             else:
                 move_away = lambda a: len([snake for snake in real_killers
                     if path_distance_pq(a, snake.head) > path_distance_pq(g.me.head, snake.head) ])
-                return prefer_by_score(move_away)(moves)
+                return prefer_no(off_border_1)(prefer_by_score(move_away)(prefer_no(on_border)(moves)))
 
     def log_print(anything=None):
         turn = g.state["turn"]
@@ -1055,6 +1056,9 @@ def run():
     log = {'id': '12dcd32c-e6b3-4624-82c0-a37bc4f36cb5', 'turn': 67, 'me': {'name': 'mark_snake', 'health': 91, 'body': [(9, 8), (9, 9), (8, 9), (7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9)]}, 'others': [{'name': 'ich heisse marvin', 'health': 93, 'body': [(7, 6), (6, 6), (5, 6), (4, 6), (4, 5), (3, 5), (2, 5), (1, 5), (1, 6), (1, 7)]}], 'food': [(3, 0), (2, 4), (6, 2)], 'module': 'functional2', 'decision_path': ['killer near'], 'next_coord': (10, 8), 'next_move': 'right', 'time': '0.006s'}
     #log = 522f26f8-c980-4070-9465-9573b0782ea4
     log = {'id': '1ab910ef-1d1a-4b31-962b-90067610c1e0', 'turn': 41, 'me': {'name': 'mark_snake', 'health': 76, 'body': [(2, 9), (2, 8), (2, 7), (2, 6), (1, 6)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 85, 'body': [(0, 7), (0, 6), (0, 5), (1, 5), (1, 4)]}, {'name': 'Kakemonsteret-v2', 'health': 96, 'body': [(8, 9), (8, 8), (9, 8), (9, 7), (9, 6), (8, 6), (8, 5), (8, 4)]}, {'name': 'Raptor', 'health': 100, 'body': [(5, 10), (5, 9), (6, 9), (6, 8), (6, 7), (6, 6), (6, 6)]}], 'food': [(1, 10)], 'module': 'functional2', 'decision_path': ['killer near', "don't go border and move away", 'go to food'], 'next_coord': (1, 9), 'next_move': 'left', 'time': '0.012s'}
+    log = {'id': '3a97a544-6eec-42f1-81e9-b2aff05c2616', 'turn': 27, 'me': {'name': 'mark_snake', 'health': 100, 'body': [(10, 3), (9, 3), (9, 4), (10, 4), (10, 4)]}, 'others': [{'name': 'Jazz snake', 'health': 83, 'body': [(9, 2), (8, 2), (8, 1), (7, 1), (7, 2)]}, {'name': 'Jeremy', 'health': 90, 'body': [(8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (8, 8)]}, {'name': 'Natterlie', 'health': 81, 'body': [(4, 3), (3, 3), (2, 3), (2, 4), (2, 5)]}], 'food': [(0, 10)], 'module': 'functional2', 'decision_path': [], 'next_coord': (10, 2), 'next_move': 'down', 'time': '0.000s'}
+    log = {'id': '3a97a544-6eec-42f1-81e9-b2aff05c2616', 'turn': 22, 'me': {'name': 'mark_snake', 'health': 84, 'body': [(9, 5), (9, 4), (10, 4), (10, 5)]}, 'others': [{'name': 'Jazz snake', 'health': 88, 'body': [(7, 3), (8, 3), (8, 2), (8, 1), (7, 1)]}, {'name': 'Jeremy', 'health': 95, 'body': [(8, 8), (9, 8), (9, 7), (10, 7), (10, 8), (10, 9)]}, {'name': 'Natterlie', 'health': 86, 'body': [(3, 5), (4, 5), (4, 4), (4, 3), (3, 3)]}], 'food': [(10, 3)], 'module': 'functional2', 'decision_path': ['killer near'], 'next_coord': (10, 5), 'next_move': 'right', 'time': '0.041s'}
+    log = {'id': '3a97a544-6eec-42f1-81e9-b2aff05c2616', 'turn': 18, 'me': {'name': 'mark_snake', 'health': 88, 'body': [(9, 5), (9, 6), (10, 6), (10, 5)]}, 'others': [{'name': 'Jazz snake', 'health': 92, 'body': [(7, 1), (7, 2), (7, 3), (8, 3), (8, 2)]}, {'name': 'Jeremy', 'health': 99, 'body': [(10, 8), (10, 9), (9, 9), (9, 8), (8, 8), (7, 8)]}, {'name': 'Natterlie', 'health': 90, 'body': [(3, 3), (3, 4), (3, 5), (2, 5), (2, 4)]}], 'food': [(10, 3)], 'module': 'functional2', 'decision_path': ['killer near'], 'next_coord': (10, 5), 'next_move': 'right', 'time': '0.038s'}
 
     game_state = init_from_log(log)
     special_experimenting_code(game_state)
