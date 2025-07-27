@@ -519,7 +519,7 @@ def main(game_state):
                 if not is_adjacent(c, a): continue
                 if on_border(c): continue
                 b = snake.body[i-1]
-                if get_adjacent_dir(g.me.neck, g.me.head) == get_adjacent_dir(c, b):
+                if get_adjacent_dir(g.me.head, a) == get_adjacent_dir(c, b):
                     return True
         return False
 
@@ -891,6 +891,7 @@ if __name__ == "__main__":
     log = {'id': '4c1a77d8-5372-409c-94fa-bf7550c2245f', 'turn': 12, 'me': {'name': 'mark_snake_test BLUE', 'health': 100, 'body': [(10, 8), (9, 8), (9, 7), (9, 7)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 90, 'body': [(8, 4), (7, 4), (6, 4), (5, 4)]}, {'name': 'Frank The Tank', 'health': 98, 'body': [(7, 5), (6, 5), (5, 5), (4, 5), (3, 5)]}, {'name': 'Kakemonsteret-v2', 'health': 90, 'body': [(7, 9), (7, 8), (7, 7), (7, 6)]}], 'food': [(8, 6)], 'module': 'functional2', 'decision_path': ['killer near', 'go away from killer'], 'next_coord': (10, 9), 'next_move': 'up', 'time': '0.007s'}
     log = {'id': '734ab5c5-331c-4d77-ba25-3eb76f954e5b', 'turn': 19, 'me': {'name': 'mark_snake_test BLUE', 'health': 90, 'body': [(10, 3), (10, 2), (10, 1), (9, 1), (8, 1)]}, 'others': [{'name': 'mark_snake', 'health': 99, 'body': [(0, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]}, {'name': 'Frank The Tank', 'health': 100, 'body': [(9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (5, 4)]}, {'name': 'Kakemonsteret-v2', 'health': 86, 'body': [(6, 9), (6, 8), (6, 7), (5, 7), (4, 7)]}], 'food': [(4, 3)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (9, 3), 'next_move': 'left', 'time': '0.004s'}
     log = {'id': '8157dce7-71a0-4936-9ea6-fa5fab7a66b2', 'turn': 41, 'me': {'name': 'mark_snake_test GREEN', 'health': 88, 'body': [(1, 8), (1, 9), (2, 9), (3, 9), (4, 9)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 78, 'body': [(0, 3), (1, 3), (2, 3), (2, 2), (2, 1)]}, {'name': 'Kakemonsteret-v2', 'health': 100, 'body': [(1, 4), (2, 4), (3, 4), (4, 4), (4, 3), (4, 2), (4, 2)]}, {'name': 'Frank The Tank', 'health': 96, 'body': [(3, 6), (3, 7), (3, 8), (4, 8), (4, 7), (4, 6), (5, 6), (6, 6), (7, 6), (7, 5), (7, 4)]}], 'food': [(0, 7)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (1, 7), 'next_move': 'down', 'time': '0.009s'}
+    log = {'id': '59fa0eb0-3e21-4bbc-b33e-895240feec7e', 'turn': 138, 'me': {'name': 'mark_snake_test GREEN', 'health': 3, 'body': [(2, 0), (2, 1), (1, 1), (1, 2), (0, 2), (0, 1)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 96, 'body': [(0, 8), (0, 7), (0, 6), (0, 5), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10)]}, {'name': 'Kakemonsteret-v2', 'health': 90, 'body': [(10, 0), (9, 0), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3), (7, 4), (8, 4), (9, 4), (9, 5), (8, 5), (8, 6), (8, 7)]}, {'name': 'Frank The Tank', 'health': 22, 'body': [(6, 2), (6, 1), (5, 1), (5, 2), (4, 2), (4, 1), (3, 1), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5)]}], 'food': [(10, 1)], 'module': 'simp', 'decision_path': ['1vn', 'multi-step collision [((1, 0), 3)]'], 'next_coord': (3, 0), 'next_move': 'right', 'time': '0.000s'}
 
     game_state = init_from_log(log)
     main(game_state)
