@@ -421,11 +421,11 @@ def main(game_state):
 
     def me_at_corner(moves):
         distv = distance_to_border(g.me.head)
-        if max(distv) <= 2:
+        if sum(distv) <= 3:
             killers = [snake for snake in g.others if snake.length > g.me.length 
                     if path_distance_pq(snake.head, g.me.head) <= 10 ]
             if len(killers) != 0:
-                prefer_no(lambda a: max(distance_to_border(a)) <= 2)(moves)
+                prefer_no(lambda a: sum(distance_to_border(a)) <= 2)(moves)
 
     def single_killer_near(moves):
         killers = [snake for snake in g.others if snake.length > g.me.length 
