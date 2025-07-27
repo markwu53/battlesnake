@@ -435,6 +435,10 @@ def main(game_state):
                     if any([path_distance_pq(f, g.me.head) < path_distance_pq(f, killer.head) for f in food]):
                         g.decision_path.append("get food and length will be equal")
                         return
+        if distance_pq(g.me.head, killer.head) == 6:
+            #heading border allowed
+            if off_border_1(g.me.head) and not on_border(g.me.neck) and not off_border_1(g.me.neck):
+                return
         
         if min(distance_to_border(g.me.head)) <= 1:
             return prefer_no(on_border)(moves)
@@ -449,7 +453,7 @@ def main(game_state):
             g.decision_path.append(f"multi killer {len(killers)}")
             distv = distance_to_border(g.me.head)
             if min(distv) <= 1:
-                return prefer_no(on_border)(moves)
+                return prefer_by_score(move_away_score)(prefer_no(on_border)(moves))
             return prefer_by_score(move_away_score)(moves)
 
     def no_killer_return(moves):
