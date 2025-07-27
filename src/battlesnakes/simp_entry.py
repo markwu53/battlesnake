@@ -407,9 +407,47 @@ def main(game_state):
             trap_danger,
             forming_trap_danger,
             collision_danger,
-            two_step_collision,
+            multi_step_collision,
         ])(moves)
 
+    def grow_path(head, steps):
+        layers = [[[head]]]
+        for i in range(steps):
+            layer = [ path+[nhead]
+                for path in layers[-1]
+                for end in [path[-1]]
+                for nhead in adj_cells(end)
+                if nhead not in path
+                and nhead not in g.x.occupied_cells[0]
+            ]
+            layers.append(layer)
+        return layers
+
+    def multi_step_collision(moves):
+        killers = [snake for snake in g.others if snake.length > g.me.length if distance_pq(snake.head, g.me.head) <= 8]
+        nonkillers = [snake for snake in g.others if snake.length == g.me.length if distance_pq(snake.head, g.me.head) <= 8]
+        for snake in g.snakes:
+            snake.head_paths = grow_path(snake.head, 5)
+
+        def collision_score(a):
+            def path_collision_score(apath):
+                length = len(apath)
+                if length == 5:
+                    return 999
+                if len(g.me.head_paths) <= length:
+                    return length - 1
+                snakes = (killers+nonkillers) if length <= 3 else killers
+                if apath[-1] in [ path[-1]
+                    for snake in snakes if len(snake.head_paths) >= length
+                    for path in snake.head_paths[length-1]
+                ]:
+                    return length - 1
+                npaths = [path for path in g.me.head_paths[length] if path[:length] == apath ]
+                return max([path_collision_score(path) for path in npaths])
+            return path_collision_score([g.me.head, a])
+
+        return prefer_by_score(collision_score)(moves)
+        
     def confinement_danger(moves):
         def confined(a):
             aset = path_connected_set(a)
@@ -466,20 +504,6 @@ def main(game_state):
         nonkiller_collision_points = [a for a in moves for snake in nonkillers if is_adjacent(a, snake.head)]
         return prefer_no(lambda a: a in nonkiller_collision_points)(
             prefer_no(lambda a: a in killer_collision_points)(moves))
-
-    def two_step_collision(moves):
-        if not any([distance_pq(snake.head, g.me.head) <= 4 for snake in g.others]):
-            return
-
-        killers = [snake for snake in g.others if snake.length > g.me.length]
-        nonkillers = [snake for snake in g.others if snake.length == g.me.length]
-        def collision(a):
-            step2 = [p for p in adj_cells(a) if p not in g.x.occupied_cells[1]]
-            collision = [p for p in step2 if any([path_distance_pq(p, snake.head) == 2 for snake in killers])]
-            collision2 = [p for p in step2 if any([path_distance_pq(p, snake.head) == 2 for snake in nonkillers])]
-            step2_safe = [p for p in step2 if p not in collision and p not in collision2]
-            return len(step2_safe) == 0
-        return prefer_no(collision)(moves)
 
     def ____SPLIT_CHOICES____():
         pass
@@ -810,6 +834,9 @@ if __name__ == "__main__":
     log = {'id': 'a25bff64-e6a2-4f30-a2f6-dfa7c4ff234f', 'turn': 69, 'me': {'name': 'mark_snake_test RED', 'health': 93, 'body': [(5, 6), (6, 6), (7, 6), (8, 6), (8, 7), (8, 8), (8, 9), (7, 9), (7, 8), (7, 7)]}, 'others': [{'name': 'mark_snake', 'health': 100, 'body': [(4, 5), (3, 5), (3, 4), (3, 3), (4, 3), (4, 3)]}, {'name': 'mark_snake_test GREEN', 'health': 69, 'body': [(4, 7), (5, 7), (5, 8), (5, 9), (4, 9), (3, 9), (2, 9)]}, {'name': 'mark_snake_test BLUE', 'health': 93, 'body': [(2, 7), (1, 7), (1, 8), (1, 9), (1, 10), (0, 10), (0, 9)]}], 'food': [(8, 10)], 'module': 'simp', 'decision_path': ['1vn', 'split length medium', 'avoid confined: []', 'try to go to open space'], 'next_coord': (4, 6), 'next_move': 'left', 'time': '0.007s'}
     log = {'id': '26140136-e6ac-45b7-abf9-4938e61cad78', 'turn': 176, 'me': {'name': 'mark_snake_test BLUE', 'health': 81, 'body': [(0, 6), (0, 5), (0, 4), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (5, 8), (4, 8), (4, 7), (4, 6)]}, 'others': [{'name': 'mark_snake', 'health': 98, 'body': [(3, 7), (2, 7), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 98, 'body': [(10, 8), (10, 7), (9, 7), (8, 7), (7, 7), (7, 6), (7, 5), (7, 4), (8, 4), (9, 4), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (3, 1)]}], 'food': [(3, 8)], 'module': 'simp', 'decision_path': ['1vn', 'split long', 'try to go to open space', 'go to open space (2, 6)'], 'next_coord': (1, 6), 'next_move': 'right', 'time': '0.004s'}
     log = {'id': '4c1a77d8-5372-409c-94fa-bf7550c2245f', 'turn': 208, 'me': {'name': 'mark_snake_test BLUE', 'health': 80, 'body': [(10, 6), (9, 6), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (5, 8), (6, 8), (7, 8), (8, 8), (8, 9), (9, 9)]}, 'others': [{'name': 'Frank The Tank', 'health': 76, 'body': [(3, 5), (3, 4), (2, 4), (1, 4), (1, 5), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (2, 9), (2, 8), (1, 8), (1, 7), (1, 6)]}, {'name': 'Kakemonsteret-v2', 'health': 99, 'body': [(10, 0), (9, 0), (9, 1), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (2, 1), (1, 1), (1, 0), (0, 0), (0, 1), (0, 2)]}], 'food': [(10, 5)], 'module': 'simp', 'decision_path': ['1vn', 'split long', 'split no cut can see tail'], 'next_coord': (10, 5), 'next_move': 'down', 'time': '0.005s'}
+    log = {'id': '4c1a77d8-5372-409c-94fa-bf7550c2245f', 'turn': 12, 'me': {'name': 'mark_snake_test BLUE', 'health': 90, 'body': [(8, 4), (7, 4), (6, 4), (5, 4)]}, 'others': [{'name': 'mark_snake', 'health': 100, 'body': [(10, 8), (9, 8), (9, 7), (9, 7)]}, {'name': 'Frank The Tank', 'health': 98, 'body': [(7, 5), (6, 5), (5, 5), (4, 5), (3, 5)]}, {'name': 'Kakemonsteret-v2', 'health': 90, 'body': [(7, 9), (7, 8), (7, 7), (7, 6)]}], 'food': [(8, 6)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (9, 4), 'next_move': 'right', 'time': '0.010s'}
+    log = {'id': '4c1a77d8-5372-409c-94fa-bf7550c2245f', 'turn': 12, 'me': {'name': 'mark_snake_test BLUE', 'health': 100, 'body': [(10, 8), (9, 8), (9, 7), (9, 7)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 90, 'body': [(8, 4), (7, 4), (6, 4), (5, 4)]}, {'name': 'Frank The Tank', 'health': 98, 'body': [(7, 5), (6, 5), (5, 5), (4, 5), (3, 5)]}, {'name': 'Kakemonsteret-v2', 'health': 90, 'body': [(7, 9), (7, 8), (7, 7), (7, 6)]}], 'food': [(8, 6)], 'module': 'functional2', 'decision_path': ['killer near', 'go away from killer'], 'next_coord': (10, 9), 'next_move': 'up', 'time': '0.007s'}
 
     game_state = init_from_log(log)
     main(game_state)
+
