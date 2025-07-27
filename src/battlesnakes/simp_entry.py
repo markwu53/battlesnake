@@ -420,9 +420,7 @@ def main(game_state):
 
     def single_killer_near(moves):
         killers = [snake for snake in g.others if snake.length > g.me.length 
-                   if distance_pq(snake.head, g.me.head) <= 6
-                   and distance_pq(snake.head, g.me.head) == path_distance_pq(snake.head, g.me.head)
-                   ]
+                   if path_distance_pq(snake.head, g.me.head) <= 6 ]
         if len(killers) != 1:
             return
 
@@ -443,9 +441,7 @@ def main(game_state):
 
     def multi_killer_near(moves):
         killers = [snake for snake in g.others if snake.length > g.me.length 
-                   if distance_pq(snake.head, g.me.head) <= 6
-                   and distance_pq(snake.head, g.me.head) == path_distance_pq(snake.head, g.me.head)
-                   ]
+                   if path_distance_pq(snake.head, g.me.head) <= 6 ]
         if len(killers) >= 2:
             g.decision_path.append(f"multi killer {len(killers)}")
             return prefer_no(on_border)(moves)
