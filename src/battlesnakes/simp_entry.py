@@ -389,14 +389,57 @@ def main(game_state):
 
         g.next_coord = take_first(moves)
 
+    def ____KILL_OPPOTUNITIES____():
+        pass
+
     def kill_oppotunities(moves):
         return cases([
             collision_kill,
+            trap_kill,
         ])(moves)
 
+    def trap_kill(moves):
+        if someone_in_trap():
+            kill_moves = [a for a in moves if on_border(a)]
+            if len(kill_moves) != 0:
+                g.decision_path.append("kill")
+                return kill_moves
+
+    def someone_in_trap():
+        if not off_border_1(g.me.head):
+            return False
+        in_trap = False
+        for i,c in enumerate(g.me.body):
+            if c in g.me.body[-2:]: continue
+            for snake in g.others:
+                if not is_adjacent(snake.head, c): continue
+                if not on_border(snake.head): continue
+                if on_border(c): continue
+                b = g.me.body[i-1]
+                if get_adjacent_dir(c, b) == get_adjacent_dir(snake.neck, snake.head):
+                    in_trap = True
+                    break
+        if not in_trap:
+            return False
+        if any([on_border(g.me.body[j]) for j in range(i)]):
+            #already performed kill action
+            return False
+        return True
+
     def collision_kill(moves):
-        others = [snake for snake in g.others if snake.length < g.me.length]
-        others = [snake for snake in others if distance_pq(snake.head, g.me.head) == 2]
+        [a for a in moves
+         for snakes in [[snake for snake in g.others if is_adjacent(a, snake.head)]]
+         if all([snake.length < g.me.length for snake in snakes])
+         for allowed_moves in [[[p for p in adj_cells(snake.head) if p not in g.x.occupied_cells[0]] for snake in snakes]]
+         ]
+        for a in moves:
+            snakes = [snake for snake in g.others if is_adjacent(a, snake.head)]
+            if not all([snake.length < g.me.length for snake in snakes]): continue
+            for snake in snakes:
+                allowed_moves = [p for p in adj_cells(snake.head) if p not in g.x.occupied_cells[0]]
+                if len(allowed_moves) == 1:
+                    g.decision_path.append(f"kill! {a}")
+                    return [a]
 
     def ____AVOID_DANGER____():
         pass
