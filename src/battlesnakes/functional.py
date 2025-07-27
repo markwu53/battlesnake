@@ -68,20 +68,10 @@ def special_experimenting_code(game_state):
     ###internal function begin
 
     def experiment_condition():
-        if g.e.n_other != 1: return False
-        #Eastern time (7AM - 8PM) + 4
-        #if not 11 <= time.localtime().tm_hour <= 23: return False
-        """
-        if g.other["name"] not in (
-            "Snakeformatika", #inform
-            #"Kakemonsteret-v2", #pettso
-            #"Wim HU [dev]", #wim
-            #"Frank The Tank", #djnuller
-            "ich heisse marvin", #Wrenger
-        ): 
-            return False
-        """
-        return True
+        if g.me.name == "mark_snake":
+            if len(g.others) == 1:
+                return True
+        return False
 
     def init_game(game_state):
         g.state = game_state
