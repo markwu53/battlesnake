@@ -450,7 +450,7 @@ def main(game_state):
             g.decision_path.append(f"multi killer {len(killers)}")
             return prefer_no(on_border)(moves)
 
-    def no_killer_return(moves)
+    def no_killer_return(moves):
         killers = [snake for snake in g.others if snake.length > g.me.length if distance_pq(snake.head, g.me.head) <= 6]
         if len(killers) == 0:
             return moves
