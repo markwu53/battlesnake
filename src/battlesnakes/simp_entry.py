@@ -727,13 +727,12 @@ def main(game_state):
         g.log["food"] = g.food
         
     def entry_condition():
-        if len(g.snakes) == 1:
-            return True
-        if g.me.name == "mark_snake": 
-            return False
-        if any(["mark_snake_test" in snake.name for snake in g.snakes]):
-            return True
-        if len([snake for snake in g.snakes if snake.name == "mark_snake"]) >= 2:
+        if g.me.name in [
+            "mark_snake_test RED",
+            "mark_snake_test BLUE",
+            "mark_snake_test GREEN",
+            #"mark_snake_test YELLOW",
+        ]:
             return True
         return False
 

@@ -69,12 +69,9 @@ def special_experimenting_code(game_state):
     ###internal function begin
 
     def experiment_condition():
-        # mes = [snake for snake in g.snakes if snake.name == "mark_snake"]
-        # if len(mes) >= 2: return True
-        # return False
-        if len(g.others) > 1: return True
-        if len(g.others) == 1 and g.me.length <= 10: return True
-        if len(g.others) == 0: return True
+        if g.me.name == "mark_snake":
+            if len(g.others) > 1: return True
+            if len(g.others) == 1 and g.me.length <= 10: return True
         return False
 
     def init_game(game_state):
