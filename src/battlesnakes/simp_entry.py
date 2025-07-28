@@ -68,8 +68,8 @@ def main(game_state):
             return
 
         #allowed_moves must be 2 or 3
+
         moves = sequential([
-            move_connected_group,
             territories,
             kill_oppotunities,
             #(avoid_danger),
@@ -188,7 +188,7 @@ def main(game_state):
         def nonkiller_collision(a):
             nonkillers = [snake for snake in g.others if is_adjacent(a, snake.head) and snake.length == g.me.length]
             return len(nonkillers) != 0
-        if g.x.ngroup == 1:
+        if move_connected_group(moves) == 1:
             return prefer_no(nonkiller_collision)(
                 prefer_no(killer_collision)(moves)
             )
@@ -259,27 +259,27 @@ def main(game_state):
 
     def move_connected_group(moves):
         if len(moves) == 1:
-            g.x.ngroup = 1
+            return 1
         elif len(moves) == 2:
             a,b = moves
             if path_distance_pq(a, b) > 2:
-                g.x.ngroup = 2
+                return 2
             else:
-                g.x.ngroup = 1
+                return 1
         elif len(moves) == 3:
             c = [a for a in moves if is_straight(a)][0]
             a,b = [a for a in moves if a != c]
             ac = path_distance_pq(a, c)
             bc = path_distance_pq(b, c)
             if ac == 2 and bc == 2:
-                g.x.ngroup = 1
+                return 1
             elif ac == 2 or bc == 2:
-                g.x.ngroup = 2
+                return 2
             else:
-                g.x.ngroup = 3
+                return 3
 
     def split_choice(moves):
-        ngroup = g.x.ngroup
+        ngroup = move_connected_group(moves)
         if ngroup == 1:
             return
         if ngroup == 3:
@@ -309,7 +309,7 @@ def main(game_state):
         pass
 
     def wayout(moves):
-        ngroup = g.x.ngroup
+        ngroup = move_connected_group(moves)
         if ngroup != 1:
             return
 
@@ -369,7 +369,7 @@ def main(game_state):
             return split_prefer_open_space(moves)
 
     def split_prefer_open_space(moves):
-        ngroup = g.x.ngroup
+        ngroup = move_connected_group(moves)
         if ngroup >= 1:
             return prefer_open_space(moves)
 
