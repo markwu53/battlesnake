@@ -309,7 +309,7 @@ def main(game_state):
 
     def wayout_see_one_tail(moves):
         aset = path_connected_set(g.me.head)
-        aset = [p for p in aset if a != g.me.head]
+        aset = [p for p in aset if p != g.me.head]
         if len(aset) >= int(g.me.length * 1.2):
             return
         snakes = [snake for snake in g.others if path_connected(g.me.head, snake.tail)]
