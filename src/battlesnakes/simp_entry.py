@@ -69,7 +69,7 @@ def main(game_state):
 
         #allowed_moves must be 2 or 3
         moves = sequential([
-            territories,
+            #territories,
             kill_oppotunities,
             (avoid_danger),
             (split_choice),
@@ -194,8 +194,7 @@ def main(game_state):
         ])(moves)
 
     def me_at_corner(moves):
-        distv = distance_to_border(g.me.head)
-        if sum(distv) <= 3:
+        if at_corner(g.me.head):
             killers = [snake for snake in g.others if snake.length > g.me.length 
                     and path_distance_pq(snake.head, g.me.head) <= 10 ]
             if len(killers) != 0:
@@ -287,8 +286,20 @@ def main(game_state):
 
         move_score = [(a, collision_score(a)) for a in moves]
         low_score = [(a, score) for a, score in move_score if score < 999]
+        score_999 = [a for a, score in move_score if score == 999]
+        collisions = [a for a, score in move_score if score == 1]
         if len(low_score) != 0:
             g.decision_path.append(f"multi-step collision {low_score}")
+        if len(score_999) == 0:
+            if len(collisions) != 0:
+                equal_collision = [p for p in collisions if all([snake.length == g.me.length for snake in g.others if is_adjacent(p, snake.head)])]
+                if len(equal_collision) != 0:
+                    g.decision_path.append("take equal collision")
+                    return equal_collision
+                if on_border(g.me.head) or off_border_1(g.me.head) or at_corner(g.me.head):
+                    if len(collisions) == 2:
+                        g.decision_path.append("too close to corner - take risk")
+                        return collisions
         max_score = [a for a, score in move_score if score == max([score for a, score in move_score])]
         return max_score
         
@@ -635,6 +646,10 @@ def main(game_state):
 
     def off_border_1(p):
         return not on_border(p) and any([on_border(q) for q in adj_cells(p)])
+
+    def at_corner(p):
+        distv = distance_to_border(p)
+        return sum(distv) <= 3
 
     def adj_cells(pos):
         x,y = pos
