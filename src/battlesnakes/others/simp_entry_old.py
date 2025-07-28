@@ -69,11 +69,9 @@ def main(game_state):
 
         #allowed_moves must be 2 or 3
         moves = sequential([
-            move_connected_group,
-            territories,
+            #territories,
             kill_oppotunities,
-            #(avoid_danger),
-            single_collision,
+            (avoid_danger),
             (split_choice),
             wayout,
             (get_food),
@@ -88,12 +86,12 @@ def main(game_state):
 
     def territories(moves):
         for snake in g.snakes:
-            layers = path_connected_layers(snake.head)
-            snake.cell_distance = {p:i for i,layer in enumerate(layers) for p in layer}
-            snake.head_space = [p for layer in layers for p in layer]
+            snake.path_connected_layers = path_connected_layers(snake.head)
+            snake.cell_distance = {p:i for i,layer in enumerate(snake.path_connected_layers) for p in layer}
+            snake.path_connected_set = [p for layer in snake.path_connected_layers for p in layer]
         for snake in g.snakes:
             others = [s for s in g.snakes if snake.head != s.head]
-            snake.territory = [p for p in snake.head_space
+            snake.territory = [p for p in snake.path_connected_set
                                if all([snake.cell_distance[p] < other.cell_distance.get(p, 999) for other in others])
                                ]
 
@@ -177,17 +175,15 @@ def main(game_state):
     def ____AVOID_DANGER____():
         pass
 
-    def single_collision(moves):
-        def killer_collision(a):
-            killers = [snake for snake in g.others if is_adjacent(a, snake.head) and snake.length > g.me.length]
-            return len(killers) != 0
-        def nonkiller_collision(a):
-            nonkillers = [snake for snake in g.others if is_adjacent(a, snake.head) and snake.length == g.me.length]
-            return len(nonkillers) != 0
-        if g.x.ngroup == 1:
-            return prefer_no(nonkiller_collision)(
-                prefer_no(killer_collision)(moves)
-            )
+    def avoid_danger(moves):
+        return sequential([
+            confinement_danger,
+            trap_danger,
+            forming_trap_danger,
+            #(collision_danger),
+            multi_step_collision,
+            (killer_near),
+        ])(moves)
 
     def killer_near(moves):
         return cases([
@@ -250,56 +246,276 @@ def main(game_state):
         if len(killers) == 0:
             return moves
 
+    def grow_path(head, steps):
+        layers = [[[head]]]
+        for i in range(steps):
+            layer = [ path+[nhead]
+                for path in layers[-1]
+                for end in [path[-1]]
+                for nhead in adj_cells(end)
+                if nhead not in path
+                and nhead not in g.x.occupied_cells[i]
+            ]
+            layers.append(layer)
+        return layers
+
+    def multi_step_collision(moves):
+        killers = [snake for snake in g.others if snake.length > g.me.length if distance_pq(snake.head, g.me.head) <= 8]
+        nonkillers = [snake for snake in g.others if snake.length == g.me.length if distance_pq(snake.head, g.me.head) <= 8]
+        for snake in g.snakes:
+            snake.head_paths = grow_path(snake.head, 5)
+
+        def collision_score(a):
+            def path_collision_score(apath):
+                length = len(apath)
+                if length == 5:
+                    return 999
+                if len(g.me.head_paths) <= length:
+                    return length - 1
+                snakes = (killers+nonkillers) if length <= 3 else killers
+                if apath[-1] in [ path[-1]
+                    for snake in snakes if len(snake.head_paths) >= length
+                    for path in snake.head_paths[length-1]
+                ]:
+                    return length - 1
+                npaths = [path for path in g.me.head_paths[length] if path[:length] == apath ]
+                if len(npaths) == 0:
+                    return length - 1
+                return max([path_collision_score(path) for path in npaths])
+            return path_collision_score([g.me.head, a])
+
+        move_score = [(a, collision_score(a)) for a in moves]
+        low_score = [(a, score) for a, score in move_score if score < 999]
+        score_999 = [a for a, score in move_score if score == 999]
+        collisions = [a for a, score in move_score if score == 1]
+        if len(low_score) != 0:
+            g.decision_path.append(f"multi-step collision {low_score}")
+        if len(score_999) == 0:
+            if len(collisions) != 0:
+                equal_collision = [p for p in collisions if all([snake.length == g.me.length for snake in g.others if is_adjacent(p, snake.head)])]
+                if len(equal_collision) != 0:
+                    g.decision_path.append("take equal collision")
+                    return equal_collision
+                if on_border(g.me.head) or off_border_1(g.me.head) or at_corner(g.me.head):
+                    if len(collisions) == 2:
+                        g.decision_path.append("too close to corner - take risk")
+                        return collisions
+        max_score = [a for a, score in move_score if score == max([score for a, score in move_score])]
+        return max_score
+        
+    def confinement_danger(moves):
+        def confined(a):
+            aset = path_connected_set(a)
+            if len(aset) <= 3:
+                if not any([path_connected(a, snake.tail) for snake in g.snakes]):
+                    return True
+            return False
+        confined_set = [a for a in moves if confined(a)]
+        if len(confined_set) != 0:
+            good_set = [a for a in moves if a not in confined_set]
+            if len(good_set) != 0:
+                g.decision_path.append(f"confined move {confined_set}")
+                return good_set
+
+    def is_a_border_trap(a):
+        if not on_border(a):
+            return False
+        for snake in g.others:
+            for i,c in enumerate(snake.body):
+                #tail is not a trap
+                if c in snake.body[-2:]: continue
+                if not is_adjacent(c, a): continue
+                if on_border(c): continue
+                b = snake.body[i-1]
+                if get_adjacent_dir(g.me.head, a) == get_adjacent_dir(c, b):
+                    return True
+        return False
+
+    def trap_danger(moves):
+        trap = [a for a in moves if is_a_border_trap(a)]
+        if len(trap) != 0:
+            g.decision_path.append(f"trap {trap}")
+            return prefer_not_in(trap)(moves)
+
+    def forming_trap_danger(moves):
+        others = [snake for snake in g.others if distance_pq(snake.head, g.me.head) == 2 and snake.length < g.me.length]
+        if len(others) == 1:
+            other = others[0]
+            adj_points = [p for p in adj_cells(g.me.head) if p in adj_cells(other.head)]
+            if len(adj_points) == 2:
+                collision_points = [p for p in adj_points if p in moves]
+                trap_point = [p for p in collision_points if len([q for q in adj_cells(p) if q in g.x.occupied_cells[1]]) == 1]
+                if len(trap_point) == 1:
+                    if not is_opposite_dir(get_adjacent_dir(g.me.head, trap_point[0]), get_adjacent_dir(other.neck, other.head)):
+                        g.decision_path.append(f"forming trap {trap_point}")
+                        return prefer_not_in(trap_point)(moves)
+
+    def collision_danger(moves):
+        if not any([distance_pq(snake.head, g.me.head) == 2 for snake in g.others]):
+            return
+
+        killers = [snake for snake in g.others if snake.length > g.me.length]
+        nonkillers = [snake for snake in g.others if snake.length == g.me.length]
+        killer_collision_points = [a for a in moves for snake in killers if is_adjacent(a, snake.head)]
+        nonkiller_collision_points = [a for a in moves for snake in nonkillers if is_adjacent(a, snake.head)]
+        if len(killer_collision_points) != 0:
+            g.decision_path.append(f"killer collision points {killer_collision_points}")
+        if len(nonkiller_collision_points) != 0:
+            g.decision_path.append(f"nonkiller collision points {nonkiller_collision_points}")
+
+        return prefer_no(lambda a: a in nonkiller_collision_points)(
+            prefer_no(lambda a: a in killer_collision_points)(moves))
+
     def ____SPLIT_CHOICES____():
         pass
 
     def move_connected_group(moves):
         if len(moves) == 1:
-            g.x.ngroup = 1
+            return 1
         elif len(moves) == 2:
             a,b = moves
-            if path_distance_pq(a, b) > 2:
-                g.x.ngroup = 2
-            g.x.ngroup = 1
+            if path_distance_pq(a, b) >= 4:
+                return 2
+            return 1
         elif len(moves) == 3:
-            c = [a for a in moves if is_straight(a)][0]
-            a,b = [a for a in moves if a != c]
-            ac = path_distance_pq(a, c)
-            bc = path_distance_pq(b, c)
-            if ac == 2 and bc == 2:
-                g.x.ngroup = 1
-            if ac == 2 or bc == 2:
-                g.x.ngroup = 2
-            g.x.ngroup = 3
+            straight = [a for a in moves if is_straight(a)][0]
+            others = [a for a in moves if a != straight]
+            if any([path_distance_pq(a, straight) > 2 for a in others]):
+                return 2
+            return 1
+        log_print("move_connected_group")
 
     def split_choice(moves):
-        ngroup = g.x.ngroup
+        ngroup = move_connected_group(moves)
         if ngroup == 1:
             return
-        if ngroup == 3:
-            return prefer_by_score(lambda a: len(path_connected_set(a)))(moves)
-        
-        #ngroup == 2
         return cases([
-            two_split_two,
-            three_split_two,
+            split_1vn,
+            split_1v1,
         ])(moves)
 
-    def two_split_two(moves):
-        if len(moves) != 2:
+    def split_1v1(moves):
+        if len(g.others) != 1:
             return
-        return prefer_in(g.me.territory)(moves)
+        return cases([
+            split_1v1_short,
+            split_1v1_long,
+        ])(moves)
+    
+    def split_1v1_short(moves):
+        if g.me.length <= 8:
+            return moves
 
-    def three_split_two(moves):
-        if len(moves) != 3:
+    def split_1v1_long(moves):
+        if g.me.length <= 8:
             return
-        return prefer_in(g.me.territory)(moves)
+        g.decision_path.append("this needs careful classification")
+        return sequential([
+            split_avoid_deadend,
+        ])(moves)
+
+    def split_1vn(moves):
+        if len(g.others) == 1:
+            return
+        return cases([
+            split_1vn_short,
+            split_1vn_medium,
+            (split_1vn_long),
+        ])(moves)
+
+    def split_1vn_short(moves):
+        if g.me.length <= 6:
+            return moves
+
+    def split_1vn_medium(moves):
+        if g.me.length <= 10:
+            g.decision_path.append("split length medium")
+            return split_avoid_deadend(moves)
+
+    def split_avoid_deadend(moves):
+        return prefer_no(roughly_deadend)(moves)
+
+    def split_1vn_long(moves):
+        if g.me.length <= 10:
+            return
+        g.decision_path.append("split long")
+        return sequential([
+            (split_avoid_absolute_danger),
+
+            #1vn focus on survival, prefer easy and surely wayout
+            cases([
+                (no_cut_can_see_tail),
+                (no_cut_can_reach_tail),
+            ]),
+        ])(moves)
+
+    def no_cut_can_see_tail(moves):
+        moves = [a for a in moves if 1==0
+                 or no_cut_can_see_my_tail(a)
+                 or no_cut_can_see_other_tail(a)
+                 ]
+        if len(moves) != 0:
+            g.decision_path.append("split no cut can see tail")
+            return moves
+
+    def no_cut_can_reach_tail(moves):
+        moves = [a for a in moves if 1==0
+                 or no_cut_can_reach_my_tail(a)
+                 or no_cut_can_reach_other_tail(a)
+                 ]
+        if len(moves) != 0:
+            g.decision_path.append("split no cut can reach tail")
+            return moves
+
+    def roughly_deadend(a):
+        if any([path_connected(a, snake.tail) for snake in g.snakes]):
+            return False
+        aset = path_connected_set(a)
+        if len(aset) < int(g.me.length * 0.8):
+            return True
+        return False
+    
+    def no_cut_can_see_my_tail(a):
+        if any([path_connected(a, snake.head) for snake in g.others]):
+            return False
+        return path_connected(a, g.me.tail)
+
+    def no_cut_can_see_other_tail(a):
+        if any([path_connected(a, snake.head) for snake in g.others]):
+            return False
+        return any([path_connected(a, snake.tail) for snake in g.others])
+
+    def no_cut_can_reach_my_tail(a):
+        if any([path_connected(a, snake.head) for snake in g.others]):
+            return False
+        aset = path_connected_set(a)
+        max_index = max([i for i,c in enumerate(g.me.body) if any([p in aset for p in adj_cells(c)]) ])
+        required_steps = g.me.length - max_index
+        if required_steps < len(aset):
+            return True
+        return False
+    
+    def no_cut_can_reach_other_tail(a):
+        if any([path_connected(a, snake.head) for snake in g.others]):
+            return False
+        aset = path_connected_set(a)
+        adj_snakes = [snake for snake in g.others if any([p in aset for c in snake.body for p in adj_cells(c)])]
+        if len(adj_snakes) != 0:
+            for snake in adj_snakes:
+                max_index = max([i for i,c in enumerate(snake.body) if any([p in aset for p in adj_cells(c)]) ])
+                required_steps = snake.length - max_index
+                if required_steps < len(aset):
+                    return True
+        return False
+
+    def split_avoid_absolute_danger(moves):
+        pass
 
     def ____WAYOUT____():
         pass
 
     def wayout(moves):
-        ngroup = g.x.ngroup
+        ngroup = move_connected_group(moves)
         if ngroup != 1:
             return
 
@@ -359,7 +575,7 @@ def main(game_state):
             return split_prefer_open_space(moves)
 
     def split_prefer_open_space(moves):
-        ngroup = g.x.ngroup
+        ngroup = move_connected_group(moves)
         if ngroup >= 1:
             return prefer_open_space(moves)
 
