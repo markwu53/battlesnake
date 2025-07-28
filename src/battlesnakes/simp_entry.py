@@ -288,18 +288,22 @@ def main(game_state):
         #ngroup == 2
         return cases([
             two_split_two,
-            three_split_two,
+            print_after(three_split_two),
         ])(moves)
 
     def two_split_two(moves):
         if len(moves) != 2:
             return
-        return prefer_in(g.me.territory)(moves)
+        def aset(a):
+            return [p for p in path_connected_set(a) if p in g.me.territory]
+        return prefer_by_score(lambda a: len(aset(a)))(moves)
 
     def three_split_two(moves):
         if len(moves) != 3:
             return
-        return prefer_in(g.me.territory)(moves)
+        def aset(a):
+            return [p for p in path_connected_set(a) if p in g.me.territory]
+        return prefer_by_score(lambda a: len(aset(a)))(moves)
 
     def ____WAYOUT____():
         pass
@@ -726,7 +730,7 @@ def main(game_state):
             "mark_snake_test RED",
             "mark_snake_test BLUE",
             "mark_snake_test GREEN",
-            #"mark_snake_test YELLOW",
+            "mark_snake_test YELLOW",
         ]:
             return True
         return False
@@ -804,6 +808,7 @@ if __name__ == "__main__":
     log = {'id': '19abee7a-906d-4775-98cf-3736dbc5c613', 'turn': 107, 'me': {'name': 'mark_snake_test BLUE', 'health': 17, 'body': [(6, 1), (5, 1), (5, 2), (5, 3), (5, 4)]}, 'others': [{'name': 'Frank The Tank', 'health': 95, 'body': [(7, 2), (7, 3), (8, 3), (9, 3), (10, 3), (10, 2), (9, 2)]}, {'name': 'Kakemonsteret-v2', 'health': 97, 'body': [(3, 2), (3, 3), (3, 4), (3, 5), (2, 5), (2, 4), (2, 3), (1, 3), (1, 2), (1, 1), (1, 0), (0, 0), (0, 1), (0, 2)]}, {'name': 'Wim HU [dev]', 'health': 50, 'body': [(4, 7), (4, 6), (5, 6), (6, 6), (6, 7), (7, 7), (8, 7), (9, 7)]}], 'food': [(7, 1)], 'module': 'simp', 'decision_path': ['1vn', 'killer collision points [(7, 1), (6, 2)]'], 'next_coord': (6, 0), 'next_move': 'down', 'time': '0.002s'}
     log = {'id': '5199997b-ea22-40a6-b745-d3234e040fc2', 'turn': 62, 'me': {'name': 'mark_snake_test BLUE', 'health': 97, 'body': [(2, 8), (2, 9), (3, 9), (4, 9), (5, 9)]}, 'others': [{'name': 'Frank The Tank', 'health': 93, 'body': [(1, 7), (1, 6), (2, 6), (2, 7), (3, 7), (4, 7), (5, 7), (5, 8), (6, 8), (6, 7)]}, {'name': 'Kakemonsteret-v2', 'health': 94, 'body': [(7, 5), (6, 5), (5, 5), (5, 4), (5, 3), (5, 2), (5, 1), (6, 1)]}, {'name': 'Wim HU [dev]', 'health': 89, 'body': [(3, 3), (3, 2), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4)]}], 'food': [(8, 5), (8, 3)], 'module': 'simp', 'decision_path': ['1vn', 'confined move [(3, 8)]'], 'next_coord': (1, 8), 'next_move': 'left', 'time': '0.001s'}
     log = {'id': '210c451a-bd0d-4219-bb7f-386e38317317', 'turn': 29, 'me': {'name': 'mark_snake_test GREEN', 'health': 73, 'body': [(8, 9), (7, 9), (6, 9), (5, 9)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 86, 'body': [(9, 8), (9, 7), (9, 6), (9, 5), (9, 4)]}, {'name': 'mark_snake_test BLUE', 'health': 87, 'body': [(1, 4), (1, 5), (1, 6), (2, 6), (3, 6), (4, 6)]}, {'name': 'mark_snake_test RED', 'health': 95, 'body': [(2, 1), (3, 1), (4, 1), (5, 1), (5, 0), (6, 0)]}], 'food': [(1, 3), (1, 1)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (9, 9), 'next_move': 'right', 'time': '0.004s'}
+    log = {'id': 'd504c5d2-1456-4771-9129-9b270390ad1b', 'turn': 39, 'me': {'name': 'mark_snake_test GREEN', 'health': 98, 'body': [(4, 9), (3, 9), (3, 8), (2, 8), (1, 8), (0, 8), (0, 9)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 91, 'body': [(9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7)]}, {'name': 'mark_snake_test BLUE', 'health': 72, 'body': [(6, 9), (6, 8), (6, 7), (6, 6), (6, 5), (6, 4)]}, {'name': 'mark_snake_test RED', 'health': 89, 'body': [(5, 8), (5, 7), (4, 7), (4, 6), (4, 5), (4, 4)]}], 'food': [(5, 3), (1, 1)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (4, 10), 'next_move': 'up', 'time': '0.006s'}
 
     game_state = init_from_log(log)
     main(game_state)
