@@ -110,15 +110,25 @@ def main(game_state):
         return collision_points
 
     def trap_kill(moves):
-        if someone_in_trap():
+        snake = someone_in_trap()
+        if snake is not None:
             kill_moves = [a for a in moves if on_border(a)]
             if len(kill_moves) != 0:
-                g.decision_path.append("kill")
-                return kill_moves
+                if g.me.length > snake.length:
+                    g.decision_path.append("kill")
+                    return kill_moves
+                else:
+                    kill_moves = [a for a in kill_moves if not is_adjacent(a, snake.head)]
+                    if len(kill_moves) != 0:
+                        g.decision_path.append("kill")
+                        return kill_moves
+                    else:
+                        g.decision_path.append("keep the trap")
+                        return prefer_straight(moves)
 
     def someone_in_trap():
         if not off_border_1(g.me.head):
-            return False
+            return
         in_trap = False
         for i,c in enumerate(g.me.body):
             if c in g.me.body[-2:]: continue
@@ -131,11 +141,11 @@ def main(game_state):
                     in_trap = True
                     break
         if not in_trap:
-            return False
+            return
         if any([on_border(g.me.body[j]) for j in range(i)]):
             #already performed kill action
-            return False
-        return True
+            return
+        return snake
 
     def collision_kill(moves):
         for a in moves:
@@ -971,6 +981,7 @@ if __name__ == "__main__":
     log = {'id': 'caab6339-afe6-4840-b3d1-d3d7b3396b09', 'turn': 68, 'me': {'name': 'mark_snake_test BLUE', 'health': 97, 'body': [(9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (8, 8)]}, 'others': [{'name': 'Barry', 'health': 90, 'body': [(4, 4), (4, 3), (4, 2), (4, 1), (3, 1), (2, 1), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]}, {'name': 'ich heisse marvin', 'health': 99, 'body': [(7, 1), (7, 0), (6, 0), (5, 0), (5, 1), (6, 1), (6, 2), (6, 3), (6, 4)]}], 'food': [(9, 0)], 'module': 'simp', 'decision_path': ['1vn', 'multi killer 2'], 'next_coord': (9, 2), 'next_move': 'down', 'time': '0.006s'}
     log = {'id': '3fbe1c07-e716-43ce-ab37-9fb1e23bd12a', 'turn': 71, 'me': {'name': 'mark_snake_test BLUE', 'health': 92, 'body': [(3, 10), (2, 10), (2, 9), (3, 9), (4, 9), (5, 9), (5, 8), (5, 7)]}, 'others': [{'name': 'the evening and the morning', 'health': 81, 'body': [(7, 2), (7, 3), (8, 3), (8, 4), (9, 4), (10, 4), (10, 5), (10, 6), (10, 7)]}, {'name': 'ich heisse marvin', 'health': 98, 'body': [(2, 3), (2, 2), (3, 2), (3, 3), (3, 4), (4, 4), (5, 4), (6, 4)]}], 'food': [(0, 9), (8, 0)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (4, 10), 'next_move': 'right', 'time': '0.000s'}
     log = {'id': 'ed887488-c738-47de-9721-c07d8f208fbb', 'turn': 155, 'me': {'name': 'mark_snake_test BLUE', 'health': 24, 'body': [(1, 8), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (1, 3), (1, 4)]}, 'others': [{'name': 'the evening and the morning', 'health': 99, 'body': [(5, 8), (6, 8), (6, 9), (7, 9), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (9, 9), (9, 8), (9, 7), (10, 7), (10, 6), (9, 6), (9, 5), (8, 5), (8, 4)]}, {'name': 'ich heisse marvin', 'health': 58, 'body': [(6, 5), (5, 5), (5, 4), (5, 3), (4, 3), (3, 3), (3, 4), (3, 5), (2, 5), (2, 6), (3, 6)]}], 'food': [(0, 10)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (1, 9), 'next_move': 'up', 'time': '0.011s'}
+    log = {'id': '89064acc-a973-4df0-beb3-dccb38e7bc3d', 'turn': 82, 'me': {'name': 'mark_snake_test BLUE', 'health': 20, 'body': [(3, 9), (4, 9), (4, 8), (3, 8)]}, 'others': [{'name': 'Frank The Tank', 'health': 64, 'body': [(4, 4), (5, 4), (5, 3), (5, 2), (6, 2), (6, 1), (7, 1), (8, 1), (9, 1)]}, {'name': 'Kakemonsteret-v2', 'health': 99, 'body': [(10, 2), (10, 3), (9, 3), (9, 4), (9, 5), (8, 5), (7, 5), (7, 6), (6, 6), (6, 5)]}, {'name': 'Wim HU [dev]', 'health': 96, 'body': [(4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (8, 9), (8, 8), (7, 8)]}], 'food': [(0, 1)], 'module': 'simp', 'decision_path': ['1vn', 'kill'], 'next_coord': (3, 10), 'next_move': 'up', 'time': '0.000s'}
 
     game_state = init_from_log(log)
     main(game_state)
