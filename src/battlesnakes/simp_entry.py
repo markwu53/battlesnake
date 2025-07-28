@@ -94,7 +94,11 @@ def main(game_state):
         for snake in g.snakes:
             others = [s for s in g.snakes if snake.head != s.head]
             snake.territory = [p for p in snake.head_space
-                               if all([snake.cell_distance[p] < other.cell_distance.get(p, 999) for other in others])
+                               if all([
+                                   snake.cell_distance[p] < other.cell_distance.get(p, 999) 
+                                   if snake.length < other.length else
+                                   snake.cell_distance[p] <= other.cell_distance.get(p, 999) 
+                                       for other in others])
                                ]
 
     def ____KILL_OPPOTUNITIES____():
