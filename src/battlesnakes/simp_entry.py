@@ -74,6 +74,7 @@ def main(game_state):
             kill_oppotunities,
             #(avoid_danger),
             (single_collision),
+            killer_near,
             (split_choice),
             wayout,
             (get_food),
