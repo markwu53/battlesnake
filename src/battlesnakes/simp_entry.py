@@ -259,12 +259,16 @@ def main(game_state):
             single_killer_near,
         ])(moves)
 
+    def at_corner(p):
+        distv = distance_to_border(p)
+        return sum(distv) <= 2
+
     def me_at_corner(moves):
         if at_corner(g.me.head):
             killers = [snake for snake in g.others if snake.length > g.me.length 
                     and path_distance_pq(snake.head, g.me.head) <= 10 ]
             if len(killers) != 0:
-                return prefer_no(lambda a: sum(distance_to_border(a)) <= 2)(moves)
+                return prefer_no(lambda a: sum(distance_to_border(a)) <= 1)(moves)
 
     def single_killer_near(moves):
         killers = [snake for snake in g.others if snake.length > g.me.length 
@@ -507,10 +511,6 @@ def main(game_state):
 
     def off_border_1(p):
         return not on_border(p) and any([on_border(q) for q in adj_cells(p)])
-
-    def at_corner(p):
-        distv = distance_to_border(p)
-        return sum(distv) <= 3
 
     def adj_cells(pos):
         x,y = pos
@@ -880,6 +880,7 @@ if __name__ == "__main__":
     log = {'id': 'd504c5d2-1456-4771-9129-9b270390ad1b', 'turn': 39, 'me': {'name': 'mark_snake_test GREEN', 'health': 98, 'body': [(4, 9), (3, 9), (3, 8), (2, 8), (1, 8), (0, 8), (0, 9)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 91, 'body': [(9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7)]}, {'name': 'mark_snake_test BLUE', 'health': 72, 'body': [(6, 9), (6, 8), (6, 7), (6, 6), (6, 5), (6, 4)]}, {'name': 'mark_snake_test RED', 'health': 89, 'body': [(5, 8), (5, 7), (4, 7), (4, 6), (4, 5), (4, 4)]}], 'food': [(5, 3), (1, 1)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (4, 10), 'next_move': 'up', 'time': '0.006s'}
     log = {'id': '113443e3-32e5-4166-ab4b-d1dabcd6389f', 'turn': 69, 'me': {'name': 'mark_snake_test RED', 'health': 86, 'body': [(9, 8), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (8, 3)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 100, 'body': [(2, 5), (1, 5), (0, 5), (0, 4), (1, 4), (1, 3), (1, 2), (1, 1), (2, 1), (3, 1), (3, 1)]}, {'name': 'mark_snake_test BLUE', 'health': 92, 'body': [(4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (5, 8)]}, {'name': 'mark_snake_test GREEN', 'health': 88, 'body': [(8, 9), (7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (1, 9)]}], 'food': [(10, 0)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (9, 9), 'next_move': 'up', 'time': '0.005s'}
     log = {'id': '9f7bf5f4-4673-4d11-ae1a-ea3761d51ba0', 'turn': 48, 'me': {'name': 'mark_snake_test RED', 'health': 54, 'body': [(9, 7), (9, 8), (8, 8), (8, 7)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 92, 'body': [(8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1)]}, {'name': 'mark_snake_test GREEN', 'health': 98, 'body': [(5, 9), (5, 10), (6, 10), (6, 9), (7, 9), (7, 8), (6, 8), (6, 7)]}, {'name': 'mark_snake_test YELLOW', 'health': 96, 'body': [(6, 6), (6, 5), (6, 4), (6, 3), (5, 3), (4, 3), (3, 3), (3, 2)]}], 'food': [(10, 6), (3, 5)], 'module': 'simp', 'decision_path': ['1vn', 'multi killer 3'], 'next_coord': (9, 6), 'next_move': 'down', 'time': '0.009s'}
+    log = {'id': '7b522bfa-1f7f-49b6-8789-e39f91092252', 'turn': 99, 'me': {'name': 'mark_snake_test BLUE', 'health': 89, 'body': [(1, 8), (2, 8), (2, 7), (3, 7), (4, 7), (4, 8), (4, 9)]}, 'others': [{'name': 'mark_snake_test GREEN', 'health': 84, 'body': [(2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 0)]}, {'name': 'mark_snake_test RED', 'health': 68, 'body': [(3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (8, 5)]}, {'name': 'mark_snake_test YELLOW', 'health': 72, 'body': [(10, 9), (10, 8), (10, 7), (10, 6), (9, 6), (8, 6), (7, 6), (6, 6), (5, 6)]}], 'food': [(0, 8)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (1, 7), 'next_move': 'down', 'time': '0.004s'}
 
     game_state = init_from_log(log)
     main(game_state)
