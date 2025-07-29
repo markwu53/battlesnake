@@ -448,6 +448,7 @@ def main(game_state):
                 two_split_two,
                 (three_split_two),
             ]),
+            more_space,
         ])(moves)
 
     def is_a_killed_position(a):
@@ -510,22 +511,23 @@ def main(game_state):
             return True
         return False
 
-
     def move_space(a):
         if a not in g.me.territory:
             return []
         return path_connected_set(a, complement(g.me.territory))
 
+    def more_space(moves):
+        if g.me.length <= 6:
+            moves = prefer_no(at_corner)(moves)
+        return prefer_by_score(lambda a: len(move_space(a)))(moves)
+
     def two_split_two(moves):
         if len(moves) != 2:
             return
-        return prefer_by_score(lambda a: len(move_space(a)))(
-            prefer_no(at_corner)(moves))
 
     def three_split_two(moves):
         if len(moves) != 3:
             return
-        return prefer_by_score(lambda a: len(move_space(a)))(moves)
 
     def ____WAYOUT____():
         pass
