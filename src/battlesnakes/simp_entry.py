@@ -79,7 +79,6 @@ def main(game_state):
             wayout,
             (get_food),
             other_considerations,
-            prefer_straight,
         ])(g.x.allowed_moves)
 
         g.next_coord = take_first(moves)
@@ -356,14 +355,21 @@ def main(game_state):
         pass
 
     def other_considerations(moves):
-        return cases([
-            short_prefer_more_move,
+        return sequential([
             crowd_prefer_open_space,
+            short_prefer,
+            prefer_straight,
         ])(moves)
 
-    def short_prefer_more_move(moves):
+    def short_prefer(moves):
         if g.me.length <= 8:
-            return prefer_more_next_moves(moves)
+            return sequential([
+                prefer_more_next_moves,
+                prefer_away_border,
+            ])(moves)
+
+    def prefer_away_border(moves):
+        return prefer_by_score(lambda a: min(*distance_to_border(a), 2))(moves)
 
     def crowd_prefer_open_space(moves):
         if len(g.others) >= 2:
@@ -372,7 +378,7 @@ def main(game_state):
 
     def split_prefer_open_space(moves):
         ngroup = move_connected_group(moves)
-        if ngroup >= 1:
+        if ngroup > 1:
             return prefer_open_space(moves)
 
     ######################################################
