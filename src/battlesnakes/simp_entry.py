@@ -76,6 +76,7 @@ def main(game_state):
             (single_collision),
             (split_choice),
             killer_near,
+            multi_step_collision,
             wayout,
             (get_food),
             other_considerations,
@@ -193,6 +194,63 @@ def main(game_state):
                 prefer_no(killer_collision)(moves)
             )
 
+    def grow_path(head, steps):
+        layers = [[[head]]]
+        for i in range(steps):
+            layer = [ path+[nhead]
+                for path in layers[-1]
+                for end in [path[-1]]
+                for nhead in adj_cells(end)
+                if nhead not in path
+                and nhead not in g.x.occupied_cells[i]
+            ]
+            layers.append(layer)
+        return layers
+
+    def multi_step_collision(moves):
+        killers = [snake for snake in g.others if snake.length > g.me.length if distance_pq(snake.head, g.me.head) <= 8]
+        nonkillers = [snake for snake in g.others if snake.length == g.me.length if distance_pq(snake.head, g.me.head) <= 8]
+        for snake in g.snakes:
+            snake.head_paths = grow_path(snake.head, 5)
+
+        def collision_score(a):
+            def path_collision_score(apath):
+                length = len(apath)
+                if length == 5:
+                    return 999
+                if len(g.me.head_paths) <= length:
+                    return length - 1
+                snakes = (killers+nonkillers) if length <= 3 else killers
+                if apath[-1] in [ path[-1]
+                    for snake in snakes if len(snake.head_paths) >= length
+                    for path in snake.head_paths[length-1]
+                ]:
+                    return length - 1
+                npaths = [path for path in g.me.head_paths[length] if path[:length] == apath ]
+                if len(npaths) == 0:
+                    return length - 1
+                return max([path_collision_score(path) for path in npaths])
+            return path_collision_score([g.me.head, a])
+
+        move_score = [(a, collision_score(a)) for a in moves]
+        low_score = [(a, score) for a, score in move_score if score < 999]
+        score_999 = [a for a, score in move_score if score == 999]
+        collisions = [a for a, score in move_score if score == 1]
+        if len(low_score) != 0:
+            g.decision_path.append(f"multi-step collision {low_score}")
+        if len(score_999) == 0:
+            if len(collisions) != 0:
+                equal_collision = [p for p in collisions if all([snake.length == g.me.length for snake in g.others if is_adjacent(p, snake.head)])]
+                if len(equal_collision) != 0:
+                    g.decision_path.append("take equal collision")
+                    return equal_collision
+                if on_border(g.me.head) or off_border_1(g.me.head) or at_corner(g.me.head):
+                    if len(collisions) == 2:
+                        g.decision_path.append("too close to corner - take risk")
+                        return collisions
+        max_score = [a for a, score in move_score if score == max([score for a, score in move_score])]
+        return max_score
+        
     def killer_near(moves):
         return cases([
             me_at_corner,
