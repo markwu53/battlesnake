@@ -73,6 +73,7 @@ def main(game_state):
             territories,
             kill_oppotunities,
             #(avoid_danger),
+            killer_near,
             (single_collision),
             (split_choice),
             wayout,
