@@ -73,6 +73,7 @@ def main(game_state):
             kill_oppotunities,
             #(avoid_danger),
             (single_collision),
+            prefer_no(is_a_killed_position),
             (split_choice),
             (killer_near),
             multi_step_collision,
@@ -443,7 +444,6 @@ def main(game_state):
         return sequential([
             prefer_no(is_a_border_trap),
             prefer_no(is_a_forming_trap),
-            prefer_no(is_a_killed_position),
             cases([
                 two_split_two,
                 (three_split_two),
@@ -461,6 +461,7 @@ def main(game_state):
         killer = take_first(killers)
         killer_move = [p for p in killer.allowed_moves if distance_vector_abs(p, a) in [(0,2), (2,0)] and not on_border(p)]
         if len(killer_move) != 0:
+            g.decision_path.append(f"avoid killed position {a}")
             return True
         return False
 
@@ -477,6 +478,7 @@ def main(game_state):
         my_dir = get_adjacent_dir(g.me.head, a)
         if is_opposite_dir(snake_dir, my_dir):
             return False
+        g.decision_path.append(f"avoid a forming trap {a}")
         return True
 
     def is_a_border_trap(a):
@@ -490,6 +492,7 @@ def main(game_state):
                 if on_border(c): continue
                 b = snake.body[i-1]
                 if get_adjacent_dir(g.me.head, a) == get_adjacent_dir(c, b):
+                    g.decision_path.append(f"avoid trap {a}")
                     return True
         return False
 
@@ -1032,6 +1035,7 @@ if __name__ == "__main__":
     log = {'id': '8eabdfb5-36f1-42e5-8085-f90d86c69daa', 'turn': 51, 'me': {'name': 'mark_snake_test BLUE', 'health': 100, 'body': [(9, 0), (9, 1), (9, 2), (9, 3), (9, 4), (8, 4), (8, 4)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 79, 'body': [(8, 1), (8, 2), (7, 2), (7, 3), (7, 4), (7, 5), (6, 5)]}, {'name': 'mark_snake_test GREEN', 'health': 51, 'body': [(9, 8), (9, 9), (9, 10), (8, 10)]}, {'name': 'Frank The Tank', 'health': 96, 'body': [(7, 6), (7, 7), (7, 8), (7, 9), (6, 9), (6, 8), (5, 8), (5, 9), (4, 9), (3, 9)]}], 'food': [(1, 7)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (8, 0), 'next_move': 'left', 'time': '0.003s'}
     log = {'id': 'ad5dc01f-782b-4060-9def-14ea3c4925d5', 'turn': 61, 'me': {'name': 'mark_snake_test GREEN', 'health': 83, 'body': [(3, 0), (3, 1), (2, 1), (1, 1), (1, 2), (2, 2)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 70, 'body': [(4, 3), (4, 2), (5, 2), (6, 2), (7, 2), (7, 1), (7, 0), (8, 0)]}, {'name': 'Frank The Tank', 'health': 100, 'body': [(9, 0), (9, 1), (9, 2), (8, 2), (8, 3), (8, 4), (9, 4), (9, 5), (9, 6), (9, 6)]}], 'food': [(0, 0)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (4, 0), 'next_move': 'right', 'time': '0.003s'}
     log = {'id': 'ad5dc01f-782b-4060-9def-14ea3c4925d5', 'turn': 62, 'me': {'name': 'mark_snake_test GREEN', 'health': 82, 'body': [(4, 0), (3, 0), (3, 1), (2, 1), (1, 1), (1, 2)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 69, 'body': [(4, 4), (4, 3), (4, 2), (5, 2), (6, 2), (7, 2), (7, 1), (7, 0)]}, {'name': 'Frank The Tank', 'health': 99, 'body': [(8, 0), (9, 0), (9, 1), (9, 2), (8, 2), (8, 3), (8, 4), (9, 4), (9, 5), (9, 6)]}], 'food': [(0, 0)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (4, 1), 'next_move': 'up', 'time': '0.001s'}
+    log = {'id': '336eb9ef-9e3d-4758-a416-cb1d72be3b78', 'turn': 69, 'me': {'name': 'mark_snake_test BLUE', 'health': 80, 'body': [(10, 9), (9, 9), (8, 9), (7, 9), (7, 8), (6, 8)]}, 'others': [{'name': 'mark_snake_test GREEN', 'health': 92, 'body': [(5, 10), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6)]}, {'name': 'Frank The Tank', 'health': 87, 'body': [(8, 7), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (9, 2), (8, 2), (7, 2)]}, {'name': 'Wim HU [dev]', 'health': 87, 'body': [(6, 7), (6, 6), (6, 5), (6, 4), (6, 3), (5, 3), (4, 3)]}], 'food': [(10, 10)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (10, 10), 'next_move': 'up', 'time': '0.003s'}
 
     game_state = init_from_log(log)
     main(game_state)
