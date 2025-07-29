@@ -14,8 +14,6 @@ class Snake:
 
 class DecisionAux:
     def __init__(self):
-        self.allowed_moves = None
-        self.other_allowed_moves = None
         self.occupied_cells = None
 
 class Game:
@@ -50,21 +48,22 @@ def main(game_state):
             occupied_cells(step)
             for step in [1,2,3,4,5]
         ]
-        g.x.allowed_moves = [a for a in adj_cells(g.me.head) if a not in g.x.occupied_cells[0]]
+        for snake in g.snakes:
+            snake.allowed_moves = [a for a in adj_cells(snake.head) if a not in g.x.occupied_cells[0]]
 
-        if len(g.x.allowed_moves) == 0:
+        if len(g.me.allowed_moves) == 0:
             #no allowed moves, die on myself
             g.next_coord = g.me.neck
             return
         
-        if len(g.x.allowed_moves) == 1:
+        if len(g.me.allowed_moves) == 1:
             #no choice
-            g.next_coord = g.x.allowed_moves[0]
+            g.next_coord = g.me.allowed_moves[0]
             return
 
         if len(g.others) == 0:
             #win
-            g.next_coord = g.x.allowed_moves[0]
+            g.next_coord = g.me.allowed_moves[0]
             return
 
         #allowed_moves must be 2 or 3
@@ -80,7 +79,7 @@ def main(game_state):
             wayout,
             (get_food),
             other_considerations,
-        ])(g.x.allowed_moves)
+        ])(g.me.allowed_moves)
 
         g.next_coord = take_first(moves)
 
@@ -110,8 +109,101 @@ def main(game_state):
             collision_kill,
             trap_kill,
             contact_kill,
+            try_kill_4,
+            try_trap_4,
+            try_trap_2,
         ])(moves)
 
+    def try_kill_4(moves):
+        snakes = [snake for snake in g.others if distance_pq(g.me.head, snake.head) == 4]
+        if len(snakes) != 1:
+            return
+
+        snake = take_first(snakes)
+        if g.me.length <= snake.length:
+            #this doesn't belong here
+            return
+
+        if not on_border(snake.head):
+            return
+        if distance_vector_abs(g.me.head, snake.head) not in [(2,2), (1,3), (3,1)]:
+            return
+        if off_border_1(g.me.head):
+            return
+        if not all([distance_pq(a, g.me.head) == 3 for a in snake.allowed_moves]):
+            return
+        
+        #coming near
+        snake_move = [a for a in snake.allowed_moves if on_border(a)]
+        if len(snake_move) != 1:
+            return
+        snake_move = take_first(snake_move)
+        moves = [a for a in moves if distance_vector_abs(a, snake_move) in [(0,2), (2,0)]]
+        if len(moves) != 1:
+            return
+        g.decision_path.append("try kill 4")
+        return moves
+
+    def try_trap_2(moves):
+        snakes = [snake for snake in g.others if distance_pq(g.me.head, snake.head) == 2]
+        if len(snakes) != 1:
+            return
+
+        snake = take_first(snakes)
+        if g.me.length > snake.length:
+            #this doesn't belong here
+            return
+
+        if not on_border(snake.head):
+            return
+        if distance_vector_abs(g.me.head, snake.head) != (1,1):
+            return
+        if not all([is_adjacent(a, g.me.head) for a in snake.allowed_moves]):
+            return
+        trap_moves = [a for a in moves if distance_pq(a, snake.head) == 3 and off_border_1(a)]
+        if len(trap_moves) != 1:
+            return
+        trap_move = take_first(trap_moves)
+        aset = path_connected_set(trap_move, complement(g.me.territory))
+        if len(aset) >= 3 and len(aset) >= g.me.length //2:
+            g.decision_path.append("try trap shorter")
+            return trap_moves
+
+    def try_trap_4(moves):
+        snakes = [snake for snake in g.others if distance_pq(g.me.head, snake.head) == 4]
+        if len(snakes) != 1:
+            return
+
+        snake = take_first(snakes)
+        if g.me.length > snake.length:
+            #this doesn't belong here
+            return
+
+        if len([snake for snake in g.others if distance_pq(g.me.head, snake.head) == 2]) != 0:
+            #no other complications
+            return
+
+        if not on_border(snake.head):
+            return
+        if distance_vector_abs(g.me.head, snake.head) != (2,2):
+            return
+        if path_distance_pq(g.me.head, snake.head) != 4:
+            return
+        if not all([distance_pq(a, g.me.head) == 3 for a in snake.allowed_moves]):
+            return
+        
+        #coming near
+        snake_moves = [a for a in snake.allowed_moves if on_border(a)]
+        if len(snake_moves) != 1:
+            return
+        snake_move = take_first(snake_moves)
+        moves = [a for a in moves if distance_vector_abs(a, snake_move) == (1,1)]
+        if len(moves) != 1:
+            return
+        g.decision_path.append("try trap shorter")
+        return moves
+
+        
     def contact_kill(moves):
         if on_border(g.me.head):
             return
@@ -174,8 +266,7 @@ def main(game_state):
             snakes = [snake for snake in g.others if is_adjacent(a, snake.head)]
             if not all([snake.length < g.me.length for snake in snakes]): continue
             for snake in snakes:
-                allowed_moves = [p for p in adj_cells(snake.head) if p not in g.x.occupied_cells[0]]
-                if len(allowed_moves) == 1:
+                if len(snake.allowed_moves) == 1:
                     g.decision_path.append(f"kill! {a}")
                     return [a]
 
