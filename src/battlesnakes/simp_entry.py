@@ -489,6 +489,7 @@ def main(game_state):
             for i,c in enumerate(snake.body):
                 #tail is not a trap
                 if c in snake.body[-2:]: continue
+                if c == snake.head: continue
                 if not is_adjacent(c, a): continue
                 if on_border(c): continue
                 b = snake.body[i-1]
@@ -1037,6 +1038,7 @@ if __name__ == "__main__":
     log = {'id': 'ad5dc01f-782b-4060-9def-14ea3c4925d5', 'turn': 62, 'me': {'name': 'mark_snake_test GREEN', 'health': 82, 'body': [(4, 0), (3, 0), (3, 1), (2, 1), (1, 1), (1, 2)]}, 'others': [{'name': 'mark_snake_test BLUE', 'health': 69, 'body': [(4, 4), (4, 3), (4, 2), (5, 2), (6, 2), (7, 2), (7, 1), (7, 0)]}, {'name': 'Frank The Tank', 'health': 99, 'body': [(8, 0), (9, 0), (9, 1), (9, 2), (8, 2), (8, 3), (8, 4), (9, 4), (9, 5), (9, 6)]}], 'food': [(0, 0)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (4, 1), 'next_move': 'up', 'time': '0.001s'}
     log = {'id': '336eb9ef-9e3d-4758-a416-cb1d72be3b78', 'turn': 69, 'me': {'name': 'mark_snake_test BLUE', 'health': 80, 'body': [(10, 9), (9, 9), (8, 9), (7, 9), (7, 8), (6, 8)]}, 'others': [{'name': 'mark_snake_test GREEN', 'health': 92, 'body': [(5, 10), (4, 10), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6)]}, {'name': 'Frank The Tank', 'health': 87, 'body': [(8, 7), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (9, 2), (8, 2), (7, 2)]}, {'name': 'Wim HU [dev]', 'health': 87, 'body': [(6, 7), (6, 6), (6, 5), (6, 4), (6, 3), (5, 3), (4, 3)]}], 'food': [(10, 10)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (10, 10), 'next_move': 'up', 'time': '0.003s'}
     log = {'id': 'a0b1f832-d819-4138-bece-e2e3e3a90789', 'turn': 48, 'me': {'name': 'mark_snake_test BLUE', 'health': 54, 'body': [(9, 1), (10, 1), (10, 2), (9, 2)]}, 'others': [{'name': 'mark_snake_test GREEN', 'health': 64, 'body': [(2, 2), (2, 3), (2, 4), (1, 4), (1, 5)]}, {'name': 'Frank The Tank', 'health': 88, 'body': [(7, 1), (6, 1), (5, 1), (5, 2), (4, 2), (4, 3), (4, 4), (4, 5), (5, 5)]}, {'name': 'Wim HU [dev]', 'health': 87, 'body': [(10, 4), (10, 3), (9, 3), (9, 4), (9, 5), (8, 5), (8, 6)]}], 'food': [(8, 0), (6, 6), (5, 4)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (9, 0), 'next_move': 'down', 'time': '0.003s'}
+    log = {'id': '2bfec469-ff5c-43e7-a737-94b88489276c', 'turn': 55, 'me': {'name': 'mark_snake_test GREEN', 'health': 90, 'body': [(10, 7), (10, 8), (9, 8), (9, 9), (8, 9), (8, 8), (8, 7)]}, 'others': [{'name': 'Wim HU [dev]', 'health': 90, 'body': [(9, 6), (9, 5), (9, 4), (9, 3), (9, 2)]}, {'name': 'Frank The Tank', 'health': 85, 'body': [(7, 8), (7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (3, 8), (2, 8), (2, 7)]}, {'name': 'mark_snake_test BLUE', 'health': 55, 'body': [(2, 5), (3, 5), (4, 5), (5, 5), (6, 5)]}], 'food': [(8, 10)], 'module': 'simp', 'decision_path': ['1vn', 'avoid trap (10, 6)'], 'next_coord': (9, 7), 'next_move': 'left', 'time': '0.003s'}
 
     game_state = init_from_log(log)
     main(game_state)
