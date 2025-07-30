@@ -68,7 +68,7 @@ def main(game_state):
 
         #allowed_moves must be 2 or 3
 
-        moves = sequential([
+        moves = seq([
             territories,
             kill_oppotunities,
             #(avoid_danger),
@@ -274,6 +274,21 @@ def main(game_state):
     def ____AVOID_DANGER____():
         pass
 
+    def is_a_killed_position(a):
+        if not on_border(a):
+            return False
+        if not on_border(g.me.head):
+            return False
+        killers = [snake for snake in g.others if distance_pq(snake.head, g.me.head) <= 4 and snake.length > g.me.length]
+        if len(killers) != 1:
+            return False
+        killer = take_first(killers)
+        killer_move = [p for p in killer.allowed_moves if distance_vector_abs(p, a) in [(0,2), (2,0)] and not on_border(p)]
+        if len(killer_move) != 0:
+            g.decision_path.append(f"avoid killed position {a}")
+            return True
+        return False
+
     def single_collision(moves):
         def killer_collision(a):
             killers = [snake for snake in g.others if is_adjacent(a, snake.head) and snake.length > g.me.length]
@@ -441,7 +456,7 @@ def main(game_state):
             return prefer_by_score(lambda a: len(path_connected_set(a)))(moves)
         
         #ngroup == 2
-        return sequential([
+        return seq([
             prefer_no(is_a_border_trap),
             prefer_no(is_a_forming_trap),
             prefer_no(cut_confined),
@@ -457,21 +472,6 @@ def main(game_state):
         acut = path_connected_set(a, complement(g.me.territory))
         if len(acut) >= g.me.length //2 and 0 < len(aset) <= 2:
             g.decision_path.append(f"confined move: {a}")
-            return True
-        return False
-
-    def is_a_killed_position(a):
-        if not on_border(a):
-            return False
-        if not on_border(g.me.head):
-            return False
-        killers = [snake for snake in g.others if distance_pq(snake.head, g.me.head) <= 4 and snake.length > g.me.length]
-        if len(killers) != 1:
-            return False
-        killer = take_first(killers)
-        killer_move = [p for p in killer.allowed_moves if distance_vector_abs(p, a) in [(0,2), (2,0)] and not on_border(p)]
-        if len(killer_move) != 0:
-            g.decision_path.append(f"avoid killed position {a}")
             return True
         return False
 
@@ -586,18 +586,12 @@ def main(game_state):
         pass
 
     def other_considerations(moves):
-        return sequential([
+        return seq([
             crowd_prefer_open_space,
-            short_prefer,
+            cond(g.me.length <= 8)(prefer_more_next_moves),
+            cond(g.me.length <= 16)(prefer_away_border),
             prefer_straight,
         ])(moves)
-
-    def short_prefer(moves):
-        if g.me.length <= 8:
-            return sequential([
-                prefer_more_next_moves,
-                prefer_away_border,
-            ])(moves)
 
     def prefer_away_border(moves):
         return prefer_by_score(lambda a: min(*distance_to_border(a), 2))(moves)
@@ -821,7 +815,7 @@ def main(game_state):
                     return result
         return fn
 
-    def sequential(fs):
+    def seq(fs):
         def fn(moves):
             for f in fs:
                 if len(moves) <= 1:
@@ -830,6 +824,14 @@ def main(game_state):
                 if result is not None:
                     moves = result
             return moves
+        return fn
+
+    def cond(pred):
+        def fn(f):
+            def fc(moves):
+                if pred:
+                    return f(moves)
+            return fc
         return fn
 
     def take_first(moves):
