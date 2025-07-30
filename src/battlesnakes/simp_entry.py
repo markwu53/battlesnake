@@ -444,12 +444,21 @@ def main(game_state):
         return sequential([
             prefer_no(is_a_border_trap),
             prefer_no(is_a_forming_trap),
+            prefer_no(cut_confined),
             cases([
                 two_split_two,
                 (three_split_two),
             ]),
             more_space,
         ])(moves)
+
+    def cut_confined(a):
+        aset = path_connected_set(a)
+        acut = path_connected_set(a, complement(g.me.territory))
+        if len(acut) >= g.me.length //2 and len(aset) <= 2:
+            g.decision_path.append(f"confined move: {a}")
+            return True
+        return False
 
     def is_a_killed_position(a):
         if not on_border(a):
