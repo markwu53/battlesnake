@@ -455,7 +455,7 @@ def main(game_state):
     def cut_confined(a):
         aset = path_connected_set(a)
         acut = path_connected_set(a, complement(g.me.territory))
-        if len(acut) >= g.me.length //2 and len(aset) <= 2:
+        if len(acut) >= g.me.length //2 and 0 < len(aset) <= 2:
             g.decision_path.append(f"confined move: {a}")
             return True
         return False
