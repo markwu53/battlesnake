@@ -517,8 +517,6 @@ def main(game_state):
         return path_connected_set(a, complement(g.me.territory))
 
     def more_space(moves):
-        if g.me.length <= 6:
-            moves = prefer_no(at_corner)(moves)
         return prefer_by_score(lambda a: len(move_space(a)))(moves)
 
     def two_split_two(moves):
