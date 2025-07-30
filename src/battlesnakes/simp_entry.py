@@ -9,8 +9,11 @@ class Snake:
         self.head = body[0]
         self.neck = body[1]
         self.tail = body[-1]
+        self.allowed_moves = None
+        self.ngroup = None
     def dict(self):
         return {k: self.__dict__[k] for k in ["name", "health", "body", ]}
+
 
 class DecisionAux:
     def __init__(self):
@@ -74,6 +77,7 @@ def main(game_state):
             #(avoid_danger),
             (single_collision),
             prefer_no(is_a_killed_position),
+            prefer_no(entering_danger_border_4),
             (split_choice),
             (killer_near),
             multi_step_collision,
@@ -273,6 +277,42 @@ def main(game_state):
 
     def ____AVOID_DANGER____():
         pass
+
+    def entering_danger_border_4(a):
+        snakes = [snake for snake in g.others if distance_pq(g.me.head, snake.head) <= 6]
+        if len(snakes) == 0:
+            return False
+        me2 = possible_next_state(g.me, a)
+        for snake in snakes:
+            for b in snake.allowed_moves:
+                snake2 = possible_next_state(snake, b)
+                if danger_border_4(me2, snake2):
+                    return True
+        return False
+
+    def possible_next_state(snake, a):
+        ns = Snake(
+            snake.name, [a]+snake.body[:-1], snake.health-1
+        ) if a in g.food else Snake(
+            snake.name, [a]+snake.body[:-1]+[snake.body[-2]], 100
+        )
+        ns.length = len(ns.body)
+        ns.head = ns.body[0]
+        ns.neck = ns.body[1]
+        ns.tail = ns.body[-1]
+        ns.allowed_moves = [a for a in adj_cells(ns.head) if a not in g.x.occupied_cells[1]]
+        return ns
+
+    def danger_border_4(victim, killer):
+        if not on_border(victim.head): return False
+        if killer.length <= victim.length: return False
+        if on_border(killer.head): return False
+        if distance_pq(killer.head, victim.head) != 4: return False
+        if distance_vector_abs(killer.head, victim.head) not in [(2,2), (1,3), (3,1)]: return False
+        if path_distance_pq(killer.head, victim.head) != 4: return False
+        if not all([distance_pq(a, killer.head) == 3 for a in victim.allowed_moves]): return False
+        if not any([distance_vector_abs(a, victim.head) in [(1,2), (2,1)] for a in killer.allowed_moves]): return False
+        return True
 
     def is_a_killed_position(a):
         if not on_border(a):
