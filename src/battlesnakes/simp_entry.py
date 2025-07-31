@@ -77,7 +77,7 @@ def main(game_state):
             #(avoid_danger),
             (single_collision),
             #prefer_no(is_a_killed_position),
-            prefer_no(entering_danger_border_2),
+            prefer_no(victim_border_2),
             prefer_no(entering_danger_border_4),
             (split_choice),
             (killer_near),
@@ -111,10 +111,11 @@ def main(game_state):
         pass
 
     def kill_oppotunities(moves):
-        return cases([
-            collision_kill,
+        return seq([
+            prefer_yes(collision_kill),
+            #contact_kill,
+            prefer_yes(killer_border_2),
             trap_kill,
-            contact_kill,
             try_kill_4,
             try_trap_4,
             try_trap_2,
@@ -209,7 +210,6 @@ def main(game_state):
         g.decision_path.append("try trap shorter")
         return moves
 
-        
     def contact_kill(moves):
         if on_border(g.me.head):
             return
@@ -229,8 +229,27 @@ def main(game_state):
         g.decision_path.append(f"contact kill {collision_points}")
         return collision_points
 
+    def border_trap(killer, victim):
+        def in_trap():
+            for i,c in enumerate(killer.body):
+                if c in killer.body[-2:]: continue
+                if c == killer.head: continue
+                if not is_adjacent(victim.head, c): continue
+                if on_border(c): continue
+                b = killer.body[i-1]
+                if get_adjacent_dir(c, b) == get_adjacent_dir(victim.neck, victim.head):
+                    return True
+            return False
+
+        if not off_border_1(killer.head): return False
+        if not on_border(victim.head): return False
+        if not in_trap(): return False
+        #already performed kill action
+        if any([on_border(killer.body[j]) for j in range(i)]): return False
+        return True
+
     def trap_kill(moves):
-        snake = someone_in_trap()
+        snake = snake_in_trap()
         if snake is not None:
             kill_moves = [a for a in moves if on_border(a)]
             if len(kill_moves) != 0:
@@ -246,7 +265,7 @@ def main(game_state):
                         g.decision_path.append("keep the trap")
                         return prefer_straight(moves)
 
-    def someone_in_trap():
+    def snake_in_trap():
         if not off_border_1(g.me.head):
             return
         in_trap = False
@@ -267,19 +286,20 @@ def main(game_state):
             return
         return snake
 
-    def collision_kill(moves):
-        for a in moves:
-            snakes = [snake for snake in g.others if is_adjacent(a, snake.head)]
-            if not all([snake.length < g.me.length for snake in snakes]): continue
-            for snake in snakes:
-                if len(snake.allowed_moves) == 1:
-                    g.decision_path.append(f"kill! {a}")
-                    return [a]
+    def collision_kill(a):
+        snakes = [snake for snake in g.others if is_adjacent(a, snake.head)]
+        if not all([snake.length < g.me.length for snake in snakes]): 
+            return False
+        for snake in snakes:
+            if len(snake.allowed_moves) == 1:
+                g.decision_path.append(f"kill! {a}")
+                return True
+        return False
 
     def ____AVOID_DANGER____():
         pass
 
-    def entering_danger_border_2(a):
+    def killer_border_2(a):
         snakes = [snake for snake in g.others if distance_pq(g.me.head, snake.head) <= 4]
         if len(snakes) == 0:
             return False
@@ -287,7 +307,19 @@ def main(game_state):
         for snake in snakes:
             for b in snake.allowed_moves:
                 snake2 = possible_next_state(snake, b)
-                if danger_border_2(me2, snake2):
+                if killer_victim_border_2(me2, snake2):
+                    return True
+        return False
+
+    def victim_border_2(a):
+        snakes = [snake for snake in g.others if distance_pq(g.me.head, snake.head) <= 4]
+        if len(snakes) == 0:
+            return False
+        me2 = possible_next_state(g.me, a)
+        for snake in snakes:
+            for b in snake.allowed_moves:
+                snake2 = possible_next_state(snake, b)
+                if killer_victim_border_2(snake2, me2):
                     return True
         return False
 
@@ -327,12 +359,12 @@ def main(game_state):
         if not any([distance_vector_abs(a, victim.head) in [(1,2), (2,1)] for a in killer.allowed_moves]): return False
         return True
 
-    def danger_border_2(victim, killer):
+    def killer_victim_border_2(killer, victim):
         if distance_pq(killer.head, victim.head) != 2: return False
         if killer.length <= victim.length: return False
         if not on_border(victim.head): return False
         if on_border(killer.head): return False
-        if distance_vector_abs(killer.head, victim.head) not in [(0,2), (2,0)]: return False
+        #if distance_vector_abs(killer.head, victim.head) not in [(0,2), (2,0)]: return False
         if len([a for a in victim.allowed_moves if a in killer.allowed_moves]) != 1: return False
         return True
 
