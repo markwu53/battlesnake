@@ -2,7 +2,7 @@ import typing
 import math
 import time
 
-def snake_1vn(game_state: typing.Dict) -> typing.Dict:
+def snake_1vn(game_state: typing.Dict, log=True) -> typing.Dict:
 
     #ideas:
     #1. In avoid_danger:
@@ -460,7 +460,8 @@ def snake_1vn(game_state: typing.Dict) -> typing.Dict:
             return
 
         board = lean_board()
-        my_name = "mark_snake"
+        #my_name = "mark_snake"
+        my_name = game_state["you"]["name"]
         my_snake = [snake for snake in board["snakes"] if snake["name"] == my_name][0]
         others = [snake for snake in board["snakes"] if snake["name"] != my_name]
 
@@ -1048,7 +1049,7 @@ def snake_1vn(game_state: typing.Dict) -> typing.Dict:
         log_time_diff,
     ])
 
-    print(log_text)
+    if log: print(log_text)
 
     return {"move": game_state["next_move"]}
 

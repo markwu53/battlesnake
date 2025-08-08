@@ -1,5 +1,7 @@
-def f():
-    return (4,3)
-a = (4, 3)
-b = min(*f(), 2)
+a = [1,2,3,4]
+print(a)
+b = a[:-1]
 print(b)
+b[1] = 7
+print(b)
+print(a)

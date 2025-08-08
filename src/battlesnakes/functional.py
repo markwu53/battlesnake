@@ -62,13 +62,17 @@ class Game:
         self.x = DecisionAux()
 
 
-def special_experimenting_code(game_state):
+def special_experimenting_code(game_state, log=True):
     g = Game()
 
     ###internal function begin
 
     def experiment_condition():
         if g.me["name"] == "mark_snake":
+            if len(g.others) == 1:
+                if g.s.my_length > 10:
+                    return True
+        else:
             if len(g.others) == 1:
                 if g.s.my_length > 10:
                     return True
@@ -732,7 +736,6 @@ def special_experimenting_code(game_state):
                 +(cut_can_reach_other_tail(moves) or [])
                 +(static_spacious(moves) or [])
         )
-        print(ok_moves)
         moves = [a for a in moves if a in ok_moves]
         if len(moves) != 0: 
             return moves
@@ -1422,7 +1425,6 @@ def special_experimenting_code(game_state):
                 for snake in [g.me, g.other]
                 for adj_set in [[i for i,c in enumerate(snake["body"]) if any([p in aset for p in adj_cells(c)])]]
                 if len(adj_set) != 0 ]
-            print(calc)
             min_wayout = min([a[2] for a in calc])
             calc = [a for a in calc if a[2] == min_wayout]
             wayout_point = take_first(prefer_yes(lambda a: a[0]["body"][0] == g.s.my_head)(calc))[4]
@@ -1569,7 +1571,8 @@ def special_experimenting_code(game_state):
     end_time = time.time()
     g.log["time"] = f"{end_time-start_time:.3f}s"
 
-    print(g.log)
+    if log: print(g.log)
+
     return True
 
 
