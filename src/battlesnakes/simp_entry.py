@@ -84,13 +84,13 @@ def main(game_state, log=True):
 
         #allowed_moves must be 2 or 3
 
-        moves = seq([
-            some_calculations,
+        moves = (seq([
+            (some_calculations),
             (kill_oppotunities),
             (avoid_danger),
             (reward),
             (other_considerations),
-        ])(g.me.allowed_moves)
+        ]))(g.me.allowed_moves)
 
         g.next_coord = take_first(moves)
 
@@ -136,10 +136,10 @@ def main(game_state, log=True):
             (cond(suppressed_chasing_kill_oppotunity())(prefer(suppressed_chasing_kill_move))),
             cond(border_confront_kill_oppotunity())(prefer(general_confront_kill_move)),
             cond(general_confront_kill_oppotunity())(prefer(general_confront_kill_move)),
-            cond(trap_kill_oppotunity())(cases([
+            (cond(trap_kill_oppotunity())(cases([
                 prefer(trap_kill_move, "trap kill"),
                 prefer(off_border_1, "trap preserve"),
-            ])),
+            ]))),
             (make_forming_trap),
             (attack_vulnerables),
             (cut_kill_oppotunity),
@@ -370,9 +370,10 @@ def main(game_state, log=True):
                        ]
 
         if distance_vector_abs(killer.head, target.head) == (1,1):
-            collision = [a for a in killer.allowed_moves if a in target.allowed_moves]
-            if len(collision) == 1:
-                cut_set += collision
+            if killer.length > target.length:
+                collision = [a for a in killer.allowed_moves if a in target.allowed_moves]
+                if len(collision) == 1:
+                    cut_set += collision
 
         cut_set = sorted(list(set(cut_set)))
 
@@ -1368,6 +1369,17 @@ def main(game_state, log=True):
                     return result
         return fn
 
+    def timeit(fname):
+        def fn(f):
+            def action(moves):
+                start_time = time.time()
+                result = f(moves)
+                end_time = time.time()
+                print(f"{fname}: {end_time-start_time:.3f}s")
+                return result
+            return action
+        return fn
+
     def seq(fs):
         def fn(moves):
             for f in fs:
@@ -1646,6 +1658,7 @@ if __name__ == "__main__":
 
     log = {'id': 'ff70c467-95fb-40f7-9a5a-79c6a2971a17', 'turn': 108, 'me': {'name': 'mark_snake', 'health': 93, 'length': 11, 'body': [(5, 1), (5, 2), (4, 2), (3, 2), (3, 3), (3, 4), (2, 4), (1, 4), (1, 5), (2, 5), (3, 5)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 90, 'length': 12, 'body': [(10, 0), (10, 1), (10, 2), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (5, 4)]}, {'name': 'suboptimal', 'health': 97, 'length': 8, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (9, 1), (8, 1), (7, 1), (6, 1)]}], 'food': [(9, 10), (7, 10), (0, 10)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (6, 1), 'next_move': 'right', 'time': '0.007s'}
     log = {'id': 'ff70c467-95fb-40f7-9a5a-79c6a2971a17', 'turn': 107, 'me': {'name': 'mark_snake', 'health': 94, 'length': 11, 'body': [(5, 2), (4, 2), (3, 2), (3, 3), (3, 4), (2, 4), (1, 4), (1, 5), (2, 5), (3, 5), (4, 5)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 91, 'length': 12, 'body': [(10, 1), (10, 2), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (5, 4), (6, 4)]}, {'name': 'suboptimal', 'health': 98, 'length': 8, 'body': [(7, 0), (8, 0), (9, 0), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1)]}], 'food': [(9, 10), (7, 10), (0, 10)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('suboptimal', 1, (6, 0))]", 'go cut'], 'next_coord': (5, 1), 'next_move': 'down', 'time': '0.033s'}
+    log = {'id': '79fdbca6-ddf5-4d6d-b172-d6e461cee42a', 'turn': 21, 'me': {'name': 'mark_snake', 'health': 83, 'length': 4, 'body': [(10, 9), (9, 9), (8, 9), (8, 8)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 81, 'length': 4, 'body': [(3, 0), (3, 1), (3, 2), (3, 3)]}, {'name': 'Frank The Tank', 'health': 97, 'length': 5, 'body': [(9, 10), (8, 10), (7, 10), (6, 10), (6, 9)]}], 'food': [(7, 0)], 'module': 'simp', 'decision_path': ['1vn', 'vulnerable snakes: []', 'cut is done', 'multi-step collision [((10, 10), 1)]'], 'next_coord': (10, 8), 'next_move': 'down', 'time': '0.524s'}
 
     game_state = init_from_log(log)
     #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
