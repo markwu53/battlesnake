@@ -896,7 +896,9 @@ def main(game_state, log=True):
         #static confinement space
         snakes = [snake for snake in g.others if path_connected(g.me.head, snake.head)]
         if len(snakes) != 0:
-            return
+            #can see killer head but confine cut is done - go wayout
+            if len(g.me.head_space) > len(g.me.territory):
+                return
 
         #no near tails
         snakes = [snake for snake in g.others if path_distance_pq(g.me.head, snake.tail) < 10]
@@ -906,6 +908,8 @@ def main(game_state, log=True):
         #wayout spacious
         if len(g.me.head_space) >= g.me.length * 1.1:
             return
+
+        g.decision_path.append("try wayout")
 
         return cases([
             (wayout_myself),
@@ -1659,6 +1663,8 @@ if __name__ == "__main__":
     log = {'id': 'ff70c467-95fb-40f7-9a5a-79c6a2971a17', 'turn': 108, 'me': {'name': 'mark_snake', 'health': 93, 'length': 11, 'body': [(5, 1), (5, 2), (4, 2), (3, 2), (3, 3), (3, 4), (2, 4), (1, 4), (1, 5), (2, 5), (3, 5)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 90, 'length': 12, 'body': [(10, 0), (10, 1), (10, 2), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (5, 4)]}, {'name': 'suboptimal', 'health': 97, 'length': 8, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (9, 1), (8, 1), (7, 1), (6, 1)]}], 'food': [(9, 10), (7, 10), (0, 10)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (6, 1), 'next_move': 'right', 'time': '0.007s'}
     log = {'id': 'ff70c467-95fb-40f7-9a5a-79c6a2971a17', 'turn': 107, 'me': {'name': 'mark_snake', 'health': 94, 'length': 11, 'body': [(5, 2), (4, 2), (3, 2), (3, 3), (3, 4), (2, 4), (1, 4), (1, 5), (2, 5), (3, 5), (4, 5)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 91, 'length': 12, 'body': [(10, 1), (10, 2), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (5, 4), (6, 4)]}, {'name': 'suboptimal', 'health': 98, 'length': 8, 'body': [(7, 0), (8, 0), (9, 0), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1)]}], 'food': [(9, 10), (7, 10), (0, 10)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('suboptimal', 1, (6, 0))]", 'go cut'], 'next_coord': (5, 1), 'next_move': 'down', 'time': '0.033s'}
     log = {'id': '79fdbca6-ddf5-4d6d-b172-d6e461cee42a', 'turn': 21, 'me': {'name': 'mark_snake', 'health': 83, 'length': 4, 'body': [(10, 9), (9, 9), (8, 9), (8, 8)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 81, 'length': 4, 'body': [(3, 0), (3, 1), (3, 2), (3, 3)]}, {'name': 'Frank The Tank', 'health': 97, 'length': 5, 'body': [(9, 10), (8, 10), (7, 10), (6, 10), (6, 9)]}], 'food': [(7, 0)], 'module': 'simp', 'decision_path': ['1vn', 'vulnerable snakes: []', 'cut is done', 'multi-step collision [((10, 10), 1)]'], 'next_coord': (10, 8), 'next_move': 'down', 'time': '0.524s'}
+    log = {'id': '8f77dec4-98c2-481c-bc73-e3353a98b4ca', 'turn': 264, 'me': {'name': 'mark_snake', 'health': 88, 'length': 30, 'body': [(4, 6), (4, 5), (4, 4), (4, 3), (4, 2), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (4, 9), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7)]}, 'others': [{'name': 'suboptimal', 'health': 67, 'length': 24, 'body': [(3, 7), (3, 6), (3, 5), (3, 4), (3, 3), (3, 2), (3, 1), (3, 0), (2, 0), (2, 1), (1, 1), (1, 0), (0, 0), (0, 1), (0, 2), (1, 2), (2, 2), (2, 3), (1, 3), (1, 4), (1, 5), (2, 5), (2, 6), (2, 7)]}], 'food': [(1, 10), (0, 7), (5, 7), (8, 8)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (4, 7), 'next_move': 'up', 'time': '0.004s'}
+
 
     game_state = init_from_log(log)
     #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
