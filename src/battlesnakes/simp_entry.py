@@ -141,7 +141,7 @@ def main(game_state, log=True):
                 prefer(off_border_1, "trap preserve"),
             ])),
             (make_forming_trap),
-            attack_vulnerables,
+            (attack_vulnerables),
             (cut_kill_oppotunity),
             cond(len(g.others) == 1 and g.me.length > g.other.length)((push_the_other)),
         ])(moves)
@@ -156,7 +156,9 @@ def main(game_state, log=True):
 
                 if path_distance_pq(g.me.head, snake2.head) == snake.vulnerable_steps + 2:
                     if on_border(snake2.head):
-                        attack_point = [p for p in adj_cells(snake2.head) if not on_border(p) for q in adj_cells(p) if distance_vector_abs(q, snake2.head) != (1,1)]
+                        attack_point = [q 
+                                        for p in adj_cells(snake2.head) if not on_border(p) 
+                                        for q in adj_cells(p) if distance_vector_abs(q, snake2.head) in [(0,2), (2,0)]]
                         attack_point = take_first(attack_point)
                         if path_distance_pq(g.me.head, attack_point) == snake.vulnerable_steps:
                             return shortest_path_move(g.me.head, attack_point)
@@ -1642,8 +1644,10 @@ if __name__ == "__main__":
     log = {'id': '3a637a78-3298-4fd1-9543-89d39e243f46', 'turn': 31, 'nalive': 4, 'snakes': [{'name': 'mark_snake_test RED', 'health': 97, 'length': 6, 'alive': True, 'delay': 41, 'body': [(4, 1), (4, 2), (4, 3), (3, 3), (2, 3), (1, 3)]}, {'name': 'mark_snake_test BLUE', 'health': 99, 'length': 7, 'alive': True, 'delay': 4, 'body': [(4, 9), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6)]}, {'name': 'mark_snake_test GREEN', 'health': 86, 'length': 5, 'alive': True, 'delay': 20, 'body': [(8, 9), (7, 9), (7, 8), (6, 8), (6, 9)]}, {'name': 'mark_snake_test YELLOW', 'health': 81, 'length': 5, 'alive': True, 'delay': 37, 'body': [(9, 8), (9, 7), (8, 7), (8, 6), (7, 6)]}], 'food': [(4, 0), (10, 8)]}
 
 
+    log = {'id': 'ff70c467-95fb-40f7-9a5a-79c6a2971a17', 'turn': 108, 'me': {'name': 'mark_snake', 'health': 93, 'length': 11, 'body': [(5, 1), (5, 2), (4, 2), (3, 2), (3, 3), (3, 4), (2, 4), (1, 4), (1, 5), (2, 5), (3, 5)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 90, 'length': 12, 'body': [(10, 0), (10, 1), (10, 2), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (5, 4)]}, {'name': 'suboptimal', 'health': 97, 'length': 8, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (9, 1), (8, 1), (7, 1), (6, 1)]}], 'food': [(9, 10), (7, 10), (0, 10)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (6, 1), 'next_move': 'right', 'time': '0.007s'}
+    log = {'id': 'ff70c467-95fb-40f7-9a5a-79c6a2971a17', 'turn': 107, 'me': {'name': 'mark_snake', 'health': 94, 'length': 11, 'body': [(5, 2), (4, 2), (3, 2), (3, 3), (3, 4), (2, 4), (1, 4), (1, 5), (2, 5), (3, 5), (4, 5)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 91, 'length': 12, 'body': [(10, 1), (10, 2), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (5, 4), (6, 4)]}, {'name': 'suboptimal', 'health': 98, 'length': 8, 'body': [(7, 0), (8, 0), (9, 0), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1)]}], 'food': [(9, 10), (7, 10), (0, 10)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('suboptimal', 1, (6, 0))]", 'go cut'], 'next_coord': (5, 1), 'next_move': 'down', 'time': '0.033s'}
 
-    #game_state = init_from_log(log)
-    game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
+    game_state = init_from_log(log)
+    #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
     main(game_state)
 
