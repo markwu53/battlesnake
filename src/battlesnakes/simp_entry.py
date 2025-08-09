@@ -519,6 +519,18 @@ def main(game_state, log=True):
                 return True
         return False
 
+    def preliminary_trap(killer: Snake, target: Snake):
+        for i,c in enumerate(killer.body):
+            if c in killer.body[-2:]: continue
+            if c == killer.head: continue
+            if not is_adjacent(target.head, c): continue
+            if not on_border(target.head): continue
+            if on_border(c): continue
+            b = killer.body[i-1]
+            if get_adjacent_dir(c, b) == get_adjacent_dir(target.neck, target.head):
+                    return True
+        return False
+
     def trap_kill_situation(killer: Snake, target: Snake):
         if off_border_1(killer.head):
             for i,c in enumerate(killer.body):
@@ -827,13 +839,62 @@ def main(game_state, log=True):
         if ngroup == 3:
             return prefer_by_score(lambda a: len(path_connected_set(a)))(moves)
         
+        g.decision_path.append("try split choice")
         #ngroup == 2
         return cases([
             (check_confinement),
             (check_wayout),
             (collision_take_risk),
-            more_space,
+            seq([
+                avoid_preliminary_trap,
+                avoid_static_confinement,
+                prefer_diagonal_cut_set,
+                more_space,
+            ]),
         ])(moves)
+
+    def prefer_diagonal_cut_set(moves):
+        ok_set = []
+        occupied = complement(g.me.territory)
+        for a in moves:
+            aset = path_connected_set(a, occupied)
+            cut_set = [q for p in aset for q in adj_cells(p) if q not in g.occupied_cells[0] and q not in aset]
+            if len(cut_set) == 0: continue
+            cut_set = sorted(cut_set)
+            x0, y0 = cut_set[0]
+            x1, y1 = cut_set[-1]
+            dx = abs(x0-x1)
+            dy = abs(y0-y1)
+            dd = abs(dx-dy)
+            if len(cut_set) >= 3 and dd <= 1:
+                ok_set.append(a)
+        if len(ok_set) != 0:
+            return ok_set
+
+    def avoid_static_confinement(moves):
+        ok_set = []
+        occupied = complement(g.me.head_space)
+        occupied2 = complement(g.me.territory)
+        for a in moves:
+            aset = path_connected_set(a, occupied)
+            aset2 = path_connected_set(a, occupied2)
+            if len(aset) != len(aset2):
+                #not a static confinement
+                ok_set.append(a)
+        if len(ok_set) != 0:
+            return ok_set
+
+    def avoid_preliminary_trap(moves):
+        ok_set = []
+        for snake in g.others:
+            for a in moves:
+                snake2 = possible_next_state(snake, take_first(snake.allowed_moves))
+                me2 = possible_next_state(g.me, a)
+                if not preliminary_trap(snake2, me2):
+                    ok_set.append(a)
+        if len(ok_set) != 0:
+            g.decision_path.append("avoid preliminary trap")
+            return ok_set
 
     def collision_take_risk(moves):
         if len(moves) != 3:
@@ -884,7 +945,7 @@ def main(game_state, log=True):
                 return []
             return path_connected_set(a, complement(g.me.territory))
         return prefer_by_score(lambda a: len(move_space(a)))(moves)
-    
+ 
     def ____WAYOUT____():
         pass
 
@@ -1664,6 +1725,7 @@ if __name__ == "__main__":
     log = {'id': 'ff70c467-95fb-40f7-9a5a-79c6a2971a17', 'turn': 107, 'me': {'name': 'mark_snake', 'health': 94, 'length': 11, 'body': [(5, 2), (4, 2), (3, 2), (3, 3), (3, 4), (2, 4), (1, 4), (1, 5), (2, 5), (3, 5), (4, 5)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 91, 'length': 12, 'body': [(10, 1), (10, 2), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (5, 3), (4, 3), (4, 4), (5, 4), (6, 4)]}, {'name': 'suboptimal', 'health': 98, 'length': 8, 'body': [(7, 0), (8, 0), (9, 0), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1)]}], 'food': [(9, 10), (7, 10), (0, 10)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('suboptimal', 1, (6, 0))]", 'go cut'], 'next_coord': (5, 1), 'next_move': 'down', 'time': '0.033s'}
     log = {'id': '79fdbca6-ddf5-4d6d-b172-d6e461cee42a', 'turn': 21, 'me': {'name': 'mark_snake', 'health': 83, 'length': 4, 'body': [(10, 9), (9, 9), (8, 9), (8, 8)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 81, 'length': 4, 'body': [(3, 0), (3, 1), (3, 2), (3, 3)]}, {'name': 'Frank The Tank', 'health': 97, 'length': 5, 'body': [(9, 10), (8, 10), (7, 10), (6, 10), (6, 9)]}], 'food': [(7, 0)], 'module': 'simp', 'decision_path': ['1vn', 'vulnerable snakes: []', 'cut is done', 'multi-step collision [((10, 10), 1)]'], 'next_coord': (10, 8), 'next_move': 'down', 'time': '0.524s'}
     log = {'id': '8f77dec4-98c2-481c-bc73-e3353a98b4ca', 'turn': 264, 'me': {'name': 'mark_snake', 'health': 88, 'length': 30, 'body': [(4, 6), (4, 5), (4, 4), (4, 3), (4, 2), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (4, 9), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7)]}, 'others': [{'name': 'suboptimal', 'health': 67, 'length': 24, 'body': [(3, 7), (3, 6), (3, 5), (3, 4), (3, 3), (3, 2), (3, 1), (3, 0), (2, 0), (2, 1), (1, 1), (1, 0), (0, 0), (0, 1), (0, 2), (1, 2), (2, 2), (2, 3), (1, 3), (1, 4), (1, 5), (2, 5), (2, 6), (2, 7)]}], 'food': [(1, 10), (0, 7), (5, 7), (8, 8)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (4, 7), 'next_move': 'up', 'time': '0.004s'}
+    log = {'id': '19b045a1-d685-422f-96b1-26bc8f5ca422', 'turn': 235, 'me': {'name': 'mark_snake', 'health': 81, 'length': 19, 'body': [(9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (5, 1), (6, 1)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 94, 'length': 28, 'body': [(2, 3), (1, 3), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (8, 8), (8, 7), (7, 7), (6, 7), (5, 7), (5, 6), (4, 6), (3, 6), (3, 7), (2, 7), (1, 7)]}], 'food': [(2, 0), (6, 3)], 'module': 'simp', 'decision_path': ['1v1', 'split fail confinement check', 'split fail wayout check'], 'next_coord': (8, 10), 'next_move': 'left', 'time': '0.008s'}
 
 
     game_state = init_from_log(log)
