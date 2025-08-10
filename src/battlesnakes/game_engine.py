@@ -89,6 +89,8 @@ class GameEngine:
         if snake.name in [
             "mark_snake_test RED",
             "mark_snake_test BLUE",
+            "mark_snake_test YELLOW",
+            "mark_snake_test GREEN",
         ]:
             if functional.special_experimenting_code(game_state, log=False): 
                 return {"move": game_state["next_move"]}

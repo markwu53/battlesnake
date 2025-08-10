@@ -146,34 +146,79 @@ def main(game_state, log=True):
             cond(len(g.others) == 1 and g.me.length > g.other.length)((push_the_other)),
         ])(moves)
 
+    def attack_vulnerables_equal_distance(moves):
+        snake = g.target_snake
+        snake2: Snake = snake.vulnerable_emerge
+        if path_distance_pq(g.me.head, snake2.head) == snake.vulnerable_steps:
+            attack_move = shortest_path_move(g.me.head, snake2.head)
+            attack_move = [a for a in moves if a in attack_move]
+            if len(attack_move) != 0:
+                g.decision_path.append("attack vulnerables equal distance")
+                return attack_move
+
+    def attack_vulnerables_path_distance_2(moves):
+        snake = g.target_snake
+        snake2: Snake = snake.vulnerable_emerge
+
+        if path_distance_pq(g.me.head, snake2.head) == snake.vulnerable_steps + 2:
+            if on_border(snake2.head):
+                attack_point = [q 
+                                for p in adj_cells(snake2.head) if not on_border(p) 
+                                for q in adj_cells(p) if distance_vector_abs(q, snake2.head) in [(0,2), (2,0)]]
+                attack_point = take_first(attack_point)
+                if path_distance_pq(g.me.head, attack_point) == snake.vulnerable_steps:
+                    attack_move = shortest_path_move(g.me.head, attack_point)
+                    attack_move = [a for a in moves if a in attack_move]
+                    if len(attack_move) != 0:
+                        g.decision_path.append("attack vulnerables path distance 2")
+                        return attack_move
+
+    def attack_vulnerables_distance_2(moves):
+        snake = g.target_snake
+        snake2: Snake = snake.vulnerable_emerge
+
+        if distance_pq(g.me.head, snake2.head) == snake.vulnerable_steps + 2:
+            if on_border(snake2.head):
+                attack_point = [q 
+                                for p in adj_cells(snake2.head) if not on_border(p) 
+                                for q in adj_cells(p) if distance_vector_abs(q, snake2.head) in [(0,2), (2,0)]]
+                attack_point = take_first(attack_point)
+                if path_distance_pq(g.me.head, attack_point) == snake.vulnerable_steps:
+                    attack_move = shortest_path_move(g.me.head, attack_point)
+                    attack_move = [a for a in moves if a in attack_move]
+                    if len(attack_move) != 0:
+                        g.decision_path.append("attack vulnerables distance 2")
+                        return attack_move
+
+    def attack_vulnerables_distance_4(moves):
+        snake = g.target_snake
+        snake2: Snake = snake.vulnerable_emerge
+
+        if distance_pq(g.me.head, snake2.head) == snake.vulnerable_steps + 4:
+            if on_border(snake2.head):
+                attack_points = [a for a in board_cells if distance_vector_abs(a, snake2.head) in [(2,2), (1,3), (3,1)]]
+                attack_points = [a for a in attack_points if not off_border_1(a) and path_connected(a, g.me.head)]
+                attack_points = [a for a in attack_points if path_distance_pq(g.me.head, a) == snake.vulnerable_steps+4]
+                if len(attack_points) != 0:
+                    attack_point = take_first(attack_point)
+                    attack_move = shortest_path_move(g.me.head, attack_point)
+                    attack_move = [a for a in moves if a in attack_move]
+                    if len(attack_move) != 0:
+                        g.decision_path.append("attack vulnerables")
+                        return attack_move
+
     def attack_vulnerables(moves):
         for snake in g.vulnerables:
             if g.me.length > snake.length:
-                snake2: Snake = snake.vulnerable_emerge
-
-                if path_distance_pq(g.me.head, snake2.head) == snake.vulnerable_steps:
-                    g.decision_path.append("attack vulnerables")
-                    return shortest_path_move(g.me.head, snake2.head)
-
-                if path_distance_pq(g.me.head, snake2.head) == snake.vulnerable_steps + 2:
-                    if on_border(snake2.head):
-                        attack_point = [q 
-                                        for p in adj_cells(snake2.head) if not on_border(p) 
-                                        for q in adj_cells(p) if distance_vector_abs(q, snake2.head) in [(0,2), (2,0)]]
-                        attack_point = take_first(attack_point)
-                        if path_distance_pq(g.me.head, attack_point) == snake.vulnerable_steps:
-                            g.decision_path.append("attack vulnerables")
-                            return shortest_path_move(g.me.head, attack_point)
-
-                if distance_pq(g.me.head, snake2.head) == snake.vulnerable_steps + 2:
-                    if on_border(snake2.head):
-                        attack_point = [q 
-                                        for p in adj_cells(snake2.head) if not on_border(p) 
-                                        for q in adj_cells(p) if distance_vector_abs(q, snake2.head) in [(0,2), (2,0)]]
-                        attack_point = take_first(attack_point)
-                        if path_distance_pq(g.me.head, attack_point) == snake.vulnerable_steps:
-                            g.decision_path.append("attack vulnerables")
-                            return shortest_path_move(g.me.head, attack_point)
+                g.target_snake = snake
+                result = cases([
+                    attack_vulnerables_equal_distance,
+                    attack_vulnerables_distance_2,
+                    attack_vulnerables_path_distance_2,
+                    attack_vulnerables_distance_4,
+                ])(moves)
+                if result is not None:
+                    return result
 
     def coming_to(snake: Snake, p):
         straight = [a for a in snake.allowed_moves if get_adjacent_dir(snake.head, a) == get_adjacent_dir(snake.neck, snake.head)]
