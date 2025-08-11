@@ -1,7 +1,4 @@
-a = [1,2,3,4]
-print(a)
-b = a[:-1]
-print(b)
-b[1] = 7
-print(b)
-print(a)
+def irange(a, b):
+    return list([a] if a == b else range(a, b+1) if a < b else range(a,b-1,-1,))
+
+print(irange(7,4))

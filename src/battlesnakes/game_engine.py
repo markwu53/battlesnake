@@ -47,9 +47,9 @@ class GameEngine:
         self.turn = 0
         self.snakes = [
             Snake( name="mark_snake_test RED", body=[(5,1), (5,1), (5,1)], health=100,),
-            Snake( name="mark_snake_test BLUE", body=[(9,5), (9,5), (9,5)], health=100,),
+            #Snake( name="mark_snake_test BLUE", body=[(9,5), (9,5), (9,5)], health=100,),
             Snake( name="mark_snake_test GREEN", body=[(5,9), (5,9), (5,9)], health=100,),
-            Snake( name="mark_snake_test YELLOW", body=[(1,5), (1,5), (1,5)], health=100,),
+            #Snake( name="mark_snake_test YELLOW", body=[(1,5), (1,5), (1,5)], health=100,),
         ]
         for snake in self.snakes:
             snake.alive = True
@@ -89,8 +89,8 @@ class GameEngine:
         if snake.name in [
             "mark_snake_test RED",
             "mark_snake_test BLUE",
-            "mark_snake_test YELLOW",
-            "mark_snake_test GREEN",
+            #"mark_snake_test YELLOW",
+            #"mark_snake_test GREEN",
         ]:
             if functional.special_experimenting_code(game_state, log=False): 
                 return {"move": game_state["next_move"]}
