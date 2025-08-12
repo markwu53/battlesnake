@@ -131,9 +131,9 @@ def main(game_state, log=True):
 
     def kill_oppotunities(moves):
         return cases([
-            cond(immediate_kill_oppotunity())(prefer(immediate_kill_move)),
+            (cond(immediate_kill_oppotunity())(prefer(immediate_kill_move))),
             collision_cut_oppotunity,
-            (cond(suppressed_chasing_kill_oppotunity())(prefer(suppressed_chasing_kill_move))),
+            (cond(suppressed_chasing_kill_oppotunity())(prefer_suppressed_chasing_kill_move)),
             general_confront_kill_try,
             cond(border_confront_kill_oppotunity())(prefer(general_confront_kill_move)),
             (cond(trap_kill_oppotunity())(cases([
@@ -143,7 +143,7 @@ def main(game_state, log=True):
             (make_forming_trap),
             (attack_vulnerables),
             (cut_kill_oppotunity),
-            cond(len(g.others) == 1 and g.me.length > g.other.length)((push_the_other)),
+            (cond(len(g.others) == 1 and g.me.length > g.other.length)((push_the_other))),
         ])(moves)
 
     def attack_vulnerables_equal_distance(moves):
@@ -256,8 +256,10 @@ def main(game_state, log=True):
         if vdist == (4,4):
             coming = [a for a in g.other.allowed_moves if distance_pq(a, g.me.head) < distance_pq(g.other.head, g.me.head)]
             if len(coming) > 1:
+                g.decision_path.append("push")
                 return prefer(lambda a: distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head))(moves)
             coming = take_first(coming)
+            g.decision_path.append("push")
             return prefer(lambda a: distance_vector_abs(a, coming) == (3,3))(moves)
         if vdist == (3,5):
             return prefer(lambda a: distance_vector_abs(a, g.other.head) == (3,4))(moves)
@@ -555,9 +557,7 @@ def main(game_state, log=True):
     def irange(a, b):
         return list([a] if a == b else range(a, b+1) if a < b else range(a,b-1,-1,))
 
-    def find_cut_rectangle(v):
-        target = g.target_snake
-
+    def cut_rectangles(v):
         width = g.state["board"]["width"]
         height = g.state["board"]["height"]
 
@@ -574,20 +574,7 @@ def main(game_state, log=True):
             [v, (x1, 0 if y1 < y0 else height-1)],
             [v, (0 if x1 < x0 else width-1, y1)],
         ]
-
-        for rect in rectangles:
-            (x0,y0), (x1,y1) = rect
-            cells = [(x,y) for x in irange(x0, x1) for y in irange(y0, y1)]
-
-            #select the rectangle in the correct direction
-            if any([p in cells for p in target.territory]): continue
-
-            occupied = list(set(g.occupied_cells[0]+cells))
-            oset = path_connected_set(target.head, occupied)
-            oset = [p for p in oset if p != target.head]
-            oset = trim_aset(oset, target.head, target.head)
-            if len(oset) <= target.length * 1.1:
-                return rect
+        return rectangles
 
     def cut_kill_oppotunity2(moves):
         if not cut_kill_target2():
@@ -606,23 +593,33 @@ def main(game_state, log=True):
         #good - the resulting cut space is small enough so that the target will likely die
         
         cut_set = g.target_snake.cut_set
-        rect = None
-        for v in cut_set:
-            rect = find_cut_rectangle(v)
-            if rect is not None: 
-                break
-        if rect is None:
-            g.decision_path.append("no cut path")
-            return
+        target = g.target_snake
 
-        (x0,y0), (x1,y1) = rect
-        cells = [(x,y) for x in irange(x0, x1) for y in irange(y0, y1)]
-        border = [(x,y) for x,y in cells if x in (x0,x1) or y in (y0,y1)]
-        #cut path is along the border of the rectangle
-        cut_move = [a for a in moves if a in shortest_path_move(g.me.head, v) and a in border]
-        if len(cut_move) != 0:
-            g.decision_path.append(f"go cut: {rect}")
-            return cut_move
+        for v,rect in [(v, rect) for v in cut_set for rect in cut_rectangles(v)]:
+            (x0,y0), (x1,y1) = rect
+            cells = [(x,y) for x in irange(x0, x1) for y in irange(y0, y1)]
+
+            #select the rectangle in the correct direction
+            if any([p in cells for p in target.territory]): continue
+
+            occupied = list(set(g.occupied_cells[0]+cells))
+            oset = path_connected_set(target.head, occupied)
+            oset = [p for p in oset if p != target.head]
+            oset = trim_aset(oset, target.head, target.head)
+            if len(oset) > target.length * 1.1:
+                continue
+
+            if path_distance_pq(g.me.head, v) != distance_pq(g.me.head, v):
+                continue
+
+            v2 = [p for p in [(x0,y1), (x1,y0)] if min(distance_vector_abs(g.me.head, p)) == 0]
+            v2 = take_first(v2)
+
+            g.decision_path.append(f"go cut to {(x0,y0)}")
+            cut_moves = shortest_path_move(g.me.head, v)
+            cut_moves = prefer_by_rank(lambda a: distance_pq(a, target.head))(cut_moves)
+            cut_moves = prefer_by_rank(lambda a: distance_pq(a, v2))(cut_moves)
+            return cut_moves
 
     def cut_kill_oppotunity(moves):
         #I'll cut enemy if I can
@@ -795,6 +792,9 @@ def main(game_state, log=True):
             any([distance_vector_abs(a, target.head) in [(1,2), (2,1)] for a in killer.allowed_moves]),
         ])
 
+    def prefer_suppressed_chasing_kill_move(moves):
+        return prefer(lambda a: no_cut_danger_a(a) and suppressed_chasing_kill_move(a))(moves)
+
     def suppressed_chasing_kill_move(a):
         return a in g.me.allowed_moves and a in g.target_snake.allowed_moves
 
@@ -824,7 +824,10 @@ def main(game_state, log=True):
         return False
 
     def immediate_kill_move(a):
-        return is_adjacent(a, g.target_snake.head)
+        if is_adjacent(a, g.target_snake.head):
+            g.decision_path.append("immediate kill")
+            return True
+        return False
 
     def immediate_kill_oppotunity():
         for snake in g.others:
@@ -869,17 +872,27 @@ def main(game_state, log=True):
     def ____AVOID_DANGER____():
         return
 
+    def message_step(message):
+        def fn(moves):
+            if isinstance(message, str):
+                print(message)
+                return
+            #assume a function
+            print(message(moves))
+        return fn
+
     def avoid_danger(moves):
         return seq([
+            #message_step(f"moves: {moves}"),
             (wayout),
             (avoid_suppressed_single_collision),
             (prefer_not(entering_danger(immediate_kill_situation))),
             (prefer_not(entering_danger(suppressed_chasing_kill_situation))),
             (prefer_not(entering_danger(border_confront_kill_situation))),
             (prefer_not(entering_danger(trap_kill_situation))),
-            cond(len(g.others) == 1 and g.me.length > g.other.length)(prefer_not(entering_danger(confine_kill_situation))),
+            (cond(len(g.others) == 1 and g.me.length > g.other.length)(prefer_not(entering_danger(confine_kill_situation)))),
             avoid_single_collision,
-            cond(g.me.length >= 10)(split_choice),
+            (cond(g.me.length >= 10)(split_choice)),
             (multi_step_collision),
         ])(moves)
 
@@ -1944,12 +1957,18 @@ if __name__ == "__main__":
     log = {'id': '14011e32-3f7b-4812-99f1-d4e6b1d76c7f', 'turn': 66, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 90, 'length': 13, 'alive': True, 'delay': 0, 'body': [(0, 8), (1, 8), (1, 9), (2, 9), (2, 8), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (6, 8), (6, 9), (6, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 97, 'length': 15, 'alive': True, 'delay': 0, 'body': [(0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (1, 6), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5)]}], 'food': [(5, 6)]}
     log = {'id': 'fbb65941-054c-4823-a7f1-8745d2036f9f', 'turn': 70, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 90, 'length': 15, 'alive': True, 'delay': 21, 'body': [(2, 2), (1, 2), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (5, 1), (5, 2), (6, 2), (6, 3), (5, 3)]}, {'name': 'mark_snake_test GREEN', 'health': 98, 'length': 16, 'alive': True, 'delay': 8, 'body': [(2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0)]}], 'food': [(8, 10)]}
     log = {'id': 'fbb65941-054c-4823-a7f1-8745d2036f9f', 'turn': 71, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 89, 'length': 15, 'alive': True, 'delay': 7, 'body': [(3, 2), (2, 2), (1, 2), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (5, 1), (5, 2), (6, 2), (6, 3)]}, {'name': 'mark_snake_test GREEN', 'health': 97, 'length': 16, 'alive': True, 'delay': 9, 'body': [(2, 3), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0)]}], 'food': [(8, 10)]}
+    log = {'id': '4382b29b-ebe0-4f13-9793-b58d21ea662f', 'turn': 57, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 98, 'length': 12, 'alive': True, 'delay': 3, 'body': [(0, 7), (0, 8), (0, 9), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (6, 9), (6, 8)]}, {'name': 'mark_snake_test GREEN', 'health': 97, 'length': 12, 'alive': True, 'delay': 9, 'body': [(2, 5), (1, 5), (0, 5), (0, 4), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3)]}], 'food': [(10, 7), (3, 5)]}
     log = {'id': '4382b29b-ebe0-4f13-9793-b58d21ea662f', 'turn': 58, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 97, 'length': 12, 'alive': True, 'delay': 4, 'body': [(0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (6, 9)]}, {'name': 'mark_snake_test GREEN', 'health': 100, 'length': 13, 'alive': True, 'delay': 19, 'body': [(3, 5), (2, 5), (1, 5), (0, 5), (0, 4), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (6, 3)]}], 'food': [(10, 7)]}
     log = {'id': '4382b29b-ebe0-4f13-9793-b58d21ea662f', 'turn': 59, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 96, 'length': 12, 'alive': True, 'delay': 1, 'body': [(1, 6), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 99, 'length': 13, 'alive': True, 'delay': 26, 'body': [(3, 6), (3, 5), (2, 5), (1, 5), (0, 5), (0, 4), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3)]}], 'food': [(10, 7)]}
+    log = {'id': '4382b29b-ebe0-4f13-9793-b58d21ea662f', 'turn': 60, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 95, 'length': 12, 'alive': True, 'delay': 11, 'body': [(1, 7), (1, 6), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 98, 'length': 13, 'alive': True, 'delay': 18, 'body': [(2, 6), (3, 6), (3, 5), (2, 5), (1, 5), (0, 5), (0, 4), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (5, 3)]}], 'food': [(10, 7)]}
+    log = {'id': '4382b29b-ebe0-4f13-9793-b58d21ea662f', 'turn': 61, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 94, 'length': 12, 'alive': True, 'delay': 6, 'body': [(1, 8), (1, 7), (1, 6), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 97, 'length': 13, 'alive': True, 'delay': 0, 'body': [(2, 7), (2, 6), (3, 6), (3, 5), (2, 5), (1, 5), (0, 5), (0, 4), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3)]}], 'food': [(10, 7), (8, 10)]}
+
+    log = {'id': '8661ab9d-09c2-4b7e-93fd-16a2836343eb', 'turn': 133, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 78, 'length': 19, 'alive': True, 'delay': 6, 'body': [(6, 9), (6, 8), (6, 7), (7, 7), (8, 7), (9, 7), (9, 6), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (5, 8), (5, 9), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 100, 'length': 21, 'alive': True, 'delay': 1, 'body': [(10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4, 5), (4, 6), (4, 7), (3, 7), (2, 7), (2, 6), (2, 6)]}], 'food': [(0, 0)]}
+    log = {'id': '18064945-0d46-486d-8a62-2f58f430344c', 'turn': 94, 'me': {'name': 'mark_snake', 'health': 93, 'length': 11, 'body': [(1, 5), (2, 5), (3, 5), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (9, 7)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 95, 'length': 11, 'body': [(5, 7), (4, 7), (3, 7), (2, 7), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10)]}, {'name': 'Kakemonsteret-v2', 'health': 100, 'length': 11, 'body': [(8, 0), (7, 0), (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4), (7, 3), (7, 2), (7, 2)]}, {'name': 'conesnake', 'health': 93, 'length': 6, 'body': [(0, 6), (0, 5), (0, 4), (0, 3), (1, 3), (1, 4)]}], 'food': [(10, 6)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (1, 6), 'next_move': 'up', 'time': '0.002s'}
 
 
 
-    #game_state = init_from_log(log)
-    game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
+    game_state = init_from_log(log)
+    #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
     main(game_state)
 
