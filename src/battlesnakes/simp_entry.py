@@ -238,9 +238,15 @@ def main(game_state, log=True):
         if vdist == (2,2):
             coming = [a for a in g.other.allowed_moves if distance_pq(a, g.me.head) < distance_pq(g.other.head, g.me.head)]
             if len(coming) > 1:
+                g.decision_path.append("push")
                 return prefer(lambda a: distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head))(moves)
             coming = take_first(coming)
-            return prefer(lambda a: distance_vector_abs(a, coming) in [(0,2), (2,0)])(moves)
+            other_dir = [a for a in g.other.allowed_moves if a not in coming]
+            g.decision_path.append("push")
+            if len(other_dir) == 0:
+                return prefer(lambda a: distance_vector_abs(a, coming) in [(0,2), (2,0)])(moves)
+            else:
+                return prefer(lambda a: distance_vector_abs(a, coming) == (1,1))(moves)
 
         if vdist == (3,3):
             coming = [a for a in g.other.allowed_moves if distance_pq(a, g.me.head) < distance_pq(g.other.head, g.me.head)]
@@ -1965,6 +1971,7 @@ if __name__ == "__main__":
 
     log = {'id': '8661ab9d-09c2-4b7e-93fd-16a2836343eb', 'turn': 133, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 78, 'length': 19, 'alive': True, 'delay': 6, 'body': [(6, 9), (6, 8), (6, 7), (7, 7), (8, 7), (9, 7), (9, 6), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (5, 8), (5, 9), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 100, 'length': 21, 'alive': True, 'delay': 1, 'body': [(10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (4, 5), (4, 6), (4, 7), (3, 7), (2, 7), (2, 6), (2, 6)]}], 'food': [(0, 0)]}
     log = {'id': '18064945-0d46-486d-8a62-2f58f430344c', 'turn': 94, 'me': {'name': 'mark_snake', 'health': 93, 'length': 11, 'body': [(1, 5), (2, 5), (3, 5), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (9, 7)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 95, 'length': 11, 'body': [(5, 7), (4, 7), (3, 7), (2, 7), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10)]}, {'name': 'Kakemonsteret-v2', 'health': 100, 'length': 11, 'body': [(8, 0), (7, 0), (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4), (7, 3), (7, 2), (7, 2)]}, {'name': 'conesnake', 'health': 93, 'length': 6, 'body': [(0, 6), (0, 5), (0, 4), (0, 3), (1, 3), (1, 4)]}], 'food': [(10, 6)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (1, 6), 'next_move': 'up', 'time': '0.002s'}
+    log = {'id': '3eefc818-2604-49bf-bd50-b5c9d07d125b', 'turn': 386, 'me': {'name': 'mark_snake', 'health': 86, 'length': 32, 'body': [(4, 6), (4, 7), (4, 8), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (8, 8), (8, 7), (8, 6), (9, 6), (10, 6), (10, 7), (9, 7), (9, 8), (9, 9), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (1, 10), (1, 9), (1, 8), (2, 8), (2, 7), (2, 6), (2, 5)]}, 'others': [{'name': 'SmartyRat', 'health': 99, 'length': 22, 'body': [(2, 4), (2, 3), (3, 3), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (7, 3), (8, 3), (8, 4), (8, 5), (9, 5), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (8, 1), (7, 1), (6, 1)]}], 'food': [(0, 10), (10, 0), (9, 4), (10, 9), (0, 4), (6, 0), (1, 6)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (4, 5), 'next_move': 'down', 'time': '0.004s'}
 
 
 
