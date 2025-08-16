@@ -147,7 +147,6 @@ def main(game_state, log=True):
             (make_forming_trap),
             (attack_vulnerables),
             (cut_kill_oppotunity2),
-            (cond(len(g.others) == 1 and g.me.length > g.other.length)((push_the_other))),
         ])(moves)
 
     def attack_vulnerables_equal_distance(moves):
@@ -231,64 +230,6 @@ def main(game_state, log=True):
             straight = take_first(straight)
             return distance_pq(straight, p) < distance_pq(snake.head, p)
         return False
-
-    def push_the_other(moves):
-        vdist = distance_vector_abs(g.me.head, g.other.head)
-        dist = distance_pq(g.me.head, g.other.head)
-        pdist = path_distance_pq(g.me.head, g.other.head)
-        if pdist != dist: return
-        if not len(g.other.allowed_moves) <= 2: return
-        if not coming_to(g.me, g.other.head): return
-        
-        #don't push from border to center
-        if not min(distance_to_border(g.me.head)) >= 2: return
-
-        def push_2_2(moves):
-            coming = [a for a in g.other.allowed_moves if distance_pq(a, g.me.head) < distance_pq(g.other.head, g.me.head)]
-            if len(coming) > 1:
-                g.decision_path.append("push")
-                return prefer(lambda a: distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head))(moves)
-            coming = take_first(coming)
-            other_dir = [a for a in g.other.allowed_moves if a not in coming]
-            g.decision_path.append("push")
-            if len(other_dir) == 0:
-                return prefer(lambda a: distance_vector_abs(a, coming) in [(0,2), (2,0)])(moves)
-            else:
-                return prefer(lambda a: distance_vector_abs(a, coming) == (1,1))(moves)
-
-        def push_3_3(moves):
-            coming = [a for a in g.other.allowed_moves if distance_pq(a, g.me.head) < distance_pq(g.other.head, g.me.head)]
-            if len(coming) > 1:
-                return prefer(lambda a: distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head))(moves)
-            coming = take_first(coming)
-            return prefer(lambda a: distance_vector_abs(a, coming) == (2,2))(moves)
-        def push_2_4(moves):
-            return prefer(lambda a: distance_vector_abs(a, g.other.head) == (2,3))(moves)
-        def push_4_2(moves):
-            return prefer(lambda a: distance_vector_abs(a, g.other.head) == (3,2))(moves)
-
-        def push_4_4(moves):
-            coming = [a for a in g.other.allowed_moves if distance_pq(a, g.me.head) < distance_pq(g.other.head, g.me.head)]
-            if len(coming) > 1:
-                g.decision_path.append("push")
-                return prefer(lambda a: distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head))(moves)
-            coming = take_first(coming)
-            g.decision_path.append("push")
-            return prefer(lambda a: distance_vector_abs(a, coming) == (3,3))(moves)
-        def push_3_5(moves):
-            return prefer(lambda a: distance_vector_abs(a, g.other.head) == (3,4))(moves)
-        def push_5_3(moves):
-            return prefer(lambda a: distance_vector_abs(a, g.other.head) == (4,3))(moves)
-
-        return cases([
-            cond(vdist == (2,2))(push_2_2),
-            cond(vdist == (3,3))(push_3_3),
-            cond(vdist == (2,4))(push_2_4),
-            cond(vdist == (4,2))(push_4_2),
-            cond(vdist == (4,4))(push_4_4),
-            cond(vdist == (3,5))(push_3_5),
-            cond(vdist == (5,3))(push_5_3),
-        ])(moves)
 
     def one_step_world(snakes):
         occupied = [p for snake in snakes for p in snake.body[:-1]]
@@ -407,12 +348,13 @@ def main(game_state, log=True):
         #check if cut_set is connected - no hole to escape
         #and put cut_set in line order
 
+        cut_set = sorted(list(set(cut_set)))
+
         if len(cut_set) == 1: return True
 
         def connected(a, b):
             return is_adjacent(a, b) or distance_vector_abs(a,b) == (1,1)
 
-        cut_set.sort()
         cut_set_adjacency = [(a, [b for b in cut_set if connected(a, b)]) for a in cut_set ]
         cut_set_adj_number = [(a, nb) for a,b in cut_set_adjacency for nb in [len(b)]]
         terminals = [(a,nb) for a,nb in cut_set_adj_number if nb == 1]
@@ -1394,13 +1336,13 @@ def main(game_state, log=True):
 
     def reward(moves):
         return cases([
-            cond(len(g.others) == 1 and g.me.length > g.other.length)(longer_push),
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(push),
             cond(g.me.length >= 35)(chase_tail),
             (get_food),
             chase_tail,
         ])(moves)
 
-    def longer_push(moves):
+    def push(moves):
         def push_2(moves):
             if distance_pq(g.me.head, g.other.head) == 2:
                 if distance_vector_abs(g.me.head, g.other.head) != (1,1):
@@ -1412,21 +1354,37 @@ def main(game_state, log=True):
                             g.decision_path.append("longer confront push")
                             return [collision]
 
+        def coming_push(moves):
+            if coming_to(g.me, g.other.head) and coming_to(g.other, g.me.head):
+                if distance_vector_abs(g.me.head, g.other.head) not in [(1,5), (5,1)]:
+                    moves = [a for a in moves if distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head)]
+                    if len(moves) != 0:
+                        g.decision_path.append("coming push")
+                        return moves
+
+        def center_push(moves):
+            if min(distance_to_border(g.me.head)) >= 2:
+                if coming_to(g.me, g.other.head):
+                    near_moves = [a for a in g.other.allowed_moves if distance_pq(a, g.me.head) < distance_pq(g.other.head, g.me.head)]
+                    if len(near_moves) == 1:
+                        near_move = take_first(near_moves)
+                        moves = [a for a in moves if distance_vector_abs(a, near_move) in [(1,1), (2,2)]]
+                        if len(moves) != 0:
+                            g.decision_path.append("center push")
+                            return moves
+
         def push_4(moves):
             if distance_pq(g.me.head, g.other.head) in [4,6]:
                 if path_distance_pq(g.me.head, g.other.head) == distance_pq(g.me.head, g.other.head):
-                    if coming_to(g.me, g.other.head) and coming_to(g.other, g.me.head):
-                        if distance_vector_abs(g.me.head, g.other.head) not in [(1,5), (5,1)]:
-                            moves = [a for a in moves if distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head)]
-                            if len(moves) != 0:
-                                return moves
+                    return cases([
+                        coming_push,
+                        center_push,
+                    ])(moves)
      
-        if len(g.others) == 1:
-            if g.me.length > g.other.length:
-                return cases([
-                    push_2,
-                    push_4,
-                ])(moves)
+        return cases([
+            push_2,
+            push_4,
+        ])(moves)
 
     def chase_tail(moves):
         return cases([
@@ -2034,6 +1992,7 @@ if __name__ == "__main__":
     log = {'id': 'fa929eaf-241e-486f-8303-85bedf52c498', 'turn': 341, 'me': {'name': 'mark_snake', 'health': 72, 'length': 32, 'body': [(4, 5), (5, 5), (6, 5), (7, 5), (7, 4), (8, 4), (8, 5), (8, 6), (8, 7), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (8, 3), (8, 2), (9, 2), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (4, 1), (5, 1), (5, 2), (6, 2), (6, 3), (6, 4)]}, 'others': [{'name': 'Gregory Megory', 'health': 100, 'length': 31, 'body': [(1, 4), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (1, 8), (1, 9), (2, 9), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (9, 9), (8, 9), (7, 9), (7, 8), (6, 8), (6, 7), (6, 6), (5, 6), (5, 7), (4, 7), (3, 7), (3, 7)]}], 'food': [(8, 1), (2, 2)], 'module': 'simp', 'decision_path': ['1v1', 'go cut Gregory Megory'], 'next_coord': (4, 6), 'next_move': 'up', 'time': '0.028s'}
     log = {'id': '0abf40e9-a3cf-4c98-adee-e00df74d41fa', 'turn': 258, 'me': {'name': 'mark_snake', 'health': 86, 'length': 22, 'body': [(5, 7), (4, 7), (3, 7), (3, 8), (3, 9), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (8, 9), (9, 9), (10, 9), (10, 8), (9, 8), (8, 8), (8, 7), (8, 6), (7, 6), (7, 7), (6, 7)]}, 'others': [{'name': 'Natterlie', 'health': 95, 'length': 22, 'body': [(5, 5), (5, 4), (4, 4), (4, 3), (4, 2), (3, 2), (2, 2), (2, 3), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (0, 8), (0, 9), (1, 9), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5)]}], 'food': [(0, 10)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (5, 8), 'next_move': 'up', 'time': '0.005s'}
     log = {'id': '594577e0-f2c4-41c2-9626-d731b249575c', 'turn': 128, 'me': {'name': 'mark_snake', 'health': 88, 'length': 18, 'body': [(1, 3), (2, 3), (2, 4), (2, 5), (3, 5), (3, 4), (3, 3), (4, 3), (4, 2), (4, 1), (4, 0), (5, 0), (6, 0), (6, 1), (7, 1), (8, 1), (9, 1), (9, 2)]}, 'others': [{'name': 'SmartyRat', 'health': 61, 'length': 9, 'body': [(5, 7), (6, 7), (6, 6), (6, 5), (7, 5), (7, 4), (6, 4), (5, 4), (5, 5)]}, {'name': 'conesnake', 'health': 74, 'length': 9, 'body': [(0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (1, 6), (1, 5)]}], 'food': [(10, 6)], 'module': 'simp', 'decision_path': ['1vn', 'try split choice'], 'next_coord': (1, 4), 'next_move': 'up', 'time': '0.005s'}
+    log = {'id': '6816bb06-327e-47ff-b14b-f79198d5a2b8', 'turn': 338, 'me': {'name': 'mark_snake', 'health': 77, 'length': 36, 'body': [(4, 4), (3, 4), (2, 4), (2, 5), (2, 6), (3, 6), (4, 6), (4, 7), (5, 7), (6, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9), (10, 9), (10, 8), (9, 8), (9, 7), (9, 6), (9, 5), (8, 5), (7, 5), (6, 5), (6, 4), (6, 3)]}, 'others': [{'name': 'Snakeformatika', 'health': 65, 'length': 24, 'body': [(7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (3, 2), (3, 3), (2, 3), (2, 2), (2, 1), (1, 1), (1, 2), (1, 3), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]}], 'food': [(9, 10), (10, 6)], 'module': 'simp', 'decision_path': ['1v1', 'chase tail (6, 3)'], 'next_coord': (4, 3), 'next_move': 'down', 'time': '0.009s'}
 
 
 
