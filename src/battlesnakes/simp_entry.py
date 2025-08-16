@@ -452,9 +452,26 @@ def main(game_state, log=True):
                     if p in target.head_space and p not in killer.territory
                        ]
  
-        #sort is done in cut_set_connected check
-        #sorted
-        #cut_set = sorted(list(set(cut_set)))
+        #chasing cut need add the collision point in cut_set
+        if distance_vector_abs(killer.head, target.head) == (1,1):
+            if killer.length > target.length:
+                cut_set += [a for a in killer.allowed_moves if a in target.allowed_moves]
+
+        cut_set = sorted(list(set(cut_set)))
+
+        if len(cut_set) == 1:
+            #grow back
+            while True:
+                if len(cut_set) == 0: 
+                    g.decision_path.append("apparently cut is done")
+                    break
+                cut_point = take_first(cut_set)
+                new_cut_set = [p for p in adj_cells(cut_point) 
+                        if p in killer.territory
+                        and path_distance_pq(target.head, p) > path_distance_pq(target.head, cut_point)
+                        ]
+                if len(new_cut_set) > 1: break
+                cut_set = new_cut_set
 
         #if the target has multiple place to escape then don't do it
         if not cut_set_connected(cut_set): return False
@@ -464,6 +481,10 @@ def main(game_state, log=True):
         occupied = g.occupied_cells[0]+cut_set
         oset = path_connected_set(target.head, occupied)
         oset = [p for p in oset if p != target.head]
+
+        if len(oset) == 0:
+            g.decision_path.append("cut case collision 2")
+            return False
 
         #no tails
         if any([snake.tail in oset for snake in g.snakes]):
@@ -1349,7 +1370,8 @@ def main(game_state, log=True):
                     collision = [a for a in adj_cells(g.me.head) if a in adj_cells(g.other.head)]
                     collision = take_first(collision)
                     #don't push from border to center
-                    if min(distance_to_border(g.me.head)) >= 2:
+                    #if min(distance_to_border(g.me.head)) >= 2:
+                    if sum(distance_to_border(g.me.head)) > sum(distance_to_border(g.other.head)):
                         if collision in moves:
                             g.decision_path.append("longer confront push")
                             return [collision]
@@ -1975,14 +1997,6 @@ def init_from_game_engine_log(log, name):
     return game_state
 
 if __name__ == "__main__":
-    log = {'id': '21a9a569-a404-476b-866c-115f52592ea1', 'turn': 146, 'me': {'name': 'mark_snake', 'health': 96, 'length': 17, 'body': [(4, 0), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (8, 2), (9, 2), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 87, 'length': 16, 'body': [(5, 7), (5, 6), (5, 5), (5, 4), (5, 3), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9), (4, 9)]}, {'name': 'Wim HU', 'health': 91, 'length': 8, 'body': [(4, 8), (4, 7), (3, 7), (2, 7), (1, 7), (0, 7), (0, 8), (0, 9)]}, {'name': 'Frank The Tank', 'health': 80, 'length': 14, 'body': [(0, 2), (0, 3), (0, 4), (0, 5), (1, 5), (1, 6), (2, 6), (2, 5), (2, 4), (1, 4), (1, 3), (2, 3), (3, 3), (3, 4)]}], 'food': [(6, 0)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('Kakemonsteret-v2', 2, (5, 9))]", 'go cut'], 'next_coord': (3, 0), 'next_move': 'left', 'time': '0.006s'}
-    log = {'id': '21a9a569-a404-476b-866c-115f52592ea1', 'turn': 144, 'me': {'name': 'mark_snake', 'health': 98, 'length': 17, 'body': [(5, 1), (6, 1), (7, 1), (7, 2), (8, 2), (9, 2), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (9, 9)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 89, 'length': 16, 'body': [(5, 5), (5, 4), (5, 3), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9), (4, 9), (4, 10), (3, 10)]}, {'name': 'Wim HU', 'health': 93, 'length': 8, 'body': [(3, 7), (2, 7), (1, 7), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10)]}, {'name': 'Frank The Tank', 'health': 82, 'length': 14, 'body': [(0, 4), (0, 5), (1, 5), (1, 6), (2, 6), (2, 5), (2, 4), (1, 4), (1, 3), (2, 3), (3, 3), (3, 4), (4, 4), (4, 3)]}], 'food': [(6, 0)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('Frank The Tank', 2, (0, 2))]", 'go cut'], 'next_coord': (4, 1), 'next_move': 'left', 'time': '0.015s'}
-    log = {'id': '21a9a569-a404-476b-866c-115f52592ea1', 'turn': 145, 'me': {'name': 'mark_snake', 'health': 97, 'length': 17, 'body': [(4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (8, 2), (9, 2), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 88, 'length': 16, 'body': [(5, 6), (5, 5), (5, 4), (5, 3), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (5, 9), (4, 9), (4, 10)]}, {'name': 'Wim HU', 'health': 92, 'length': 8, 'body': [(4, 7), (3, 7), (2, 7), (1, 7), (0, 7), (0, 8), (0, 9), (0, 10)]}, {'name': 'Frank The Tank', 'health': 81, 'length': 14, 'body': [(0, 3), (0, 4), (0, 5), (1, 5), (1, 6), (2, 6), (2, 5), (2, 4), (1, 4), (1, 3), (2, 3), (3, 3), (3, 4), (4, 4)]}], 'food': [(6, 0)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('Frank The Tank', 1, (0, 2))]", 'go cut'], 'next_coord': (4, 0), 'next_move': 'down', 'time': '0.018s'}
-    log = {'id': 'f2763fa5-7e39-4536-8b5e-57d7beff3c76', 'turn': 304, 'me': {'name': 'mark_snake', 'health': 91, 'length': 32, 'body': [(8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (9, 2), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3), (8, 3), (9, 3), (9, 4), (9, 5), (8, 5), (8, 4), (7, 4), (6, 4), (6, 3), (6, 2), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1)]}, 'others': [{'name': 'SmartyRat', 'health': 70, 'length': 15, 'body': [(8, 8), (8, 7), (7, 7), (6, 7), (6, 6), (6, 5), (5, 5), (4, 5), (3, 5), (2, 5), (2, 6), (2, 7), (2, 8), (3, 8), (4, 8)]}], 'food': [(4, 3), (7, 8)], 'module': 'simp', 'decision_path': ['1v1', 'longer confront push'], 'next_coord': (8, 9), 'next_move': 'down', 'time': '0.005s'}
-    log = {'id': '2ef619f7-c52a-4452-8fc5-32f8810e904c', 'turn': 382, 'me': {'name': 'mark_snake', 'health': 91, 'length': 29, 'body': [(1, 1), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (2, 7), (2, 8), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (8, 9), (7, 9), (6, 9), (5, 9)]}, 'others': [{'name': 'SmartyRat', 'health': 93, 'length': 17, 'body': [(4, 4), (5, 4), (5, 5), (6, 5), (7, 5), (7, 4), (7, 3), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (2, 3), (3, 3), (4, 3), (5, 3)]}], 'food': [(9, 8), (6, 6)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (1, 2), 'next_move': 'up', 'time': '0.002s'}
-    log = {'id': '25cd2454-c8b1-4e99-8c4e-64dccaffd67b', 'turn': 217, 'me': {'name': 'mark_snake', 'health': 89, 'length': 14, 'body': [(3, 6), (2, 6), (2, 7), (2, 8), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (6, 8), (7, 8), (7, 7), (6, 7), (5, 7)]}, 'others': [{'name': 'Snakeformatika', 'health': 84, 'length': 14, 'body': [(9, 6), (9, 7), (8, 7), (8, 8), (9, 8), (9, 9), (8, 9), (7, 9), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8)]}, {'name': 'Prüzze v2', 'health': 92, 'length': 19, 'body': [(6, 5), (5, 5), (5, 4), (4, 4), (3, 4), (3, 3), (3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (8, 2), (9, 2), (9, 3), (8, 3), (7, 3), (6, 3)]}], 'food': [(8, 5)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (3, 7), 'next_move': 'up', 'time': '0.016s'}
-    log = {'id': '25cd2454-c8b1-4e99-8c4e-64dccaffd67b', 'turn': 218, 'me': {'name': 'mark_snake', 'health': 88, 'length': 14, 'body': [(3, 7), (3, 6), (2, 6), (2, 7), (2, 8), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (6, 8), (7, 8), (7, 7), (6, 7)]}, 'others': [{'name': 'Snakeformatika', 'health': 83, 'length': 14, 'body': [(10, 6), (9, 6), (9, 7), (8, 7), (8, 8), (9, 8), (9, 9), (8, 9), (7, 9), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9)]}, {'name': 'Prüzze v2', 'health': 91, 'length': 19, 'body': [(6, 6), (6, 5), (5, 5), (5, 4), (4, 4), (3, 4), (3, 3), (3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (8, 2), (9, 2), (9, 3), (8, 3), (7, 3)]}], 'food': [(8, 5)], 'module': 'simp', 'decision_path': ['1vn', 'multi-step collision [((4, 7), 3), ((3, 8), 3)]'], 'next_coord': (3, 8), 'next_move': 'up', 'time': '0.014s'}
-    log = {'id': '892ad015-1e88-445c-9827-fb06d85c9098', 'turn': 318, 'me': {'name': 'mark_snake', 'health': 99, 'length': 34, 'body': [(6, 4), (5, 4), (4, 4), (4, 3), (4, 2), (4, 1), (3, 1), (2, 1), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (6, 1), (6, 2), (7, 2), (8, 2), (9, 2), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10)]}, 'others': [{'name': 'Wim HU', 'health': 90, 'length': 20, 'body': [(8, 6), (9, 6), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (3, 8), (3, 7), (2, 7), (1, 7), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3)]}], 'food': [(1, 10)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (7, 4), 'next_move': 'right', 'time': '0.006s'}
     log = {'id': '57f65068-413e-45d7-851f-704563b69001', 'turn': 110, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 100, 'length': 16, 'alive': True, 'delay': 14, 'body': [(10, 6), (9, 6), (8, 6), (7, 6), (6, 6), (5, 6), (5, 7), (4, 7), (4, 6), (4, 5), (4, 4), (4, 3), (4, 2), (3, 2), (3, 1), (3, 1)]}, {'name': 'mark_snake_test GREEN', 'health': 96, 'length': 19, 'alive': True, 'delay': 7, 'body': [(5, 1), (6, 1), (7, 1), (7, 2), (6, 2), (6, 3), (5, 3), (5, 4), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0)]}], 'food': [(5, 2)]}
     log = {'id': 'fa3cbdd0-9959-4e1b-8160-84ce65ff86c5', 'turn': 69, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 90, 'length': 15, 'alive': True, 'delay': 24, 'body': [(5, 2), (4, 2), (4, 3), (5, 3), (6, 3), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8), (7, 9), (7, 10), (6, 10), (5, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 94, 'length': 13, 'alive': True, 'delay': 7, 'body': [(6, 1), (7, 1), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (9, 1), (9, 2), (9, 3), (8, 3), (8, 2), (7, 2)]}], 'food': [(6, 0)]}
     log = {'id': '9d1ff0da-cf71-4604-b933-20b976dfdafb', 'turn': 67, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 95, 'length': 13, 'alive': True, 'delay': 7, 'body': [(8, 9), (7, 9), (6, 9), (5, 9), (5, 8), (5, 7), (5, 6), (4, 6), (3, 6), (2, 6), (1, 6), (0, 6), (0, 7)]}, {'name': 'mark_snake_test GREEN', 'health': 86, 'length': 13, 'alive': True, 'delay': 7, 'body': [(8, 7), (8, 6), (8, 5), (7, 5), (6, 5), (5, 5), (5, 4), (5, 3), (5, 2), (5, 1), (4, 1), (3, 1), (2, 1)]}], 'food': [(10, 9), (2, 0)]}
@@ -1993,11 +2007,19 @@ if __name__ == "__main__":
     log = {'id': '0abf40e9-a3cf-4c98-adee-e00df74d41fa', 'turn': 258, 'me': {'name': 'mark_snake', 'health': 86, 'length': 22, 'body': [(5, 7), (4, 7), (3, 7), (3, 8), (3, 9), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (8, 9), (9, 9), (10, 9), (10, 8), (9, 8), (8, 8), (8, 7), (8, 6), (7, 6), (7, 7), (6, 7)]}, 'others': [{'name': 'Natterlie', 'health': 95, 'length': 22, 'body': [(5, 5), (5, 4), (4, 4), (4, 3), (4, 2), (3, 2), (2, 2), (2, 3), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (0, 8), (0, 9), (1, 9), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5)]}], 'food': [(0, 10)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (5, 8), 'next_move': 'up', 'time': '0.005s'}
     log = {'id': '594577e0-f2c4-41c2-9626-d731b249575c', 'turn': 128, 'me': {'name': 'mark_snake', 'health': 88, 'length': 18, 'body': [(1, 3), (2, 3), (2, 4), (2, 5), (3, 5), (3, 4), (3, 3), (4, 3), (4, 2), (4, 1), (4, 0), (5, 0), (6, 0), (6, 1), (7, 1), (8, 1), (9, 1), (9, 2)]}, 'others': [{'name': 'SmartyRat', 'health': 61, 'length': 9, 'body': [(5, 7), (6, 7), (6, 6), (6, 5), (7, 5), (7, 4), (6, 4), (5, 4), (5, 5)]}, {'name': 'conesnake', 'health': 74, 'length': 9, 'body': [(0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (1, 6), (1, 5)]}], 'food': [(10, 6)], 'module': 'simp', 'decision_path': ['1vn', 'try split choice'], 'next_coord': (1, 4), 'next_move': 'up', 'time': '0.005s'}
     log = {'id': '6816bb06-327e-47ff-b14b-f79198d5a2b8', 'turn': 338, 'me': {'name': 'mark_snake', 'health': 77, 'length': 36, 'body': [(4, 4), (3, 4), (2, 4), (2, 5), (2, 6), (3, 6), (4, 6), (4, 7), (5, 7), (6, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9), (10, 9), (10, 8), (9, 8), (9, 7), (9, 6), (9, 5), (8, 5), (7, 5), (6, 5), (6, 4), (6, 3)]}, 'others': [{'name': 'Snakeformatika', 'health': 65, 'length': 24, 'body': [(7, 1), (6, 1), (5, 1), (4, 1), (3, 1), (3, 2), (3, 3), (2, 3), (2, 2), (2, 1), (1, 1), (1, 2), (1, 3), (1, 4), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0)]}], 'food': [(9, 10), (10, 6)], 'module': 'simp', 'decision_path': ['1v1', 'chase tail (6, 3)'], 'next_coord': (4, 3), 'next_move': 'down', 'time': '0.009s'}
+    log = {'id': '50f18a97-67a8-45ad-ae98-fdd6c7a405c5', 'turn': 149, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 96, 'length': 26, 'alive': True, 'delay': 10, 'body': [(6, 1), (6, 2), (7, 2), (7, 1), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (2, 6), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6)]}, {'name': 'mark_snake_test GREEN', 'health': 89, 'length': 20, 'alive': True, 'delay': 1, 'body': [(8, 3), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 5), (5, 5), (6, 5), (6, 6), (6, 7), (6, 8), (7, 8), (8, 8), (8, 9), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10)]}], 'food': [(8, 0), (5, 7)]}
+    log = {'id': '50f18a97-67a8-45ad-ae98-fdd6c7a405c5', 'turn': 148, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 97, 'length': 26, 'alive': True, 'delay': 5, 'body': [(6, 2), (7, 2), (7, 1), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (2, 6), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5)]}, {'name': 'mark_snake_test GREEN', 'health': 90, 'length': 20, 'alive': True, 'delay': 4, 'body': [(8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 5), (5, 5), (6, 5), (6, 6), (6, 7), (6, 8), (7, 8), (8, 8), (8, 9), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (4, 9)]}], 'food': [(8, 0), (5, 7)]}
+    log = {'id': '704488f3-a03d-4ebd-a46e-584b4d5abf9e', 'turn': 90, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 99, 'length': 12, 'alive': True, 'delay': 1, 'body': [(1, 1), (1, 2), (1, 3), (1, 4), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10)]}, {'name': 'mark_snake_test GREEN', 'health': 96, 'length': 19, 'alive': True, 'delay': 6, 'body': [(2, 2), (2, 3), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4), (10, 4), (10, 3), (9, 3), (8, 3), (7, 3), (7, 2), (6, 2), (5, 2), (4, 2)]}], 'food': [(6, 10), (4, 8)]}
+    log = {'id': '9a268e12-0648-44e5-a382-29af5edf3538', 'turn': 88, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 95, 'length': 17, 'alive': True, 'delay': 19, 'body': [(1, 9), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (7, 8), (7, 7), (7, 6), (7, 5), (7, 4), (7, 3), (8, 3), (9, 3)]}, {'name': 'mark_snake_test GREEN', 'health': 87, 'length': 18, 'alive': True, 'delay': 10, 'body': [(1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (6, 1), (5, 1), (4, 1), (3, 1), (3, 2)]}], 'food': [(0, 6)]}
+    log = {'id': 'e74a7277-0e50-4f99-89e2-171f17256596', 'turn': 69, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 98, 'length': 12, 'alive': True, 'delay': 3, 'body': [(1, 2), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0)]}, {'name': 'mark_snake_test GREEN', 'health': 97, 'length': 18, 'alive': True, 'delay': 4, 'body': [(2, 3), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (3, 8), (4, 8)]}], 'food': [(5, 2)]}
 
 
 
 
-    game_state = init_from_log(log)
-    #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
+
+
+
+    #game_state = init_from_log(log)
+    game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
     main(game_state)
 
