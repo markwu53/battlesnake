@@ -426,7 +426,9 @@ def main(game_state, log=True):
                 cut_set[0] = start
                 continue
             a = cut_set[i-1]
-            b = take_first([b for b in cut_set_copy if b not in cut_set[:i] and connected(a, b)])
+            b = [b for b in cut_set_copy if b not in cut_set[:i] and connected(a, b)]
+            if len(b) != 1: return False
+            b = take_first(b)
             cut_set[i] = b
 
         return True
