@@ -636,6 +636,8 @@ def main(game_state, log=True):
             occupied = list(set(g.occupied_cells[0]+cells))
             oset = path_connected_set(target.head, occupied)
             oset = [p for p in oset if p != target.head]
+            if any([snake.tail in oset for snake in g.snakes]):
+                continue
             oset = trim_aset(oset, target.head, target.head)
             if len(oset) > target.length * 1.1:
                 continue
@@ -2011,9 +2013,11 @@ if __name__ == "__main__":
     log = {'id': 'f09285e7-b28f-444d-98ad-c6dd0b62a8fd', 'turn': 144, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 99, 'length': 25, 'alive': True, 'delay': 0, 'body': [(7, 3), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (5, 2), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3), (1, 4), (1, 5)]}, {'name': 'mark_snake_test GREEN', 'health': 91, 'length': 18, 'alive': True, 'delay': 6, 'body': [(8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (3, 4), (3, 5), (3, 6), (3, 7), (4, 7), (4, 6), (4, 5), (5, 5), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6)]}], 'food': [(2, 7), (9, 9), (6, 9), (2, 10)]}
     log = {'id': 'f09285e7-b28f-444d-98ad-c6dd0b62a8fd', 'turn': 145, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 98, 'length': 25, 'alive': True, 'delay': 8, 'body': [(8, 3), (7, 3), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (5, 2), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3), (1, 4)]}, {'name': 'mark_snake_test GREEN', 'health': 90, 'length': 18, 'alive': True, 'delay': 3, 'body': [(9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (3, 4), (3, 5), (3, 6), (3, 7), (4, 7), (4, 6), (4, 5), (5, 5), (5, 6), (6, 6), (7, 6), (8, 6)]}], 'food': [(2, 7), (9, 9), (6, 9), (2, 10), (0, 10)]}
     log = {'id': 'f09285e7-b28f-444d-98ad-c6dd0b62a8fd', 'turn': 146, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 97, 'length': 25, 'alive': True, 'delay': 7, 'body': [(9, 3), (8, 3), (7, 3), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (5, 2), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3)]}, {'name': 'mark_snake_test GREEN', 'health': 89, 'length': 18, 'alive': True, 'delay': 8, 'body': [(10, 4), (9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (3, 4), (3, 5), (3, 6), (3, 7), (4, 7), (4, 6), (4, 5), (5, 5), (5, 6), (6, 6), (7, 6)]}], 'food': [(2, 7), (9, 9), (6, 9), (2, 10), (0, 10)]}
+    log = {'id': '324a0ccf-02dc-4ba7-9022-a14e35bdc992', 'turn': 234, 'me': {'name': 'mark_snake', 'health': 72, 'length': 14, 'body': [(7, 5), (8, 5), (9, 5), (9, 4), (9, 3), (9, 2), (9, 1), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 100, 'length': 24, 'body': [(0, 10), (0, 9), (1, 9), (2, 9), (3, 9), (4, 9), (4, 8), (4, 7), (4, 6), (4, 5), (4, 4), (4, 3), (4, 2), (5, 2), (6, 2), (6, 1), (7, 1), (8, 1), (8, 2), (7, 2), (7, 3), (6, 3), (5, 3), (5, 3)]}], 'food': [(2, 10), (0, 4)], 'module': 'simp', 'decision_path': ['1v1', "vulnerable snakes: [('Kakemonsteret-v2', 5, (5, 10))]", 'preliminary cut kill target: Kakemonsteret-v2', 'go cut to (5, 8)'], 'next_coord': (7, 6), 'next_move': 'up', 'time': '0.009s'}
+    log = {'id': '4453260e-362f-4c8e-b919-597735a824f0', 'turn': 185, 'me': {'name': 'mark_snake', 'health': 96, 'length': 19, 'body': [(8, 9), (8, 10), (9, 10), (10, 10), (10, 9), (9, 9), (9, 8), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3), (7, 4)]}, 'others': [{'name': 'Red Yarn', 'health': 95, 'length': 20, 'body': [(5, 8), (4, 8), (3, 8), (2, 8), (1, 8), (1, 7), (2, 7), (3, 7), (3, 6), (3, 5), (3, 4), (3, 3), (3, 2), (4, 2), (5, 2), (6, 2), (6, 3), (6, 4), (5, 4), (5, 5)]}], 'food': [(2, 2), (0, 5), (5, 1)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (7, 9), 'next_move': 'left', 'time': '0.017s'}
 
 
-    #game_state = init_from_log(log)
-    game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
+    game_state = init_from_log(log)
+    #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
     main(game_state)
 
