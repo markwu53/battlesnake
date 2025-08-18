@@ -931,7 +931,7 @@ def main(game_state, log=True):
             (cond(len(g.others) == 1 and g.me.length > g.other.length)(prefer_not(entering_danger(confine_kill_situation)))),
             avoid_single_collision,
             (cond(g.me.length >= 10)(split_choice)),
-            cond(g.me.length <= 10)(multi_step_collision),
+            (cond(g.me.length <= 10)(multi_step_collision)),
         ])(moves)
 
     def confine_kill_situation(killer: Snake, target: Snake):
@@ -1457,11 +1457,16 @@ def main(game_state, log=True):
 
     def get_food(moves):
         food_near = [f for f in g.food if distance_pq(f, g.me.head) <= 8]
-        food_good = [f for f in food_near if path_connected(f, g.me.head) and all([path_distance_pq(f, g.me.head) < path_distance_pq(f, snake.head) for snake in g.others])]
+        food_good = [f for f in food_near 
+                     if path_connected(f, g.me.head) 
+                     and all([path_distance_pq(f, g.me.head) < path_distance_pq(f, snake.head) if snake.length >= g.me.length 
+                     else path_distance_pq(f, g.me.head) <= path_distance_pq(f, snake.head)
+                              for snake in g.others])]
         if len(food_good) != 0:
             food_better = prefer_by_rank(lambda f: path_distance_pq(f, g.me.head))(food_good)
             food_target = take_first(food_better)
             food_moves = shortest_path_move(g.me.head, food_target)
+            g.decision_path.append(f"get food {food_target}")
             return prefer_yes(lambda a: a in food_moves)(moves)
 
     def ____OTHER_CONSIDERATIONS____():
@@ -2019,11 +2024,11 @@ if __name__ == "__main__":
     log = {'id': '148bedd1-9a1c-4449-868b-b87828955abf', 'turn': 70, 'me': {'name': 'mark_snake', 'health': 93, 'length': 8, 'body': [(6, 4), (6, 5), (7, 5), (8, 5), (8, 4), (8, 3), (7, 3), (6, 3)]}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 99, 'length': 9, 'body': [(3, 5), (3, 4), (2, 4), (1, 4), (1, 5), (0, 5), (0, 4), (0, 3), (0, 2)]}, {'name': 'Gregory Megory', 'health': 78, 'length': 7, 'body': [(6, 8), (7, 8), (7, 7), (8, 7), (9, 7), (9, 8), (8, 8)]}, {'name': 'Game of Chicken', 'health': 96, 'length': 10, 'body': [(3, 9), (2, 9), (1, 9), (0, 9), (0, 8), (1, 8), (2, 8), (3, 8), (4, 8), (4, 7)]}], 'food': [(7, 4)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (7, 4), 'next_move': 'right', 'time': '0.044s'}
     log = {'id': 'a9a2ed34-a590-4f21-8928-4ecf9379401e', 'turn': 77, 'me': {'name': 'mark_snake', 'health': 51, 'length': 6, 'body': [(6, 9), (6, 8), (6, 7), (6, 6), (5, 6), (4, 6)]}, 'others': [{'name': 'SmartyRat', 'health': 86, 'length': 6, 'body': [(3, 8), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7)]}, {'name': 'Lancer', 'health': 99, 'length': 11, 'body': [(7, 10), (8, 10), (8, 9), (8, 8), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (9, 5), (9, 6)]}, {'name': 'Prüzze v2', 'health': 93, 'length': 9, 'body': [(4, 3), (5, 3), (6, 3), (6, 2), (6, 1), (7, 1), (8, 1), (9, 1), (9, 2)]}], 'food': [(2, 2), (0, 3)], 'module': 'simp', 'decision_path': ['1vn', 'multi-step collision [((7, 9), 1), ((5, 9), 2), ((6, 10), 1)]', 'too close to corner - take risk'], 'next_coord': (7, 9), 'next_move': 'right', 'time': '0.040s'}
     log = {'id': '646ceebd-e19e-47a3-8e5b-88c6ea603e18', 'turn': 115, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 93, 'length': 15, 'alive': True, 'delay': 23, 'body': [(9, 8), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (9, 4), (8, 4), (7, 4), (6, 4), (6, 3), (6, 2), (6, 1), (6, 0), (7, 0)]}, {'name': 'mark_snake_test BLUE', 'health': 55, 'length': 6, 'alive': False, 'delay': 9, 'body': [(2, 1), (1, 1), (0, 1), (0, 0), (1, 0), (2, 0)]}, {'name': 'mark_snake_test GREEN', 'health': 98, 'length': 15, 'alive': True, 'delay': 6, 'body': [(2, 9), (3, 9), (4, 9), (5, 9), (5, 8), (5, 7), (4, 7), (4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 7), (0, 6), (1, 6)]}, {'name': 'mark_snake_test YELLOW', 'health': 79, 'length': 12, 'alive': False, 'delay': 0, 'body': [(0, 6), (0, 7), (1, 7), (1, 8), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9)]}], 'food': [(8, 5)]}
+    log = {'id': 'f32be290-1721-46b7-b000-da156d76ab73', 'turn': 130, 'me': {'name': 'mark_snake', 'health': 95, 'length': 11, 'body': [(3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (7, 8), (6, 8), (5, 8), (5, 7), (5, 6), (5, 5)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 87, 'length': 12, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (9, 1), (9, 2), (8, 2), (8, 1), (7, 1), (6, 1)]}, {'name': 'StatusCode418', 'health': 70, 'length': 12, 'body': [(9, 9), (9, 8), (9, 7), (9, 6), (10, 6), (10, 5), (10, 4), (10, 3), (9, 3), (9, 4), (8, 4), (8, 3)]}, {'name': 'babble_snake', 'health': 85, 'length': 10, 'body': [(2, 8), (2, 7), (1, 7), (1, 6), (2, 6), (2, 5), (3, 5), (3, 4), (4, 4), (5, 4)]}], 'food': [(4, 10), (2, 9), (6, 10)], 'module': 'simp', 'decision_path': ['1vn', 'try split choice', 'split fail confinement check'], 'next_coord': (3, 10), 'next_move': 'up', 'time': '0.045s'}
 
 
 
-
-    #game_state = init_from_log(log)
-    game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
+    game_state = init_from_log(log)
+    #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
     main(game_state)
 
