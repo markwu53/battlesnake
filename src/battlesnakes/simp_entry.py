@@ -922,6 +922,7 @@ def main(game_state, log=True):
 
     def avoid_danger(moves):
         return seq([
+            avoid_single_collision_dead,
             (wayout),
             (avoid_suppressed_single_collision),
             (prefer_not(entering_danger(immediate_kill_situation))),
@@ -929,10 +930,18 @@ def main(game_state, log=True):
             (prefer_not(entering_danger(border_confront_kill_situation))),
             (prefer_not(entering_danger(trap_kill_situation))),
             (cond(len(g.others) == 1 and g.me.length > g.other.length)(prefer_not(entering_danger(confine_kill_situation)))),
-            avoid_single_collision,
+            (avoid_single_collision),
             (cond(g.me.length >= 10)(split_choice)),
             (cond(g.me.length <= 10)(multi_step_collision)),
         ])(moves)
+
+    def avoid_single_collision_dead(moves):
+        snakes = [snake for snake in g.others if snake.length >= g.me.length and distance_pq(snake.head, g.me.head) == 2]
+        if len(snakes) != 0:
+            dead_moves = [a for a in moves if any([is_adjacent(a, snake.head) and len(snake.allowed_moves) == 1 for snake in snakes])]
+            moves = [a for a in moves if a not in dead_moves]
+            if len(moves) != 0:
+                return moves
 
     def confine_kill_situation(killer: Snake, target: Snake):
         return False
@@ -2025,6 +2034,8 @@ if __name__ == "__main__":
     log = {'id': 'a9a2ed34-a590-4f21-8928-4ecf9379401e', 'turn': 77, 'me': {'name': 'mark_snake', 'health': 51, 'length': 6, 'body': [(6, 9), (6, 8), (6, 7), (6, 6), (5, 6), (4, 6)]}, 'others': [{'name': 'SmartyRat', 'health': 86, 'length': 6, 'body': [(3, 8), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7)]}, {'name': 'Lancer', 'health': 99, 'length': 11, 'body': [(7, 10), (8, 10), (8, 9), (8, 8), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (9, 5), (9, 6)]}, {'name': 'Prüzze v2', 'health': 93, 'length': 9, 'body': [(4, 3), (5, 3), (6, 3), (6, 2), (6, 1), (7, 1), (8, 1), (9, 1), (9, 2)]}], 'food': [(2, 2), (0, 3)], 'module': 'simp', 'decision_path': ['1vn', 'multi-step collision [((7, 9), 1), ((5, 9), 2), ((6, 10), 1)]', 'too close to corner - take risk'], 'next_coord': (7, 9), 'next_move': 'right', 'time': '0.040s'}
     log = {'id': '646ceebd-e19e-47a3-8e5b-88c6ea603e18', 'turn': 115, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 93, 'length': 15, 'alive': True, 'delay': 23, 'body': [(9, 8), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (9, 4), (8, 4), (7, 4), (6, 4), (6, 3), (6, 2), (6, 1), (6, 0), (7, 0)]}, {'name': 'mark_snake_test BLUE', 'health': 55, 'length': 6, 'alive': False, 'delay': 9, 'body': [(2, 1), (1, 1), (0, 1), (0, 0), (1, 0), (2, 0)]}, {'name': 'mark_snake_test GREEN', 'health': 98, 'length': 15, 'alive': True, 'delay': 6, 'body': [(2, 9), (3, 9), (4, 9), (5, 9), (5, 8), (5, 7), (4, 7), (4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 7), (0, 6), (1, 6)]}, {'name': 'mark_snake_test YELLOW', 'health': 79, 'length': 12, 'alive': False, 'delay': 0, 'body': [(0, 6), (0, 7), (1, 7), (1, 8), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9)]}], 'food': [(8, 5)]}
     log = {'id': 'f32be290-1721-46b7-b000-da156d76ab73', 'turn': 130, 'me': {'name': 'mark_snake', 'health': 95, 'length': 11, 'body': [(3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (7, 8), (6, 8), (5, 8), (5, 7), (5, 6), (5, 5)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 87, 'length': 12, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (9, 1), (9, 2), (8, 2), (8, 1), (7, 1), (6, 1)]}, {'name': 'StatusCode418', 'health': 70, 'length': 12, 'body': [(9, 9), (9, 8), (9, 7), (9, 6), (10, 6), (10, 5), (10, 4), (10, 3), (9, 3), (9, 4), (8, 4), (8, 3)]}, {'name': 'babble_snake', 'health': 85, 'length': 10, 'body': [(2, 8), (2, 7), (1, 7), (1, 6), (2, 6), (2, 5), (3, 5), (3, 4), (4, 4), (5, 4)]}], 'food': [(4, 10), (2, 9), (6, 10)], 'module': 'simp', 'decision_path': ['1vn', 'try split choice', 'split fail confinement check'], 'next_coord': (3, 10), 'next_move': 'up', 'time': '0.045s'}
+    log = {'id': 'c130ff8d-a7b7-4e92-8589-4fab572e0c9b', 'turn': 29, 'me': {'name': 'mark_snake', 'health': 75, 'length': 4, 'body': [(1, 0), (1, 1), (1, 2), (1, 3)]}, 'others': [{'name': 'Hunger of Hadar', 'health': 73, 'length': 4, 'body': [(4, 5), (4, 4), (5, 4), (5, 5)]}, {'name': 'rattlesnake', 'health': 98, 'length': 6, 'body': [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6)]}, {'name': 'babble_snake', 'health': 93, 'length': 6, 'body': [(4, 3), (5, 3), (5, 2), (6, 2), (6, 1), (7, 1)]}], 'food': [(3, 7)], 'module': 'simp', 'decision_path': ['1vn', 'vulnerable snakes: []'], 'next_coord': (0, 0), 'next_move': 'left', 'time': '0.008s'}
+
 
 
 
