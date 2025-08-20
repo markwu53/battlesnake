@@ -1483,11 +1483,11 @@ def main(game_state, log=True):
 
     def other_considerations(moves):
         return seq([
-            (prefer_less_split),
-            (prefer_more_next_moves),
+            cond(g.me.length >= 10)(prefer_less_split),
             #cond(len(g.others) >= 2)(split_prefer_open_space),
             #cond(g.me.length <= 8)(prefer_more_next_moves),
             cond(g.me.length <= 16)(prefer_away_border),
+            cond(g.me.length < 10 and len(g.others) >= 2)(prefer_open_space),
             prefer_straight,
         ])(moves)
 
