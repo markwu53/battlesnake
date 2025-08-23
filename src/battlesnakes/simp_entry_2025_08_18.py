@@ -1483,11 +1483,11 @@ def main(game_state, log=True):
 
     def other_considerations(moves):
         return seq([
-            (prefer_less_split),
-            (prefer_more_next_moves),
+            cond(g.me.length >= 10)(prefer_less_split),
             #cond(len(g.others) >= 2)(split_prefer_open_space),
             #cond(g.me.length <= 8)(prefer_more_next_moves),
             cond(g.me.length <= 16)(prefer_away_border),
+            cond(g.me.length < 10 and len(g.others) >= 2)(prefer_open_space),
             prefer_straight,
         ])(moves)
 
@@ -1832,6 +1832,24 @@ def main(game_state, log=True):
 
     def prefer_not(check, message=None):
         return prefer(lambda a: not check(a), message)
+
+    def choose(check):
+        def fn(moves):
+            yes = [a for a in moves if check(a)]
+            no = [a for a in moves if a not in yes]
+            if len(yes) != 0 and len(no) != 0:
+                return yes
+        return fn
+
+    def avoid(check, message=None):
+        def fn(moves):
+            yes = [a for a in moves if check(a)]
+            no = [a for a in moves if a not in yes]
+            if len(yes) != 0 and len(no) != 0:
+                return no
+            if len(no) == 0 and message is not None:
+                g.decision_path.append(f"avoid {message} fail")
+        return fn
 
     def prefer_by_score(score):
         def fn(moves):

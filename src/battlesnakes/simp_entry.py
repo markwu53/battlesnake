@@ -1244,9 +1244,13 @@ def main(game_state, log=True):
             ]):
                 return
    
-        #no near tails
+        #tail
         if any([snake.tail in g.me.territory for snake in g.snakes]):
             return
+        if len(cut_set) != 0:
+            future_tail = g.me.body[-1-len(cut_set)]
+            if any([p in g.me.territory for p in adj_cells(future_tail)]):
+                return
 
         #wayout spacious
         if len(g.me.territory) >= g.me.length * 1.1:
@@ -1833,6 +1837,24 @@ def main(game_state, log=True):
     def prefer_not(check, message=None):
         return prefer(lambda a: not check(a), message)
 
+    def choose(check):
+        def fn(moves):
+            yes = [a for a in moves if check(a)]
+            no = [a for a in moves if a not in yes]
+            if len(yes) != 0 and len(no) != 0:
+                return yes
+        return fn
+
+    def avoid(check, message=None):
+        def fn(moves):
+            yes = [a for a in moves if check(a)]
+            no = [a for a in moves if a not in yes]
+            if len(yes) != 0 and len(no) != 0:
+                return no
+            if len(no) == 0 and message is not None:
+                g.decision_path.append(f"avoid {message} fail")
+        return fn
+
     def prefer_by_score(score):
         def fn(moves):
             moves = [(a, score(a)) for a in moves]
@@ -2035,6 +2057,7 @@ if __name__ == "__main__":
     log = {'id': '646ceebd-e19e-47a3-8e5b-88c6ea603e18', 'turn': 115, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 93, 'length': 15, 'alive': True, 'delay': 23, 'body': [(9, 8), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (9, 4), (8, 4), (7, 4), (6, 4), (6, 3), (6, 2), (6, 1), (6, 0), (7, 0)]}, {'name': 'mark_snake_test BLUE', 'health': 55, 'length': 6, 'alive': False, 'delay': 9, 'body': [(2, 1), (1, 1), (0, 1), (0, 0), (1, 0), (2, 0)]}, {'name': 'mark_snake_test GREEN', 'health': 98, 'length': 15, 'alive': True, 'delay': 6, 'body': [(2, 9), (3, 9), (4, 9), (5, 9), (5, 8), (5, 7), (4, 7), (4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 7), (0, 6), (1, 6)]}, {'name': 'mark_snake_test YELLOW', 'health': 79, 'length': 12, 'alive': False, 'delay': 0, 'body': [(0, 6), (0, 7), (1, 7), (1, 8), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9)]}], 'food': [(8, 5)]}
     log = {'id': 'f32be290-1721-46b7-b000-da156d76ab73', 'turn': 130, 'me': {'name': 'mark_snake', 'health': 95, 'length': 11, 'body': [(3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (7, 8), (6, 8), (5, 8), (5, 7), (5, 6), (5, 5)]}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 87, 'length': 12, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (9, 1), (9, 2), (8, 2), (8, 1), (7, 1), (6, 1)]}, {'name': 'StatusCode418', 'health': 70, 'length': 12, 'body': [(9, 9), (9, 8), (9, 7), (9, 6), (10, 6), (10, 5), (10, 4), (10, 3), (9, 3), (9, 4), (8, 4), (8, 3)]}, {'name': 'babble_snake', 'health': 85, 'length': 10, 'body': [(2, 8), (2, 7), (1, 7), (1, 6), (2, 6), (2, 5), (3, 5), (3, 4), (4, 4), (5, 4)]}], 'food': [(4, 10), (2, 9), (6, 10)], 'module': 'simp', 'decision_path': ['1vn', 'try split choice', 'split fail confinement check'], 'next_coord': (3, 10), 'next_move': 'up', 'time': '0.045s'}
     log = {'id': 'c130ff8d-a7b7-4e92-8589-4fab572e0c9b', 'turn': 29, 'me': {'name': 'mark_snake', 'health': 75, 'length': 4, 'body': [(1, 0), (1, 1), (1, 2), (1, 3)]}, 'others': [{'name': 'Hunger of Hadar', 'health': 73, 'length': 4, 'body': [(4, 5), (4, 4), (5, 4), (5, 5)]}, {'name': 'rattlesnake', 'health': 98, 'length': 6, 'body': [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6)]}, {'name': 'babble_snake', 'health': 93, 'length': 6, 'body': [(4, 3), (5, 3), (5, 2), (6, 2), (6, 1), (7, 1)]}], 'food': [(3, 7)], 'module': 'simp', 'decision_path': ['1vn', 'vulnerable snakes: []'], 'next_coord': (0, 0), 'next_move': 'left', 'time': '0.008s'}
+    log = {'id': '36c1cb98-0267-4be0-93ba-31e5670d7e40', 'turn': 365, 'me': {'name': 'mark_snake', 'health': 91, 'length': 34, 'body': [(5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (9, 8), (8, 8), (7, 8), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0)]}, 'others': [{'name': 'ich heisse marvin', 'health': 77, 'length': 17, 'body': [(4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (3, 9), (2, 9), (1, 9), (0, 9), (0, 8), (1, 8), (1, 7), (1, 6), (2, 6), (2, 5)]}], 'food': [(2, 3), (4, 1)], 'module': 'simp', 'decision_path': ['1v1', 'try wayout'], 'next_coord': (6, 4), 'next_move': 'right', 'time': '0.004s'}
 
 
 
