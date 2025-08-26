@@ -1302,7 +1302,7 @@ def main(game_state, log=True):
         #b is the exit point and is a border point - so not in aset
         b2 = take_first([p for p in adj_cells(b) if p in aset]) if b else a
         while True:
-            trim_set = [p for p in aset if p != a and p != b2 and len([q for q in adj_cells(p) if q in aset+[a]]) == 1]
+            trim_set = [p for p in aset if p != a and p != b2 and len([q for q in adj_cells(p) if q in list(aset)+[a]]) == 1]
             if len(trim_set) == 0:
                 break
             aset = [p for p in aset if p not in trim_set]
