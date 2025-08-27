@@ -1155,14 +1155,15 @@ def main(game_state, log=True):
             return ok_set
 
     def avoid_preliminary_trap(moves):
-        ok_set = []
+        danger_set = []
         for snake in g.others:
-            for a in moves:
-                snake2 = possible_next_state(snake, take_first(snake.allowed_moves))
-                me2 = possible_next_state(g.me, a)
-                if not preliminary_trap(snake2, me2):
-                    ok_set.append(a)
-        danger_set = [a for a in moves if a not in ok_set]
+            if len(snake.allowed_moves) != 0:
+                for a in moves:
+                    snake2 = possible_next_state(snake, take_first(snake.allowed_moves))
+                    me2 = possible_next_state(g.me, a)
+                    if preliminary_trap(snake2, me2):
+                        danger_set.append(a)
+        ok_set = [a for a in moves if a not in danger_set]
         if len(danger_set) != 0:
             g.decision_path.append("avoid preliminary trap")
         if len(ok_set) != 0:
