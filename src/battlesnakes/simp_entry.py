@@ -116,8 +116,9 @@ def main(game_state, log=True):
         hypothetic_development_territories(g.snakes)
 
     def hypothetic_development_territories(snakes):
+        occupied = [p for snake in snakes for p in snake.body[:-1]]
         for snake in snakes:
-            layers = path_connected_layers(snake.head)
+            layers = path_connected_layers(snake.head, occupied)
             snake.cell_distance = {p:i for i,layer in enumerate(layers) for p in layer}
             snake.head_space = [p for layer in layers for p in layer if p != snake.head]
         for snake in snakes:
@@ -929,8 +930,9 @@ def main(game_state, log=True):
             (prefer_not(entering_danger(suppressed_chasing_kill_situation))),
             (prefer_not(entering_danger(border_confront_kill_situation))),
             (prefer_not(entering_danger(trap_kill_situation))),
-            (cond(len(g.others) == 1 and g.me.length > g.other.length)(prefer_not(entering_danger(confine_kill_situation)))),
             (avoid_single_collision),
+            #(prefer_not(entering_danger(confine_kill_situation))),
+            avoid_next_step_confinement,
             (cond(g.me.length >= 10)(split_choice)),
             (cond(g.me.length <= 10)(multi_step_collision)),
         ])(moves)
@@ -943,8 +945,49 @@ def main(game_state, log=True):
             if len(moves) != 0:
                 return moves
 
-    def confine_kill_situation(killer: Snake, target: Snake):
-        return False
+    def avoid_next_step_confinement(moves):
+        distances = [(snake, path_distance_pq(snake.head, g.me.head)) for snake in g.others]
+        min_dist = min([dist for snake, dist in distances])
+        if min_dist == 999:
+            return
+        killer = take_first([snake for snake, dist in distances if dist == min_dist])
+        danger_set = []
+        for a in moves:
+            me2 = possible_next_state(g.me, a)
+            for b in killer.allowed_moves:
+                if b == a: continue
+                snake2 = possible_next_state(killer, b)
+                hypothetic_development_territories([snake2, me2])
+                cut_set = [p
+                            for a in me2.territory
+                            for p in adj_cells(a)
+                            if p in me2.head_space and p not in me2.territory
+                    ] if snake2.length > me2.length else [a
+                            for a in snake2.territory
+                            for p in adj_cells(a)
+                            if p in me2.head_space and p not in snake2.territory
+                            ]
+                cut_set = sorted(list(set(cut_set)))
+                if len(cut_set) == 0: continue
+                if len(cut_set) > 2: continue
+                if len(cut_set) == 2:
+                    if not cut_set_connected(cut_set): continue
+                occupied = [p for snake in [me2, snake2] for p in snake.body[:-1]]+cut_set
+                oset = path_connected_set(me2.head, occupied)
+
+                #no tails
+                if any([snake.tail in oset for snake in [me2, snake2]]): continue
+
+                #trimmed
+                oset = trim_aset(oset, me2.head, me2.head)
+                if len(oset) >= me2.length * 1.1: continue
+                danger_set.append(a)
+        if len(danger_set) != 0:
+            g.decision_path.append(f"avoid next step confinement {danger_set}")
+            moves = [a for a in moves if a not in danger_set]
+            if len(moves) != 0:
+                return moves
+
 
     def entering_danger(danger):
         def fn(a):
@@ -960,7 +1003,7 @@ def main(game_state, log=True):
     def possible_next_state(snake, a):
         ns = Snake(
             snake.name, [a]+snake.body[:-1], snake.health-1
-        ) if a in g.food else Snake(
+        ) if a not in g.food else Snake(
             snake.name, [a]+snake.body[:-1]+[snake.body[-2]], 100
         )
         ns.allowed_moves = [a for a in adj_cells(ns.head) if a not in g.occupied_cells[1]]
@@ -2060,7 +2103,7 @@ if __name__ == "__main__":
     log = {'id': 'c130ff8d-a7b7-4e92-8589-4fab572e0c9b', 'turn': 29, 'me': {'name': 'mark_snake', 'health': 75, 'length': 4, 'body': [(1, 0), (1, 1), (1, 2), (1, 3)]}, 'others': [{'name': 'Hunger of Hadar', 'health': 73, 'length': 4, 'body': [(4, 5), (4, 4), (5, 4), (5, 5)]}, {'name': 'rattlesnake', 'health': 98, 'length': 6, 'body': [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6)]}, {'name': 'babble_snake', 'health': 93, 'length': 6, 'body': [(4, 3), (5, 3), (5, 2), (6, 2), (6, 1), (7, 1)]}], 'food': [(3, 7)], 'module': 'simp', 'decision_path': ['1vn', 'vulnerable snakes: []'], 'next_coord': (0, 0), 'next_move': 'left', 'time': '0.008s'}
     log = {'id': '36c1cb98-0267-4be0-93ba-31e5670d7e40', 'turn': 365, 'me': {'name': 'mark_snake', 'health': 91, 'length': 34, 'body': [(5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (9, 8), (8, 8), (7, 8), (7, 7), (8, 7), (9, 7), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0)]}, 'others': [{'name': 'ich heisse marvin', 'health': 77, 'length': 17, 'body': [(4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (3, 9), (2, 9), (1, 9), (0, 9), (0, 8), (1, 8), (1, 7), (1, 6), (2, 6), (2, 5)]}], 'food': [(2, 3), (4, 1)], 'module': 'simp', 'decision_path': ['1v1', 'try wayout'], 'next_coord': (6, 4), 'next_move': 'right', 'time': '0.004s'}
     log = {'id': '2a44a283-0460-4d22-a667-bb83b9f83662', 'turn': 162, 'me': {'name': 'mark_snake', 'health': 56, 'length': 11, 'body': [(9, 9), (9, 8), (10, 8), (10, 7), (9, 7), (8, 7), (8, 8), (8, 9), (8, 10), (7, 10), (6, 10)]}, 'others': [{'name': 'Wim HU', 'health': 100, 'length': 12, 'body': [(3, 3), (3, 2), (3, 1), (3, 0), (2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 2), (2, 2)]}, {'name': 'conesnake', 'health': 55, 'length': 8, 'body': [(1, 9), (1, 8), (2, 8), (2, 7), (3, 7), (4, 7), (4, 6), (4, 5)]}, {'name': 'Red Yarn', 'health': 100, 'length': 20, 'body': [(9, 5), (10, 5), (10, 6), (9, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (7, 2), (7, 3), (7, 4), (6, 4), (6, 3), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 7)]}], 'food': [(0, 10), (1, 10), (10, 0), (2, 5), (7, 5)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('Red Yarn', 1, (9, 4))]", 'try wayout'], 'next_coord': (9, 10), 'next_move': 'up', 'time': '0.007s'}
-
+    log = {'id': '50e1f763-c462-45d5-bdf6-ede4b16f5f6c', 'turn': 118, 'me': {'name': 'mark_snake', 'health': 65, 'length': 13, 'body': [(6, 6), (5, 6), (5, 5), (5, 4), (6, 4), (7, 4), (8, 4), (8, 5), (8, 6), (8, 7), (9, 7), (10, 7), (10, 8)]}, 'others': [{'name': 'ich heisse marvin', 'health': 44, 'length': 8, 'body': [(6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 7)]}, {'name': 'Game of Chicken', 'health': 75, 'length': 7, 'body': [(3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (1, 3)]}, {'name': 'soma-mini v1[standard]', 'health': 84, 'length': 9, 'body': [(2, 6), (3, 6), (3, 5), (3, 4), (3, 3), (2, 3), (2, 2), (3, 2), (4, 2)]}], 'food': [(4, 10), (1, 9), (5, 0)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (6, 5), 'next_move': 'down', 'time': '0.020s'}
 
 
 
