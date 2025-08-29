@@ -981,7 +981,8 @@ def main(game_state, log=True):
                 if len(cut_set) > 2: continue
                 if len(cut_set) == 2:
                     if not cut_set_connected(cut_set): continue
-                occupied = [p for snake in [me2, snake2] for p in snake.body[:-1]]+cut_set
+                occupied = [p for snake in [me2, snake2] for p in snake.body[:-1]]+g.occupied_cells[1]+cut_set
+                occupied = list(set(occupied))
                 oset = path_connected_set(me2.head, occupied)
 
                 #no tails
