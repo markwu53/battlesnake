@@ -933,7 +933,7 @@ def main(game_state, log=True):
             (prefer_not(entering_danger(trap_kill_situation))),
             (avoid_single_collision),
             #(prefer_not(entering_danger(confine_kill_situation))),
-            cond(g.me.length > 8)(avoid_next_step_confinement),
+            (cond(g.me.length > 8)(avoid_next_step_confinement)),
             (cond(g.me.length >= 10)(split_choice)),
             (cond(g.me.length <= 10)(multi_step_collision)),
         ])(moves)
@@ -989,8 +989,12 @@ def main(game_state, log=True):
                 if any([snake.tail in oset for snake in [me2, snake2]]): continue
 
                 #trimmed
-                oset = trim_aset(oset, me2.head, me2.head)
-                if len(oset) >= me2.length * 1.1: continue
+                indexes = [i for i,c in enumerate(g.me.body) if c != g.me.head and c != g.me.tail and any([p in oset for p in adj_cells(c)])]
+                max_index = max(indexes)
+                wayout_point = g.me.body[max_index]
+                wayout_length = g.me.length - max_index -1
+                oset = trim_aset(oset, me2.head, wayout_point)
+                if len(oset) >= wayout_length * 1.1: continue
 
                 danger_set.append(a)
                 #only need one killer move to make me confined
@@ -2113,6 +2117,7 @@ if __name__ == "__main__":
     log = {'id': 'e68d47bc-aba8-4aca-9ce5-71003ccc5b23', 'turn': 44, 'me': {'name': 'mark_snake', 'health': 91, 'length': 8, 'body': [(7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8), (7, 9), (7, 10)]}, 'others': [{'name': 'SmartyRat', 'health': 76, 'length': 5, 'body': [(3, 3), (3, 2), (2, 2), (2, 3), (2, 4)]}, {'name': 'Natterlie', 'health': 58, 'length': 4, 'body': [(4, 6), (3, 6), (2, 6), (2, 7)]}, {'name': 'Frank The Tank', 'health': 99, 'length': 8, 'body': [(8, 2), (8, 1), (7, 1), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5)]}], 'food': [(4, 4), (5, 3)], 'module': 'simp', 'decision_path': ['1vn', 'multi-step collision [((8, 3), 1), ((7, 2), 1)]', 'take equal collision', 'go to open space (5, 5)'], 'next_coord': (7, 2), 'next_move': 'down', 'time': '0.015s'}
     log = {'id': '84bdb9f4-b0a1-457b-a572-eb830bc9ea7b', 'turn': 135, 'me': {'name': 'mark_snake', 'health': 100, 'length': 10, 'body': [(0, 3), (1, 3), (2, 3), (2, 2), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (6, 1)]}, 'others': [{'name': 'Wim HU', 'health': 94, 'length': 16, 'body': [(5, 4), (5, 5), (6, 5), (7, 5), (8, 5), (9, 5), (10, 5), (10, 4), (10, 3), (9, 3), (8, 3), (8, 2), (7, 2), (7, 3), (6, 3), (5, 3)]}, {'name': 'Game of Chicken', 'health': 96, 'length': 14, 'body': [(5, 10), (6, 10), (6, 9), (5, 9), (5, 8), (5, 7), (5, 6), (4, 6), (4, 7), (4, 8), (3, 8), (3, 9), (2, 9), (1, 9)]}, {'name': 'Red Yarn', 'health': 94, 'length': 8, 'body': [(7, 6), (7, 7), (7, 8), (7, 9), (7, 10), (8, 10), (9, 10), (9, 9)]}], 'food': [(1, 4)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('Game of Chicken', 1, (4, 10))]", 'try split choice'], 'next_coord': (0, 2), 'next_move': 'down', 'time': '0.005s'}
     log = {'id': '79c38401-55c0-4510-b31c-1abd597d6383', 'turn': 126, 'me': {'name': 'mark_snake', 'health': 81, 'length': 12, 'body': [(5, 9), (5, 8), (6, 8), (7, 8), (7, 9), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (9, 8)]}, 'others': [{'name': 'Lancer', 'health': 90, 'length': 15, 'body': [(2, 0), (1, 0), (1, 1), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (3, 1), (4, 1), (4, 2), (3, 2), (3, 3), (4, 3), (4, 4)]}, {'name': 'ich heisse marvin', 'health': 44, 'length': 10, 'body': [(6, 4), (7, 4), (7, 5), (7, 6), (6, 6), (5, 6), (5, 5), (4, 5), (3, 5), (3, 6)]}, {'name': 'soma-mini v1[standard]', 'health': 93, 'length': 9, 'body': [(3, 9), (3, 8), (3, 7), (2, 7), (2, 6), (2, 5), (2, 4), (1, 4), (1, 5)]}], 'food': [(9, 3)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('Lancer', 3, (5, 0))]"], 'next_coord': (6, 9), 'next_move': 'right', 'time': '0.013s'}
+    log = {'id': '22c7da40-3216-40f3-b8b4-f918771aea2f', 'turn': 244, 'me': {'name': 'mark_snake', 'health': 94, 'length': 31, 'body': [(4, 6), (4, 7), (4, 8), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (8, 8), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (7, 3), (6, 3), (6, 2), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (1, 6), (1, 5)]}, 'others': [{'name': 'David Hisselhoff', 'health': 51, 'length': 13, 'body': [(3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (1, 7)]}], 'food': [(9, 4), (9, 1), (4, 4), (3, 2), (7, 6)], 'module': 'simp', 'decision_path': ['1v1', 'avoid next step confinement [(4, 5)]'], 'next_coord': (5, 6), 'next_move': 'right', 'time': '0.006s'}
 
 
 
