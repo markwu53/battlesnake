@@ -994,7 +994,7 @@ def main(game_state, log=True):
                 wayout_point = g.me.body[max_index]
                 wayout_length = g.me.length - max_index -1
                 oset = trim_aset(oset, me2.head, wayout_point)
-                if len(oset) >= wayout_length * 1.1: continue
+                if len(oset) >= wayout_length: continue
 
                 danger_set.append(a)
                 #only need one killer move to make me confined
