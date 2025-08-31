@@ -923,8 +923,8 @@ def main(game_state, log=True):
 
     def avoid_danger(moves):
         return seq([
-            avoid_single_collision_dead,
-            avoid_next_step_no_move,
+            (avoid_single_collision_dead),
+            (avoid_next_step_no_move),
             (wayout),
             (avoid_suppressed_single_collision),
             (prefer_not(entering_danger(immediate_kill_situation))),
@@ -977,7 +977,7 @@ def main(game_state, log=True):
                             if p in me2.head_space and p not in snake2.territory
                             ]
                 cut_set = sorted(list(set(cut_set)))
-                if len(cut_set) == 0: continue
+                #if len(cut_set) == 0: continue
                 if len(cut_set) > 2: continue
                 if len(cut_set) == 2:
                     if not cut_set_connected(cut_set): continue
@@ -2121,6 +2121,7 @@ if __name__ == "__main__":
     log = {'id': '22c7da40-3216-40f3-b8b4-f918771aea2f', 'turn': 244, 'me': {'name': 'mark_snake', 'health': 94, 'length': 31, 'body': [(4, 6), (4, 7), (4, 8), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (8, 8), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (7, 3), (6, 3), (6, 2), (6, 1), (5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (1, 6), (1, 5)]}, 'others': [{'name': 'David Hisselhoff', 'health': 51, 'length': 13, 'body': [(3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (1, 7)]}], 'food': [(9, 4), (9, 1), (4, 4), (3, 2), (7, 6)], 'module': 'simp', 'decision_path': ['1v1', 'avoid next step confinement [(4, 5)]'], 'next_coord': (5, 6), 'next_move': 'right', 'time': '0.006s'}
     log = {'id': 'beec8c1b-b816-424d-af10-5abe21827d02', 'turn': 57, 'me': {'name': 'mark_snake', 'health': 97, 'length': 10, 'body': [(6, 3), (7, 3), (8, 3), (8, 2), (7, 2), (7, 1), (7, 0), (6, 0), (5, 0), (5, 1)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 64, 'length': 6, 'body': [(9, 10), (10, 10), (10, 9), (9, 9), (9, 8), (10, 8)]}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 100, 'length': 7, 'body': [(2, 3), (3, 3), (4, 3), (5, 3), (5, 2), (4, 2), (4, 2)]}, {'name': 'snakey_wakey', 'health': 97, 'length': 9, 'body': [(7, 8), (7, 7), (8, 7), (8, 6), (7, 6), (7, 5), (6, 5), (5, 5), (4, 5)]}], 'food': [(8, 0)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('FerralSnake-standard', 1, (8, 10))]", 'try split choice', 'get food (8, 0)'], 'next_coord': (6, 4), 'next_move': 'up', 'time': '0.029s'}
     log = {'id': 'beec8c1b-b816-424d-af10-5abe21827d02', 'turn': 58, 'me': {'name': 'mark_snake', 'health': 96, 'length': 10, 'body': [(6,4), (6, 3), (7, 3), (8, 3), (8, 2), (7, 2), (7, 1), (7, 0), (6, 0), (5, 0)]}, 'others': [{'name': 'FerralSnake-standard', 'health': 63, 'length': 6, 'body': [(8,10), (9, 10), (10, 10), (10, 9), (9, 9), (9, 8)]}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 99, 'length': 7, 'body': [(2,2), (2, 3), (3, 3), (4, 3), (5, 3), (5, 2), (4, 2)]}, {'name': 'snakey_wakey', 'health': 96, 'length': 9, 'body': [(7,9), (7, 8), (7, 7), (8, 7), (8, 6), (7, 6), (7, 5), (6, 5), (5, 5)]}], 'food': [(8, 0)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('FerralSnake-standard', 1, (8, 10))]", 'try split choice', 'get food (8, 0)'], 'next_coord': (6, 4), 'next_move': 'up', 'time': '0.029s'}
+    log = {'id': 'b674ef84-3b67-4871-9775-351a50570bd6', 'turn': 61, 'me': {'name': 'mark_snake', 'health': 93, 'length': 10, 'body': [(6, 3), (6, 4), (7, 4), (8, 4), (9, 4), (9, 3), (10, 3), (10, 2), (9, 2), (9, 1)]}, 'others': [{'name': 'SmartyRat', 'health': 55, 'length': 4, 'body': [(7, 2), (7, 1), (6, 1), (6, 0)]}, {'name': 'Natterlie', 'health': 96, 'length': 9, 'body': [(5, 2), (4, 2), (4, 3), (3, 3), (3, 4), (2, 4), (2, 5), (1, 5), (1, 6)]}, {'name': 'poc', 'health': 89, 'length': 9, 'body': [(4, 7), (3, 7), (3, 6), (3, 5), (4, 5), (4, 6), (5, 6), (6, 6), (6, 7)]}], 'food': [(6, 2)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (7, 3), 'next_move': 'right', 'time': '0.022s'}
 
 
 
