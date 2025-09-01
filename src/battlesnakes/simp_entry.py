@@ -1077,6 +1077,10 @@ def main(game_state, log=True):
                     if p in g.me.head_space and p not in g.me.territory ] 
         cut_set = sorted(list(set(cut_set)))
  
+        #only consider one-point cut
+        #when cut is too far in the future, don't over optimize it
+        if len(cut_set) > 1: return
+
         if len(cut_set) > 2:
             #if cut_set too long, don't consider cut danger
             return
@@ -1901,10 +1905,11 @@ if __name__ == "__main__":
     log = {'id': 'e1704880-1bfc-4e55-9b7d-cbccaefb4d96', 'turn': 86, 'me': {'name': 'mark_snake', 'health': 99, 'length': 13, 'body': [(10, 4), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (6, 4), (6, 5), (5, 5), (4, 5), (3, 5), (3, 6), (3, 7)]}, 'others': [{'name': 'slieks', 'health': 88, 'length': 8, 'body': [(6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (8, 6), (9, 6)]}, {'name': 'ich heisse marvin', 'health': 69, 'length': 8, 'body': [(3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 0), (6, 0), (5, 0)]}, {'name': 'Spaceheater', 'health': 58, 'length': 6, 'body': [(2, 8), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3)]}], 'food': [(8, 1), (4, 2), (4, 6)], 'module': 'simp', 'decision_path': ['1vn', "vulnerable snakes: [('slieks', 1, (7, 6))]"], 'next_coord': (9, 4), 'next_move': 'left', 'time': '0.021s'}
     log = {'id': 'e1704880-1bfc-4e55-9b7d-cbccaefb4d96', 'turn': 87, 'me': {'name': 'mark_snake', 'health': 98, 'length': 13, 'body': [(9, 4), (10, 4), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (6, 4), (6, 5), (5, 5), (4, 5), (3, 5), (3, 6)]}, 'others': [{'name': 'slieks', 'health': 87, 'length': 8, 'body': [(7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (8, 6)]}, {'name': 'ich heisse marvin', 'health': 68, 'length': 8, 'body': [(3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 0), (6, 0)]}, {'name': 'Spaceheater', 'health': 57, 'length': 6, 'body': [(3, 8), (2, 8), (2, 7), (2, 6), (2, 5), (2, 4)]}], 'food': [(8, 1), (4, 2), (4, 6)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (8, 4), 'next_move': 'left', 'time': '0.005s'}
     log = {'id': 'faaa4285-f09f-4179-8c1c-6367e212405b', 'turn': 120, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 99, 'length': 19, 'alive': True, 'delay': 8, 'body': [(3, 5), (3, 4), (4, 4), (4, 3), (4, 2), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (7, 3), (8, 3), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8)]}, {'name': 'mark_snake_test GREEN', 'health': 89, 'length': 16, 'alive': True, 'delay': 26, 'body': [(4, 6), (3, 6), (3, 7), (3, 8), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (7, 8), (6, 8), (6, 7), (7, 7), (7, 6), (7, 5), (6, 5)]}], 'food': [(8, 1)]}
+    log = {'id': 'b7c66d53-c7bb-4593-8d13-7c4ca3310b69', 'turn': 372, 'me': {'name': 'mark_snake', 'health': 86, 'length': 38, 'body': [(3, 5), (3, 4), (2, 4), (1, 4), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (2, 9), (1, 9), (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (5, 9), (4, 9), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (9, 8), (9, 7), (9, 6), (9, 5), (8, 5), (8, 6), (8, 7), (8, 8), (7, 8)]}, 'others': [{'name': 'conesnake', 'health': 92, 'length': 14, 'body': [(5, 5), (5, 4), (5, 3), (5, 2), (5, 1), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3)]}], 'food': [(4, 0), (6, 3), (1, 2), (1, 5), (1, 7)], 'module': 'simp', 'decision_path': ['1v1', 'try wayout'], 'next_coord': (2, 5), 'next_move': 'left', 'time': '0.006s'}
 
 
 
-    #game_state = init_from_log(log)
-    game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
+    game_state = init_from_log(log)
+    #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
     main(game_state)
 
