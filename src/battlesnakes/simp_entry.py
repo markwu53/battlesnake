@@ -1251,11 +1251,17 @@ def main(game_state, log=True):
 
         def coming_push(moves):
             if coming_to(g.me, g.other.head) and coming_to(g.other, g.me.head):
-                if distance_vector_abs(g.me.head, g.other.head) not in [(1,5), (5,1)]:
+                if distance_pq(g.me.head, g.other.head) == 4:
                     moves = [a for a in moves if distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head)]
                     if len(moves) != 0:
                         g.decision_path.append("coming push")
                         return moves
+                if distance_pq(g.me.head, g.other.head) == 6:
+                    if distance_vector_abs(g.me.head, g.other.head) in [(2,4), (4,2), (3,3)]:
+                        moves = [a for a in moves if distance_vector_abs(a, g.other.head) in [(2,3), (3,2)]]
+                        if len(moves) != 0:
+                            g.decision_path.append("coming push")
+                            return moves
 
         def center_push(moves):
             if min(distance_to_border(g.me.head)) >= 2:
@@ -1906,6 +1912,7 @@ if __name__ == "__main__":
     log = {'id': 'e1704880-1bfc-4e55-9b7d-cbccaefb4d96', 'turn': 87, 'me': {'name': 'mark_snake', 'health': 98, 'length': 13, 'body': [(9, 4), (10, 4), (10, 3), (9, 3), (8, 3), (7, 3), (6, 3), (6, 4), (6, 5), (5, 5), (4, 5), (3, 5), (3, 6)]}, 'others': [{'name': 'slieks', 'health': 87, 'length': 8, 'body': [(7, 6), (6, 6), (5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (8, 6)]}, {'name': 'ich heisse marvin', 'health': 68, 'length': 8, 'body': [(3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 0), (6, 0)]}, {'name': 'Spaceheater', 'health': 57, 'length': 6, 'body': [(3, 8), (2, 8), (2, 7), (2, 6), (2, 5), (2, 4)]}], 'food': [(8, 1), (4, 2), (4, 6)], 'module': 'simp', 'decision_path': ['1vn'], 'next_coord': (8, 4), 'next_move': 'left', 'time': '0.005s'}
     log = {'id': 'faaa4285-f09f-4179-8c1c-6367e212405b', 'turn': 120, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 99, 'length': 19, 'alive': True, 'delay': 8, 'body': [(3, 5), (3, 4), (4, 4), (4, 3), (4, 2), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (7, 3), (8, 3), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8)]}, {'name': 'mark_snake_test GREEN', 'health': 89, 'length': 16, 'alive': True, 'delay': 26, 'body': [(4, 6), (3, 6), (3, 7), (3, 8), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (7, 8), (6, 8), (6, 7), (7, 7), (7, 6), (7, 5), (6, 5)]}], 'food': [(8, 1)]}
     log = {'id': 'b7c66d53-c7bb-4593-8d13-7c4ca3310b69', 'turn': 372, 'me': {'name': 'mark_snake', 'health': 86, 'length': 38, 'body': [(3, 5), (3, 4), (2, 4), (1, 4), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (2, 9), (1, 9), (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (5, 9), (4, 9), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (9, 8), (9, 7), (9, 6), (9, 5), (8, 5), (8, 6), (8, 7), (8, 8), (7, 8)]}, 'others': [{'name': 'conesnake', 'health': 92, 'length': 14, 'body': [(5, 5), (5, 4), (5, 3), (5, 2), (5, 1), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3)]}], 'food': [(4, 0), (6, 3), (1, 2), (1, 5), (1, 7)], 'module': 'simp', 'decision_path': ['1v1', 'try wayout'], 'next_coord': (2, 5), 'next_move': 'left', 'time': '0.006s'}
+    log = {'id': '9283b907-2cee-4fee-99ff-d3693d9ce0bc', 'turn': 312, 'me': {'name': 'mark_snake', 'health': 86, 'length': 28, 'body': [(4, 10), (5, 10), (6, 10), (6, 9), (7, 9), (8, 9), (9, 9), (9, 8), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (9, 2), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (4, 7), (3, 7), (2, 7)]}, 'others': [{'name': 'Spaceheater', 'health': 80, 'length': 16, 'body': [(2, 6), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (1, 5), (2, 5), (3, 5), (4, 5)]}], 'food': [(6, 0), (9, 10), (1, 4)], 'module': 'simp', 'decision_path': ['1v1', 'coming push'], 'next_coord': (3, 10), 'next_move': 'left', 'time': '0.011s'}
 
 
 
