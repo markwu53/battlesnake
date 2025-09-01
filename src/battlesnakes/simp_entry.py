@@ -1343,7 +1343,8 @@ def main(game_state, log=True):
 
     def other_considerations(moves):
         return seq([
-            cond(g.me.length >= 10)(prefer_less_split),
+            multi_step_collision,
+            (cond(g.me.length >= 10)(prefer_less_split)),
             #cond(len(g.others) >= 2)(split_prefer_open_space),
             #cond(g.me.length <= 8)(prefer_more_next_moves),
             cond(g.me.length <= 16)(prefer_away_border),
@@ -1362,11 +1363,6 @@ def main(game_state, log=True):
 
     def prefer_away_border(moves):
         return prefer_by_score(lambda a: min(*distance_to_border(a), 2))(moves)
-
-    def crowd_prefer_open_space(moves):
-        if len(g.others) >= 2:
-            g.decision_path.append("try to go to open space")
-            return split_prefer_open_space(moves)
 
     def split_prefer_open_space(moves):
         ngroup = move_connected_group(moves)
@@ -1913,6 +1909,9 @@ if __name__ == "__main__":
     log = {'id': 'faaa4285-f09f-4179-8c1c-6367e212405b', 'turn': 120, 'nalive': 2, 'snakes': [{'name': 'mark_snake_test RED', 'health': 99, 'length': 19, 'alive': True, 'delay': 8, 'body': [(3, 5), (3, 4), (4, 4), (4, 3), (4, 2), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (7, 3), (8, 3), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8)]}, {'name': 'mark_snake_test GREEN', 'health': 89, 'length': 16, 'alive': True, 'delay': 26, 'body': [(4, 6), (3, 6), (3, 7), (3, 8), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (7, 8), (6, 8), (6, 7), (7, 7), (7, 6), (7, 5), (6, 5)]}], 'food': [(8, 1)]}
     log = {'id': 'b7c66d53-c7bb-4593-8d13-7c4ca3310b69', 'turn': 372, 'me': {'name': 'mark_snake', 'health': 86, 'length': 38, 'body': [(3, 5), (3, 4), (2, 4), (1, 4), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (2, 9), (1, 9), (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (5, 9), (4, 9), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (9, 8), (9, 7), (9, 6), (9, 5), (8, 5), (8, 6), (8, 7), (8, 8), (7, 8)]}, 'others': [{'name': 'conesnake', 'health': 92, 'length': 14, 'body': [(5, 5), (5, 4), (5, 3), (5, 2), (5, 1), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3)]}], 'food': [(4, 0), (6, 3), (1, 2), (1, 5), (1, 7)], 'module': 'simp', 'decision_path': ['1v1', 'try wayout'], 'next_coord': (2, 5), 'next_move': 'left', 'time': '0.006s'}
     log = {'id': '9283b907-2cee-4fee-99ff-d3693d9ce0bc', 'turn': 312, 'me': {'name': 'mark_snake', 'health': 86, 'length': 28, 'body': [(4, 10), (5, 10), (6, 10), (6, 9), (7, 9), (8, 9), (9, 9), (9, 8), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (9, 2), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (4, 7), (3, 7), (2, 7)]}, 'others': [{'name': 'Spaceheater', 'health': 80, 'length': 16, 'body': [(2, 6), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (1, 5), (2, 5), (3, 5), (4, 5)]}], 'food': [(6, 0), (9, 10), (1, 4)], 'module': 'simp', 'decision_path': ['1v1', 'coming push'], 'next_coord': (3, 10), 'next_move': 'left', 'time': '0.011s'}
+    log = {'id': '1708325b-2260-4862-a088-2021c35fc97e', 'turn': 176, 'me': {'name': 'mark_snake', 'health': 98, 'length': 16, 'body': [(8, 6), (9, 6), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (6, 9), (6, 8), (7, 8), (8, 8), (8, 7), (7, 7), (6, 7), (5, 7), (4, 7)]}, 'others': [{'name': '@~~~~@', 'health': 89, 'length': 18, 'body': [(6, 4), (7, 4), (7, 3), (6, 3), (6, 2), (5, 2), (5, 3), (4, 3), (3, 3), (3, 2), (2, 2), (1, 2), (1, 3), (2, 3), (2, 4), (2, 5), (3, 5), (3, 4)]}], 'food': [(5, 0), (2, 6)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (7, 6), 'next_move': 'left', 'time': '0.013s'}
+    log = {'id': 'ca149b53-e520-4465-b816-b23781ae3f6a', 'turn': 192, 'me': {'name': 'mark_snake', 'health': 91, 'length': 16, 'body': [(8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (5, 8), (6, 8), (7, 8), (8, 8), (8, 9), (8, 10), (7, 10), (6, 10), (5, 10)]}, 'others': [{'name': 'slieks', 'health': 87, 'length': 11, 'body': [(9, 1), (8, 1), (7, 1), (6, 1), (6, 0), (5, 0), (5, 1), (5, 2), (6, 2), (7, 2), (8, 2)]}, {'name': '@~~~~@', 'health': 93, 'length': 15, 'body': [(2, 6), (2, 7), (3, 7), (4, 7), (4, 6), (3, 6), (3, 5), (3, 4), (4, 4), (5, 4), (6, 4), (6, 3), (5, 3), (4, 3), (4, 2)]}], 'food': [(10, 10), (0, 3)], 'module': 'simp', 'decision_path': ['1vn', 'preliminary cut kill target: slieks', 'get food (10, 10)'], 'next_coord': (9, 4), 'next_move': 'right', 'time': '0.029s'}
+
 
 
 
