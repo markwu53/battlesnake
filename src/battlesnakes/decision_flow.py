@@ -60,40 +60,6 @@ def main(game_state, log=True, log_db=False):
     def ________DECISION_LOGIC________():
         return
 
-    def decision():
-
-        #estimated 5-step occupied cells
-        g.occupied_cells = [
-            occupied_cells(step)
-            for step in [1,2,3,4,5]
-        ]
-        for snake in g.snakes:
-            snake.allowed_moves = [a for a in adj_cells(snake.head) if a not in g.occupied_cells[0]]
- 
-        if g.turn < 1:
-            g.next_coord = take_first(g.me.allowed_moves)
-            return
-
-        if len(g.me.allowed_moves) == 0:
-            #no allowed moves, die on myself
-            g.next_coord = g.me.neck
-            return
- 
-        if len(g.me.allowed_moves) == 1:
-            #no choice
-            g.next_coord = g.me.allowed_moves[0]
-            return
-
-        if len(g.others) == 0:
-            #win
-            g.next_coord = g.me.allowed_moves[0]
-            return
-
-        #allowed_moves must be 2 or 3
-        moves = decision_flow(g.me.allowed_moves)
-
-        g.next_coord = take_first(moves)
-
     def decision_flow(moves):
         return seq([
             some_calculations,
@@ -140,6 +106,7 @@ def main(game_state, log=True, log_db=False):
             ])),
 
             multi_step_collision,
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(border_go_up),
             (cond(g.me.length >= 10)(prefer_less_split)),
             cond(g.me.length <= 16)(prefer_away_border),
             cond(g.me.length < 10 and len(g.others) >= 2)(prefer_open_space),
@@ -148,13 +115,47 @@ def main(game_state, log=True, log_db=False):
             id,
         ])(moves)
 
-    def fake(moves):
-        return [(4,9)]
+    def decision():
+
+        #estimated 5-step occupied cells
+        g.occupied_cells = [
+            occupied_cells(step)
+            for step in [1,2,3,4,5]
+        ]
+        for snake in g.snakes:
+            snake.allowed_moves = [a for a in adj_cells(snake.head) if a not in g.occupied_cells[0]]
+ 
+        if g.turn < 1:
+            g.next_coord = take_first(g.me.allowed_moves)
+            return
+
+        if len(g.me.allowed_moves) == 0:
+            #no allowed moves, die on myself
+            g.next_coord = g.me.neck
+            return
+ 
+        if len(g.me.allowed_moves) == 1:
+            #no choice
+            g.next_coord = g.me.allowed_moves[0]
+            return
+
+        if len(g.others) == 0:
+            #win
+            g.next_coord = g.me.allowed_moves[0]
+            return
+
+        #allowed_moves must be 2 or 3
+        moves = decision_flow(g.me.allowed_moves)
+
+        g.next_coord = take_first(moves)
 
     def message(msg):
         def fn(moves):
             print(msg, moves)
         return fn
+
+    def border_go_up(moves):
+        pass
 
     def avoid_serious_cut_danger(moves):
         return prefer(no_cut_danger_a(strict=False))(moves)
@@ -536,10 +537,13 @@ def main(game_state, log=True, log_db=False):
                             if p in me2.head_space and p not in snake2.territory
                             ]
                 cut_set = sorted(list(set(cut_set)))
+
                 #if len(cut_set) == 0: continue
-                if len(cut_set) > 2: continue
-                if len(cut_set) == 2:
-                    if not cut_set_connected(cut_set): continue
+                #if len(cut_set) > 2: continue
+                #if len(cut_set) == 2:
+                    #if not cut_set_connected(cut_set): continue
+                if cut_set_too_thick(cut_set): continue
+
                 occupied = [p for snake in [me2, snake2] for p in snake.body[:-1]]+g.occupied_cells[1]+cut_set
                 occupied = list(set(occupied))
                 oset = path_connected_set(me2.head, occupied)
@@ -566,6 +570,19 @@ def main(game_state, log=True, log_db=False):
             moves = [a for a in moves if a not in danger_set]
             if len(moves) != 0:
                 return moves
+
+    def cut_set_too_thick(cut_set):
+        if len(cut_set) <= 2:
+            return False
+        min_x = min([x for x,y in cut_set])
+        max_x = max([x for x,y in cut_set])
+        if max_x - min_x < 2:
+            return False
+        min_y = min([y for x,y in cut_set])
+        max_y = min([y for x,y in cut_set])
+        if max_y - min_y < 2:
+            return False
+        return True
 
     def avoid_single_collision(moves):
         avoid = [a 
@@ -1864,11 +1881,12 @@ if __name__ == "__main__":
     log = {'id': 'ad5c44ea-805a-441d-8645-ad336340c304', 'turn': 311, 'me': {'name': 'mark_snake', 'health': 83, 'length': 29, 'body': [(1, 4), (1, 3), (1, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (3, 7), (4, 7), (4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9)]}, 'others': [{'name': 'Natterlie', 'health': 86, 'length': 24, 'body': [(7, 0), (7, 1), (8, 1), (8, 2), (7, 2), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (5, 6), (4, 6), (3, 6), (3, 5), (4, 5), (4, 4), (4, 3), (5, 3), (5, 2), (4, 2), (4, 1), (3, 1), (2, 1), (1, 1)]}], 'food': [(3, 2)], 'module': 'simp', 'decision_path': ['1v1', 'avoid next step confinement [(1, 5)]'], 'next_coord': (0, 4), 'next_move': 'left', 'time': '0.007s'} 
     log = {'id': 'ad5c44ea-805a-441d-8645-ad336340c304', 'turn': 309, 'me': {'name': 'mark_snake', 'health': 85, 'length': 29, 'body': [(1, 2), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (3, 7), (4, 7), (4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7)]}, 'others': [{'name': 'Natterlie', 'health': 88, 'length': 24, 'body': [(8, 1), (8, 2), (7, 2), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (5, 6), (4, 6), (3, 6), (3, 5), (4, 5), (4, 4), (4, 3), (5, 3), (5, 2), (4, 2), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2)]}], 'food': [(3, 2)], 'module': 'simp', 'decision_path': ['1v1'], 'next_coord': (1, 3), 'next_move': 'up', 'time': '0.006s'}
     log = {'id': 'ad5c44ea-805a-441d-8645-ad336340c304', 'turn': 300, 'me': {'name': 'mark_snake', 'health': 94, 'length': 29, 'body': [(4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (9, 2), (9, 3)]}, 'others': [{'name': 'Natterlie', 'health': 97, 'length': 24, 'body': [(4, 6), (3, 6), (3, 5), (4, 5), (4, 4), (4, 3), (5, 3), (5, 2), (4, 2), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (1, 6), (1, 5), (1, 4)]}], 'food': [(3, 2)], 'module': 'simp', 'decision_path': ['1v1', 'get food (3, 2)'], 'next_coord': (4, 7), 'next_move': 'down', 'time': '0.028s'}
+    log = {'id': 'd61199d0-c5d2-4aab-a07d-d886fb447c8c', 'turn': 137, 'me': {'name': 'mark_snake_test GREEN', 'health': 95, 'length': 22, 'body': [(3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (1, 8), (1, 9), (2, 9), (2, 8), (2, 7), (3, 7), (3, 6), (3, 5), (3, 4), (3, 3)], 'id': 'gs_BtqFkkvj7Hyrj7Rt36fhHwkK'}, 'others': [{'name': 'mark_snake', 'health': 98, 'length': 15, 'body': [(5, 2), (5, 1), (5, 0), (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4), (8, 4), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8)], 'id': 'gs_C6tQ3B7tm4r8PPrvRBJBGvXB'}], 'food': [(8, 2)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (4, 0), 'next_move': 'right', 'time': '0.023s'}
 
 
 
     game_state = init_from_log(log)
-    self_name = "mark_snake"
+    self_name = "mark_snake_test GREEN"
     #game_state = init_from_db_log(id, turn, self_name)
     #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
     main(game_state, log=True, log_db=False)
