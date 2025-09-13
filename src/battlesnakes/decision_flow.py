@@ -1692,7 +1692,7 @@ def main(game_state, log=True, log_db=True):
         return
 
     def init_db():
-        db_conn = sqlite3.connect("my_database.db")
+        db_conn = sqlite3.connect("/project/src/battlesnakes/my_database.db")
         cursor = db_conn.cursor()
         sql = """
         insert into game_turn (game_id, game_turn, food, insert_date) values (?, ?, ?, ?)
