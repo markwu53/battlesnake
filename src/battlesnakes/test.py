@@ -1,4 +1,5 @@
-def irange(a, b):
-    return list([a] if a == b else range(a, b+1) if a < b else range(a,b-1,-1,))
+def fn(name):
+    print(name)
 
-print(irange(7,4))
+fn("Mark", non_existing=False)
+

@@ -55,6 +55,7 @@ def main(game_state, log=True):
         return
 
     def decision():
+
         #estimated 5-step occupied cells
         g.occupied_cells = [
             occupied_cells(step)
