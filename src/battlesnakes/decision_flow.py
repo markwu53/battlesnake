@@ -47,7 +47,7 @@ class GameTurn:
         self.turn = None
         self.vulnerables = []
 
-def main(game_state, log=True, log_db=True):
+def main(game_state, log=True, log_db=False):
 
     ######################################################
     # "global" variable
