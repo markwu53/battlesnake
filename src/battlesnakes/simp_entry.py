@@ -1840,11 +1840,11 @@ def main(game_state, log=True):
         
     def entry_condition():
         if g.me.name in [
-            "mark_snake",
-            #"mark_snake_test RED",
-            #"mark_snake_test BLUE",
-            #"mark_snake_test GREEN",
-            #"mark_snake_test YELLOW",
+            #"mark_snake",
+            "mark_snake_test RED",
+            "mark_snake_test BLUE",
+            "mark_snake_test GREEN",
+            "mark_snake_test YELLOW",
         ]:
             return True
         return False
