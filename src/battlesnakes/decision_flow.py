@@ -1107,6 +1107,7 @@ def main(game_state, log=True, log_db=False):
                                                 and snake.length >= killer.length 
                                                 and take_first(collision_points) in snake.allowed_moves
                                                 ]) == 0:
+                                        g.target_snake = target
                                         return True
         return False
 
