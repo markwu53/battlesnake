@@ -186,6 +186,17 @@ def main(game_state, log=True, log_db=False):
             return ngroup
         return prefer_by_rank(next_ngroup)(moves)
 
+    def corner_danger_food(f):
+        if g.me.length >= 15:
+            return False
+        if not at_corner(f):
+            return False
+        if sum(distance_to_border(f)) <= 1:
+            if distance_pq(f, g.me.head) <= 8:
+                if len([snake for snake in g.others if distance_pq(snake.head, f) <= 8 and snake.length >= g.me.length+2]) != 0:
+                    return True
+        return False
+
     def get_food(moves):
         food_near = [f for f in g.food if distance_pq(f, g.me.head) <= 8]
         food_good = [f for f in food_near 
@@ -193,6 +204,7 @@ def main(game_state, log=True, log_db=False):
                      and all([path_distance_pq(f, g.me.head) < path_distance_pq(f, snake.head) if snake.length >= g.me.length 
                      else path_distance_pq(f, g.me.head) <= path_distance_pq(f, snake.head)
                               for snake in g.others])]
+        food_good = [f for f in food_good if not corner_danger_food(f)]
         if len(food_good) == 0:
             return
 
@@ -1891,6 +1903,7 @@ if __name__ == "__main__":
     log = {'id': 'ad5c44ea-805a-441d-8645-ad336340c304', 'turn': 300, 'me': {'name': 'mark_snake', 'health': 94, 'length': 29, 'body': [(4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (9, 2), (9, 3)]}, 'others': [{'name': 'Natterlie', 'health': 97, 'length': 24, 'body': [(4, 6), (3, 6), (3, 5), (4, 5), (4, 4), (4, 3), (5, 3), (5, 2), (4, 2), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (1, 6), (1, 5), (1, 4)]}], 'food': [(3, 2)], 'module': 'simp', 'decision_path': ['1v1', 'get food (3, 2)'], 'next_coord': (4, 7), 'next_move': 'down', 'time': '0.028s'}
     log = {'id': 'd61199d0-c5d2-4aab-a07d-d886fb447c8c', 'turn': 137, 'me': {'name': 'mark_snake_test GREEN', 'health': 95, 'length': 22, 'body': [(3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (1, 8), (1, 9), (2, 9), (2, 8), (2, 7), (3, 7), (3, 6), (3, 5), (3, 4), (3, 3)], 'id': 'gs_BtqFkkvj7Hyrj7Rt36fhHwkK'}, 'others': [{'name': 'mark_snake', 'health': 98, 'length': 15, 'body': [(5, 2), (5, 1), (5, 0), (6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4), (8, 4), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8)], 'id': 'gs_C6tQ3B7tm4r8PPrvRBJBGvXB'}], 'food': [(8, 2)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (4, 0), 'next_move': 'right', 'time': '0.023s'}
     log = {'id': 'ad12fd1f-f49a-4f8b-a80a-d796a838ff6a', 'turn': 111, 'me': {'name': 'mark_snake', 'health': 91, 'length': 11, 'body': [(6, 9), (6, 8), (5, 8), (4, 8), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (8, 6), (8, 5)], 'id': 'gs_mrxS3X7pbX7jXcdjDdRGdXMf'}, 'others': [{'name': 'SmartyRat', 'health': 93, 'length': 5, 'body': [(1, 6), (1, 5), (1, 4), (1, 3), (1, 2)], 'id': 'gs_G8cFMX9jkCGMWRKdYGVM8d64'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 77, 'length': 15, 'body': [(7, 0), (6, 0), (5, 0), (5, 1), (6, 1), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (6, 5), (6, 4), (5, 4), (4, 4), (4, 3)], 'id': 'gs_QFgm6DMXpkb6jKJJhYWJFJXJ'}, {'name': 'Lancer', 'health': 95, 'length': 10, 'body': [(5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (9, 9), (8, 9), (7, 9)], 'id': 'gs_9xrqdQPyPXxbjGPDJ7qkMjkR'}], 'food': [(2, 10), (9, 4)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Copy of snake2_v3_FINAL_final(1)', 1, (8, 0))]"], 'next_coord': (7, 9), 'next_move': 'right', 'time': '0.002s'}
+    log = {'id': '1b21d19f-d9b7-4826-9e00-4049c87cce2e', 'turn': 56, 'me': {'name': 'mark_snake', 'health': 67, 'length': 5, 'body': [(2, 2), (2, 1), (2, 0), (1, 0), (1, 1)], 'id': 'gs_VSS6McdSVFwjxS7SKvCSX8JT'}, 'others': [{'name': 'mini snake', 'health': 71, 'length': 5, 'body': [(4, 4), (5, 4), (5, 3), (4, 3), (4, 2)], 'id': 'gs_S74rJWwkTMkqCQ3dPGk9hBwd'}, {'name': 'Snakeformatika', 'health': 68, 'length': 8, 'body': [(4, 0), (5, 0), (6, 0), (6, 1), (7, 1), (7, 2), (6, 2), (6, 3)], 'id': 'gs_hxFg8tr7PmCCDSdjbBcv9qHD'}], 'food': [(7, 3), (0, 0)], 'module': 'decision_flow', 'decision_path': ['1vn', 'get food (0, 0)'], 'next_coord': (1, 2), 'next_move': 'left', 'time': '0.014s'}
 
 
 
