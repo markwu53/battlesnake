@@ -96,6 +96,7 @@ def main(game_state, log=True, log_db=False):
             cut_kill_oppotunity,
 
             (cond(g.me.length > 8)(avoid_next_step_confinement)),
+            avoid_two_snake_trap,
             (cond(g.me.length >= 10)(split_choice)),
             cond(8 <= g.me.length <= 9)(collision_take_risk),
             (cond(g.me.length <= 10)(multi_step_collision)),
@@ -416,6 +417,23 @@ def main(game_state, log=True, log_db=False):
     def at_corner(p):
         distv = distance_to_border(p)
         return sum(distv) <= 2
+
+    def avoid_two_snake_trap(moves):
+        snakes = [snake for snake in g.others if distance_vector_abs(snake.head, g.me.head) == (1,1)]
+        if len(snakes) != 2:
+            return
+        snake1, snake2 = snakes
+        if distance_vector_abs(snake1.head, snake2.head) not in [(0,2), (2,0)]:
+            return
+        danger = [a for a in moves if a in snake1.allowed_moves and a in snake2.allowed_moves]
+        if len(danger) == 0:
+            return
+        danger = take_first(danger)
+        if all([any([get_adjacent_dir(snake.head, a) == get_adjacent_dir(g.me.head, danger) for a in snake.allowed_moves]) for snake in snakes]):
+            g.decision_path.append("avoid two-snake trap")
+            moves = [a for a in moves if a != danger]
+            if len(moves) != 0:
+                return moves
 
     def split_choice(moves):
         ngroup = move_connected_group(moves)
@@ -1935,6 +1953,7 @@ if __name__ == "__main__":
     log = {'id': '9b1130b0-9df2-4cc7-af08-1c77df536084', 'turn': 138, 'me': {'name': 'mark_snake', 'health': 95, 'length': 9, 'body': [(6, 4), (7, 4), (8, 4), (8, 3), (8, 2), (7, 2), (6, 2), (5, 2), (5, 3)], 'id': 'gs_cgWd67FPGfxD8PTyPYgJKCQY'}, 'others': [{'name': 'mini snake', 'health': 89, 'length': 9, 'body': [(1, 3), (2, 3), (2, 4), (3, 4), (4, 4), (4, 5), (3, 5), (3, 6), (3, 7)], 'id': 'gs_PkdJYYgXQkG3vkdC3h7M8BJ6'}, {'name': 'SmartyRat', 'health': 56, 'length': 5, 'body': [(8, 6), (9, 6), (9, 5), (8, 5), (7, 5)], 'id': 'gs_wWFSBxRhw7jkP8XdxkpRDpTC'}, {'name': 'go-st', 'health': 88, 'length': 15, 'body': [(5, 5), (5, 6), (4, 6), (4, 7), (5, 7), (5, 8), (6, 8), (6, 9), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (8, 9), (7, 9)], 'id': 'gs_RhwWKkg8jwkdqHG6JvD7BMBC'}], 'food': [(10, 10), (1, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'apparently cut is done', 'multi-step collision [((5, 4), 1), ((6, 5), 1), ((6, 3), 2)]'], 'next_coord': (6, 3), 'next_move': 'down', 'time': '0.022s'}
     log = {'id': '24454c0b-98c0-456d-8c48-7a96b22bb899', 'turn': 59, 'me': {'name': 'mark_snake', 'health': 81, 'length': 7, 'body': [(4, 1), (3, 1), (2, 1), (2, 2), (2, 3), (3, 3), (3, 2)], 'id': 'gs_7ywvCkCRPXPkwrRGhcrQhSmd'}, 'others': [{'name': 'go-st', 'health': 94, 'length': 6, 'body': [(0, 3), (0, 4), (0, 5), (1, 5), (1, 4), (2, 4)], 'id': 'gs_TtGqpKyj7qTHjFdGGyrMFFDS'}, {'name': 'ich heisse marvin', 'health': 87, 'length': 8, 'body': [(5, 2), (5, 3), (5, 4), (5, 5), (6, 5), (7, 5), (7, 6), (7, 7)], 'id': 'gs_hY8qHtx7vbb6BPt8Bj9dH7bR'}, {'name': 'Game of Chicken', 'health': 100, 'length': 7, 'body': [(1, 6), (1, 7), (1, 8), (2, 8), (3, 8), (3, 7), (3, 7)], 'id': 'gs_vCRTY43QQdtS7XJvTSQWR8CK'}], 'food': [(4, 5)], 'module': 'decision_flow', 'decision_path': ['1vn', 'multi-step collision [((5, 1), 1), ((4, 2), 1)]'], 'next_coord': (4, 0), 'next_move': 'down', 'time': '0.012s'}
     log = {'id': '33fa0133-283e-4504-8eba-1d69cc511d87', 'turn': 113, 'me': {'name': 'mark_snake', 'health': 61, 'length': 11, 'body': [(3, 8), (3, 7), (3, 6), (3, 5), (3, 4), (4, 4), (4, 5), (4, 6), (5, 6), (5, 5), (5, 4)], 'id': 'gs_CWdWWjXt3qQyJ7VjYhvfkfJY'}, 'others': [{'name': 'Lancer', 'health': 76, 'length': 9, 'body': [(0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (1, 5), (1, 6), (1, 7), (1, 8)], 'id': 'gs_ScKgDrb7cDMB99W7Kb6Q4BJC'}, {'name': 'go-st', 'health': 92, 'length': 12, 'body': [(8, 5), (8, 4), (9, 4), (9, 3), (8, 3), (8, 2), (8, 1), (8, 0), (7, 0), (7, 1), (7, 2), (7, 3)], 'id': 'gs_7yGbMypHkFgDDb6cKG73hv7V'}, {'name': 'ich heisse marvin', 'health': 48, 'length': 10, 'body': [(5, 0), (5, 1), (4, 1), (3, 1), (3, 2), (2, 2), (1, 2), (1, 3), (1, 4), (0, 4)], 'id': 'gs_3yfVJRhf4MbvxD8vpM4CJF8R'}], 'food': [(0, 0), (9, 0)], 'module': 'decision_flow', 'decision_path': ['1vn'], 'next_coord': (4, 8), 'next_move': 'right', 'time': '0.021s'}
+    log = {'id': '3435befb-2d5e-460f-8b4c-465f5e203b30', 'turn': 77, 'me': {'name': 'mark_snake', 'health': 100, 'length': 12, 'body': [(7, 6), (7, 7), (8, 7), (9, 7), (9, 8), (8, 8), (7, 8), (6, 8), (6, 9), (6, 10), (5, 10), (5, 10)], 'id': 'gs_MwBTr4FqgYfBqrgHRv6MST8Y'}, 'others': [{'name': 'SmartyRat', 'health': 92, 'length': 6, 'body': [(8, 5), (9, 5), (9, 4), (9, 3), (8, 3), (8, 2)], 'id': 'gs_PkbdK6x8GP6fpHd4MdDBKywP'}, {'name': 'Wim HU', 'health': 75, 'length': 9, 'body': [(6, 5), (6, 6), (5, 6), (4, 6), (4, 7), (4, 8), (4, 9), (4, 10), (3, 10)], 'id': 'gs_Wm88V36bkK76gD7DmhRdkK9W'}, {'name': 'Red Yarn', 'health': 88, 'length': 10, 'body': [(2, 7), (3, 7), (3, 6), (3, 5), (3, 4), (3, 3), (4, 3), (4, 2), (5, 2), (5, 3)], 'id': 'gs_7gkQKgd8PWc39P3Xh3fCDb4d'}], 'food': [(6, 3)], 'module': 'decision_flow', 'decision_path': ['1vn', 'try split choice'], 'next_coord': (7, 5), 'next_move': 'down', 'time': '0.026s'}
 
 
     game_state = init_from_log(log)
