@@ -101,6 +101,8 @@ def main(game_state, log=True, log_db=False):
             cond(8 <= g.me.length <= 9)(collision_take_risk),
             (cond(g.me.length <= 10)(multi_step_collision)),
 
+            cond(len(g.others) == 1 and g.me.length >= g.other.length)(avoid_cornered_bordered),
+
             #rewards
             #I'm not sure if this should be a par or seq
             #I used par before but let's experiment seq
@@ -179,7 +181,6 @@ def main(game_state, log=True, log_db=False):
             return
         oset = sorted(g.other.territory)
         trimmed_oset, wayout_point, wayout_length = self_wayout_calculations(g.other)
-        print(wayout_point, wayout_length)
 
         #I want to gain territory, or sequeeze opponent territory at the same time
         #I don't know how to do that exactly
@@ -205,6 +206,19 @@ def main(game_state, log=True, log_db=False):
         # So the whole loop may not be a rectangle. 
         # My purpose is to gain more and more territory from the opponent with the most efficient route.
 
+
+    def avoid_cornered_bordered(moves):
+        #only one opponent
+        if sum(distance_to_border(g.me.head)) <= 1:
+            if distance_pq(g.me.head, g.other.head) <= 8:
+                if path_distance_pq(g.me.head, g.other.head) == distance_pq(g.me.head, g.other.head):
+                    g.decision_path.append("avoid cornered bordered")
+                    return prefer_not(on_border)(moves)
+        if sum(distance_to_border(g.me.head)) <= 2:
+            if distance_pq(g.me.head, g.other.head) <= 6:
+                if path_distance_pq(g.me.head, g.other.head) == distance_pq(g.me.head, g.other.head):
+                    g.decision_path.append("avoid cornered bordered")
+                    return prefer_by_rank(lambda a: min(distance_vector_abs(a, g.other.head)))(moves)
 
     def border_go_up(moves):
         pass
@@ -348,6 +362,8 @@ def main(game_state, log=True, log_db=False):
                 if distance_vector_abs(g.me.head, g.other.head) != (1,1):
                     collision = [a for a in adj_cells(g.me.head) if a in adj_cells(g.other.head)]
                     collision = take_first(collision)
+                    if collision not in moves: return
+
                     #don't push from border to center
                     #if min(distance_to_border(g.me.head)) >= 2:
                     if sum(distance_to_border(g.me.head)) > sum(distance_to_border(g.other.head)):
@@ -365,6 +381,7 @@ def main(game_state, log=True, log_db=False):
             if coming_to(g.me, g.other.head) and coming_to(g.other, g.me.head):
                 if distance_pq(g.me.head, g.other.head) == 4:
                     moves = [a for a in moves if distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head)]
+                    print(moves)
                     if len(moves) != 0:
                         g.decision_path.append("coming push")
                         return moves
@@ -396,7 +413,7 @@ def main(game_state, log=True, log_db=False):
     
         return par([
             push_2,
-            push_4,
+            (push_4),
         ])(moves)
 
     def multi_step_collision(moves):
@@ -2003,6 +2020,9 @@ if __name__ == "__main__":
     log = {'id': '3c22aff5-d232-41ec-a3eb-95997bab0709', 'turn': 348, 'me': {'name': 'mark_snake', 'health': 97, 'length': 25, 'body': [(8, 2), (8, 3), (8, 4), (8, 5), (9, 5), (9, 4), (9, 3), (9, 2), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (9, 9), (9, 8), (9, 7), (8, 7), (7, 7), (7, 8), (7, 9)], 'id': 'gs_3rT6W93TXKcC7qHgrYMTf9KS'}, 'others': [{'name': 'ich heisse marvin', 'health': 96, 'length': 15, 'body': [(6, 8), (5, 8), (4, 8), (4, 7), (3, 7), (2, 7), (2, 6), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (7, 4), (7, 3)], 'id': 'gs_BhkggfdB6DrgqXtfYqpXGm8D'}], 'food': [(3, 10), (1, 8), (3, 8)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (8, 1), 'next_move': 'down', 'time': '0.009s'}
     log = {'id': '75c7e050-9328-4e5a-a44b-86d0e265fb3b', 'turn': 298, 'me': {'name': 'mark_snake', 'health': 60, 'length': 23, 'body': [(3, 7), (4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (9, 6), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (6, 10), (6, 9), (7, 9), (7, 8), (6, 8), (5, 8), (4, 8)], 'id': 'gs_99wp73gMGVHMWgDwRpfG7B6P'}, 'others': [{'name': 'Game of Chicken', 'health': 93, 'length': 34, 'body': [(4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (8, 5), (8, 4), (7, 4), (6, 4), (6, 3), (6, 2), (7, 2), (7, 3), (8, 3), (9, 3), (10, 3), (10, 2), (10, 1), (9, 1), (9, 2), (8, 2), (8, 1), (8, 0), (7, 0), (7, 1), (6, 1), (5, 1), (5, 2), (5, 3), (5, 4), (4, 4), (3, 4), (3, 5), (4, 5)], 'id': 'gs_hGvMf9Sg3ryg8YPkKkkXXcg3'}], 'food': [(5, 10), (2, 2), (4, 10), (2, 1)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (4, 10) via (3, 10)'], 'next_coord': (3, 8), 'next_move': 'up', 'time': '0.012s'}
     log = {'id': '75c7e050-9328-4e5a-a44b-86d0e265fb3b', 'turn': 276, 'me': {'name': 'mark_snake', 'health': 82, 'length': 23, 'body': [(4, 8), (3, 8), (2, 8), (1, 8), (1, 9), (2, 9), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (1, 7), (2, 7), (3, 7), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2)], 'id': 'gs_99wp73gMGVHMWgDwRpfG7B6P'}, 'others': [{'name': 'Game of Chicken', 'health': 100, 'length': 32, 'body': [(8, 0), (7, 0), (7, 1), (6, 1), (5, 1), (5, 2), (5, 3), (5, 4), (4, 4), (3, 4), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (7, 6), (8, 6), (8, 5), (8, 4), (9, 4), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (6, 10), (6, 10)], 'id': 'gs_hGvMf9Sg3ryg8YPkKkkXXcg3'}], 'food': [(7, 4)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (5, 8), 'next_move': 'right', 'time': '0.004s'}
+    log = {'id': 'ac1b1bcc-fc71-471e-8538-6d4962277288', 'turn': 289, 'me': {'name': 'mark_snake', 'health': 99, 'length': 27, 'body': [(1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5)], 'id': 'gs_JJGhw7RYQdwrgK8fvdQFjqC9'}, 'others': [{'name': 'ich heisse marvin', 'health': 91, 'length': 18, 'body': [(6, 7), (7, 7), (8, 7), (9, 7), (9, 8), (9, 9), (9, 10), (8, 10), (7, 10), (7, 9), (8, 9), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8)], 'id': 'gs_wtHBVQfTcXjXt766d7K36hKT'}], 'food': [(5, 9)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (5, 9)'], 'next_coord': (2, 10), 'next_move': 'right', 'time': '0.014s'}
+    log = {'id': 'ac1b1bcc-fc71-471e-8538-6d4962277288', 'turn': 290, 'me': {'name': 'mark_snake', 'health': 99, 'length': 27, 'body': [(1,9), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4)], 'id': 'gs_JJGhw7RYQdwrgK8fvdQFjqC9'}, 'others': [{'name': 'ich heisse marvin', 'health': 91, 'length': 18, 'body': [(5,7), (6, 7), (7, 7), (8, 7), (9, 7), (9, 8), (9, 9), (9, 10), (8, 10), (7, 10), (7, 9), (8, 9), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8)], 'id': 'gs_wtHBVQfTcXjXt766d7K36hKT'}], 'food': [(5, 9)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (5, 9)'], 'next_coord': (2, 10), 'next_move': 'right', 'time': '0.014s'}
+    log = {'id': 'ac1b1bcc-fc71-471e-8538-6d4962277288', 'turn': 291, 'me': {'name': 'mark_snake', 'health': 99, 'length': 27, 'body': [(1,8), (1,9), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3)], 'id': 'gs_JJGhw7RYQdwrgK8fvdQFjqC9'}, 'others': [{'name': 'ich heisse marvin', 'health': 91, 'length': 18, 'body': [(4,7), (5,7), (6, 7), (7, 7), (8, 7), (9, 7), (9, 8), (9, 9), (9, 10), (8, 10), (7, 10), (7, 9), (8, 9), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8)], 'id': 'gs_wtHBVQfTcXjXt766d7K36hKT'}], 'food': [(5, 9)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (5, 9)'], 'next_coord': (2, 10), 'next_move': 'right', 'time': '0.014s'}
 
 
     game_state = init_from_log(log)
