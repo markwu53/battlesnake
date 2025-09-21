@@ -1,5 +1,10 @@
-def fn(name):
-    print(name)
+a = [
+    1,
+        2,
+        3,
+    4,
+    5,
+]
 
-fn("Mark", non_existing=False)
+print(a)
 
