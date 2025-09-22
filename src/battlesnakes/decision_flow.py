@@ -1255,7 +1255,7 @@ def main(game_state, log=True, log_db=False):
         collision = [a for a in moves if a in snake.allowed_moves]
         c = take_first([c for c in snake.allowed_moves if c not in collision])
         snake2 = possible_next_state(snake, c)
-        others = [possible_next_state(s, take_first(s.allowed_moves)) for s in g.others if s.head != snake.head]
+        others = [possible_next_state(s, take_first(s.allowed_moves)) for s in g.others if s.head != snake.head and len(s.allowed_moves) != 0]
 
         for m in collision:
             me2 = possible_next_state(g.me, m)
