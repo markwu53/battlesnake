@@ -119,6 +119,7 @@ def main(game_state, log=True, log_db=False):
             multi_step_collision,
             cond(len(g.others) == 1 and g.me.length > g.other.length)(border_go_up),
             (cond(g.me.length >= 10)(prefer_less_split)),
+            cond(g.me.length <15)(prefer_more_territory),
             cond(g.me.length <= 16)(prefer_away_border),
             cond(g.me.length < 10 and len(g.others) >= 2)(prefer_open_space),
             prefer(is_straight),
@@ -230,6 +231,18 @@ def main(game_state, log=True, log_db=False):
         #I'll define it as territory is less than or equal to 2
         return prefer_not(serious_cut_danger_a)(moves)
         #return prefer(no_cut_danger_a(strict=False))(moves)
+
+    def prefer_more_territory(moves):
+        return prefer_by_score(lambda a: len(new_territory(a)))(moves)
+
+    def new_territory(a):
+        territory = g.me.territory
+        territory_border = [p for p in territory if len([q for q in adj_cells(p) if q not in territory and q not in g.occupied_cells[0] and q != g.me.head]) != 0]
+        lost = [p for p in territory_border if path_distance_pq(a, p) > path_distance_pq(g.me.head, p)]
+        gain = [q for p in territory_border if path_distance_pq(a, p) < path_distance_pq(g.me.head, p)
+                for q in adj_cells(p) if q not in territory and q not in g.occupied_cells[0] and q != g.me.head]
+        new_territory = list(set([p for p in territory if p not in lost] + gain))
+        return new_territory
 
     def prefer_open_space(moves):
         aset = path_connected_set(g.me.head)
@@ -2075,6 +2088,7 @@ if __name__ == "__main__":
     log = {'id': 'c156aee4-45b6-46e3-9e39-c745f0cdb7ae', 'turn': 28, 'me': {'name': 'mark_snake', 'health': 76, 'length': 4, 'body': [(3, 5), (2, 5), (2, 6), (2, 7)], 'id': 'gs_BfpRRvQMqKchqGGc6SGBDhbB'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 99, 'length': 8, 'body': [(4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 9), (7, 9), (6, 9)], 'id': 'gs_VqY79486DfhJQJcwXMCrcPyP'}, {'name': 'Lancer', 'health': 78, 'length': 4, 'body': [(1, 3), (2, 3), (3, 3), (4, 3)], 'id': 'gs_F6tVMbJYX6fX3YfjXm9rmfTd'}, {'name': 'ich heisse marvin', 'health': 95, 'length': 7, 'body': [(7, 3), (8, 3), (9, 3), (10, 3), (10, 2), (10, 1), (9, 1)], 'id': 'gs_m4W4tkhY99FMr6qYdQKwtkG6'}], 'food': [(3, 8)], 'module': 'decision_flow', 'decision_path': ['1vn', 'avoid serious cut danger (3, 6)', 'go to open space (2, 4)'], 'next_coord': (3, 4), 'next_move': 'down', 'time': '0.134s'}
     log = {'id': 'c156aee4-45b6-46e3-9e39-c745f0cdb7ae', 'turn': 29, 'me': {'name': 'mark_snake', 'health': 76, 'length': 4, 'body': [(3,4), (3, 5), (2, 5), (2, 6)], 'id': 'gs_BfpRRvQMqKchqGGc6SGBDhbB'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 99, 'length': 8, 'body': [(4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 9), (7, 9), (6, 9)], 'id': 'gs_VqY79486DfhJQJcwXMCrcPyP'}, {'name': 'Lancer', 'health': 78, 'length': 4, 'body': [(1,2), (1, 3), (2, 3), (3, 3)], 'id': 'gs_F6tVMbJYX6fX3YfjXm9rmfTd'}, {'name': 'ich heisse marvin', 'health': 95, 'length': 7, 'body': [(6,3), (7, 3), (8, 3), (9, 3), (10, 3), (10, 2), (10, 1)], 'id': 'gs_m4W4tkhY99FMr6qYdQKwtkG6'}], 'food': [(3, 8)], 'module': 'decision_flow', 'decision_path': ['1vn', 'avoid serious cut danger (3, 6)', 'go to open space (2, 4)'], 'next_coord': (3, 4), 'next_move': 'down', 'time': '0.134s'}
     log = {'id': 'c156aee4-45b6-46e3-9e39-c745f0cdb7ae', 'turn': 30, 'me': {'name': 'mark_snake', 'health': 76, 'length': 4, 'body': [(3,3), (3,4), (3, 5), (2, 5)], 'id': 'gs_BfpRRvQMqKchqGGc6SGBDhbB'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 99, 'length': 8, 'body': [(4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 9), (7, 9), (6, 9)], 'id': 'gs_VqY79486DfhJQJcwXMCrcPyP'}, {'name': 'Lancer', 'health': 78, 'length': 4, 'body': [(2,2), (1,2), (1, 3), (2, 3)], 'id': 'gs_F6tVMbJYX6fX3YfjXm9rmfTd'}, {'name': 'ich heisse marvin', 'health': 95, 'length': 7, 'body': [(5,3), (6,3), (7, 3), (8, 3), (9, 3), (10, 3), (10, 2)], 'id': 'gs_m4W4tkhY99FMr6qYdQKwtkG6'}], 'food': [(3, 8)], 'module': 'decision_flow', 'decision_path': ['1vn', 'avoid serious cut danger (3, 6)', 'go to open space (2, 4)'], 'next_coord': (3, 4), 'next_move': 'down', 'time': '0.134s'}
+    log = {'id': '88ad22ee-fd74-4030-9170-5ffa88aa101d', 'turn': 119, 'me': {'name': 'mark_snake', 'health': 100, 'length': 14, 'body': [(8, 1), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (4, 3), (4, 4), (4, 5), (3, 5), (2, 5), (2, 4), (2, 3), (2, 3)], 'id': 'gs_8Hqv8PhFjJHvmgMjCx3f8hfD'}, 'others': [{'name': 'Lancer', 'health': 98, 'length': 9, 'body': [(10, 3), (9, 3), (8, 3), (8, 4), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8)], 'id': 'gs_hQXhhBqFRFQ9rdrCR9p7TghP'}, {'name': '@~~~~@', 'health': 91, 'length': 12, 'body': [(6, 5), (7, 5), (7, 6), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (3, 8), (2, 8), (2, 7), (3, 7)], 'id': 'gs_GfKCKhH97KR8mGXwJ3S7MyMD'}, {'name': 'Game of Chicken', 'health': 63, 'length': 6, 'body': [(1, 2), (1, 3), (1, 4), (1, 5), (0, 5), (0, 6)], 'id': 'gs_P7F9CFFPqb864xFfRvDR4Yj3'}], 'food': [(6, 10)], 'module': 'decision_flow', 'decision_path': ['1vn'], 'next_coord': (9, 1), 'next_move': 'right', 'time': '0.015s'}
 
 
     game_state = init_from_log(log)
