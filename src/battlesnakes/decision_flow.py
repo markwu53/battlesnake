@@ -537,6 +537,7 @@ def main(game_state, log=True, log_db=False):
         ])(moves)
 
     def type_2_collision(moves):
+
         killers = [snake for snake in g.others if snake.length > g.me.length and distance_vector_abs(g.me.head, snake.head) == (1,1)]
         nonkillers = [snake for snake in g.others if snake.length == g.me.length and distance_vector_abs(g.me.head, snake.head) == (1,1)]
         if len(killers) == 0 and len(nonkillers) == 0: return
