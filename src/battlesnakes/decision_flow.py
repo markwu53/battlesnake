@@ -571,6 +571,7 @@ def main(game_state, log=True, log_db=False):
         
         g.decision_path.append("try split choice")
         #ngroup == 2
+        """
         return par([
             (check_confinement),
             (check_wayout),
@@ -583,6 +584,10 @@ def main(game_state, log=True, log_db=False):
                 more_space,
             ]),
         ])(moves)
+        """
+        ok_set = [a for a in moves if combined_wayout(a)]
+        if len(ok_set) != 0:
+            return ok_set
 
     def more_space(moves):
         def move_space(a):
