@@ -1503,8 +1503,8 @@ def main(game_state, log=True, log_db=False):
         #cut is done
         if len(cut_set) == 0: return False
 
-        if len(cut_set) != 0:
-            if min([path_distance_pq(killer.head, a) for a in cut_set]) > 2: return False
+        # if len(cut_set) != 0:
+        #     if min([path_distance_pq(killer.head, a) for a in cut_set]) > 2: return False
 
         if cut_set_dim(cut_set) >= 3:
             return False
