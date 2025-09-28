@@ -107,11 +107,7 @@ def main(game_state, log=True, log_db=False):
 
             cond(len(g.others) == 1 and g.me.length >= g.other.length)(avoid_cornered_bordered),
 
-            #rewards
-            #I'm not sure if this should be a par or seq
-            #I used par before but let's experiment seq
 
-            #(par([
             cond(g.me.health < 20)(get_food),
             cond(len(g.others) == 1 and g.me.length > g.other.length)(push),
             (corner_push),
@@ -120,11 +116,15 @@ def main(game_state, log=True, log_db=False):
 
             (cond(7 <= g.me.length <= 10)(split_choice)),
             cond(g.me.length <= 10)(killer_near_prefer_away_border),
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_to_the_end),
+            cond(len(g.others) == 1 and g.me.length >= 10)(
+                par([
+                    prefer_more_territory,
+                    cond(g.me.length > g.other.length)(chase_other_tail),
+                ])),
 
             (get_food),
-            #])),
 
-            cond(g.me.length >= 10)(prefer_more_territory),
             (cond(g.me.length <= 12)(multi_step_collision)),
 
             #do split choice again with lower priority, no length condition
@@ -190,6 +190,14 @@ def main(game_state, log=True, log_db=False):
         wayout_length = snake.length - max_index -1
         oset = trim_aset(oset, snake.head, wayout_point)
         return (oset, wayout_point, wayout_length)
+
+    def chase_to_the_end(moves):
+        if distance_vector_abs(g.me.head, g.other.head) != (1,1): return
+        if not is_adjacent(g.me.head, g.other.neck): return
+        moves = [a for a in moves if is_adjacent(a, g.other.head)]
+        if len(moves) != 0:
+            g.decision_path.append("chase to the end")
+            return moves
 
     def gain_territory(moves):
         #len(g.others) == 1 and g.me.length > 20
@@ -270,6 +278,7 @@ def main(game_state, log=True, log_db=False):
     def prefer_more_territory(moves):
         ngroup = move_connected_group(moves)
         if ngroup != 1: return
+        if distance_pq(g.me.head, g.other.head) != path_distance_pq(g.me.head, g.other.head): return
         g.decision_path.append("prefer more territory")
         return prefer_by_score(lambda a: len(new_territory(a)))(moves)
 
@@ -411,7 +420,11 @@ def main(game_state, log=True, log_db=False):
         return fn
 
     def chase_other_tail(moves):
-        pass
+        tail_move = shortest_path_move(g.me.head, g.other.tail)
+        tail_move = [a for a in moves if a in tail_move]
+        if len(tail_move) != 0:
+            g.decision_path.append("chase other tail")
+            return tail_move
 
     def corner_push(moves):
         snakes = [snake for snake in g.others if sum(distance_to_border(snake.head)) <= 1 and snake.length < g.me.length]
@@ -2279,6 +2292,8 @@ if __name__ == "__main__":
     log = {'id': '38628e52-1788-4182-8cb0-dced1871d20c', 'turn': 142, 'me': {'name': 'mark_snake', 'health': 98, 'length': 20, 'body': [(5, 9), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (8, 9), (8, 8), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (7, 3), (6, 3), (5, 3), (5, 2), (5, 1), (6, 1)], 'id': 'gs_dfyfDcpbD39dTr4HJcCF46v9'}, 'others': [{'name': 'mini snake', 'health': 71, 'length': 11, 'body': [(5, 7), (5, 6), (4, 6), (4, 7), (4, 8), (3, 8), (2, 8), (2, 7), (2, 6), (1, 6), (0, 6)], 'id': 'gs_MXfMPKfRSkcT7q8HwVd3jFm9'}, {'name': 'slieks', 'health': 98, 'length': 8, 'body': [(8, 2), (8, 1), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0)], 'id': 'gs_wgB78bG9QK6C8j4f8dcCCPCK'}, {'name': 'Red Yarn', 'health': 73, 'length': 10, 'body': [(1, 5), (2, 5), (3, 5), (4, 5), (4, 4), (4, 3), (4, 2), (3, 2), (3, 3), (2, 3)], 'id': 'gs_qfXkyhqVGPVVpKKDmSw77xHG'}], 'food': [(9, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', 'preliminary cut kill target: mini snake', 'go cut to (6, 8)'], 'next_coord': (5, 8), 'next_move': 'down', 'time': '0.008s'}
     log = {'id': 'b9c4014b-229c-4b51-82c7-112ff470f833', 'turn': 48, 'me': {'name': 'mark_snake', 'health': 99, 'length': 12, 'body': [(7, 1), (6, 1), (5, 1), (5, 2), (6, 2), (6, 3), (5, 3), (5, 4), (6, 4), (6, 5), (6, 6), (5, 6)], 'id': 'gs_X44Jct7yfXmwK88kpP6k98BK'}, 'others': [{'name': 'do you have any games on your phone', 'health': 62, 'length': 5, 'body': [(0, 0), (1, 0), (1, 1), (1, 2), (0, 2)], 'id': 'gs_BVfS4qpTCXDXxMkky4Dd3CMX'}, {'name': 'Lancer', 'health': 97, 'length': 10, 'body': [(8, 0), (8, 1), (9, 1), (9, 2), (8, 2), (8, 3), (9, 3), (10, 3), (10, 4), (9, 4)], 'id': 'gs_KCwxQk6rwcFtt3Hg8b7p6DvP'}, {'name': 'Wim HU', 'health': 83, 'length': 6, 'body': [(2, 0), (2, 1), (3, 1), (4, 1), (4, 0), (3, 0)], 'id': 'gs_7PQcS9rY6HPBYd3d9FhkTjvG'}], 'food': [(1, 5)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('do you have any games on your phone', 2, (0, 2)), ('Wim HU', 2, (4, 0))]", 'preliminary cut kill target: Lancer', 'go cut to (7, 0)'], 'next_coord': (7, 0), 'next_move': 'down', 'time': '0.008s'}
     log = {'id': '8d263c65-2a92-45eb-beca-f25e8e38e9a6', 'turn': 69, 'me': {'name': 'mark_snake', 'health': 67, 'length': 5, 'body': [(1, 6), (1, 7), (2, 7), (2, 8), (3, 8)], 'id': 'gs_MbqmpMW3rDTr9BqjR3mtKfr7'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 56, 'length': 8, 'body': [(3, 4), (3, 5), (3, 6), (4, 6), (5, 6), (5, 5), (4, 5), (4, 4)], 'id': 'gs_hRYjwPyMbXVrKtMbgyrCYRy3'}, {'name': 'Jeremy', 'health': 92, 'length': 8, 'body': [(4, 7), (5, 7), (5, 8), (6, 8), (6, 9), (7, 9), (8, 9), (8, 8)], 'id': 'gs_yMx8mtTPThyYVcyFCPTSDJWG'}, {'name': 'CrystalSnake1', 'health': 94, 'length': 11, 'body': [(9, 10), (9, 9), (9, 8), (9, 7), (9, 6), (9, 5), (9, 4), (10, 4), (10, 3), (10, 2), (10, 1)], 'id': 'gs_VhyvwQwdxWYWpVF8YJ9TbhBK'}], 'food': [(1, 3)], 'module': 'decision_flow', 'decision_path': ['1vn', 'prefer more territory'], 'next_coord': (0, 6), 'next_move': 'left', 'time': '0.032s'}
+    log = {'id': 'aa2b92a5-ad3f-4ecd-a02a-36216cc9cf0c', 'turn': 234, 'me': {'name': 'mark_snake', 'health': 94, 'length': 28, 'body': [(5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (4, 9), (3, 9), (2, 9), (1, 9), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (1, 1), (2, 1), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6)], 'id': 'gs_SHFk6ckqvT9PWK7yWtSppPFS'}, 'others': [{'name': 'SmartyRat', 'health': 88, 'length': 10, 'body': [(6, 4), (6, 5), (6, 6), (6, 7), (7, 7), (7, 8), (7, 9), (6, 9), (6, 10), (7, 10)], 'id': 'gs_cytyKS6CJRhR4gFMQkT7vgjX'}], 'food': [(10, 0), (8, 0), (2, 3)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (2, 3)'], 'next_coord': (4, 5), 'next_move': 'left', 'time': '0.021s'}
+    log = {'id': '4518aab9-d952-400c-a998-fd24a2a59e35', 'turn': 146, 'me': {'name': 'mark_snake', 'health': 82, 'length': 19, 'body': [(3, 5), (2, 5), (1, 5), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (5, 2), (6, 2), (7, 2), (8, 2), (9, 2), (9, 3)], 'id': 'gs_pH34rjkjM6wJt7HKmcJqHR3G'}, 'others': [{'name': 'Red Yarn', 'health': 85, 'length': 14, 'body': [(4, 8), (3, 8), (3, 7), (4, 7), (5, 7), (6, 7), (6, 6), (6, 5), (6, 4), (6, 3), (5, 3), (5, 4), (5, 5), (5, 6)], 'id': 'gs_hMjYW9cw8RwPVST8fJHb3Vd7'}], 'food': [(7, 8), (1, 0), (2, 9)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (3, 4), 'next_move': 'down', 'time': '0.020s'}
 
 
     game_state = init_from_log(log)
