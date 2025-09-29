@@ -417,11 +417,18 @@ def main(game_state, log=True, log_db=False):
         return fn
 
     def chase_other_tail(moves):
-        tail_move = shortest_path_move(g.me.head, g.other.tail)
-        tail_move = [a for a in moves if a in tail_move]
-        if len(tail_move) != 0:
-            g.decision_path.append("chase other tail")
-            return tail_move
+        if is_adjacent(g.me.head, g.other.tail):
+            #don't follow too close
+            tail_move = [a for a in moves if path_connected(a, g.other.tail)]
+            if len(tail_move) != 0:
+                g.decision_path.append("chase other tail detour")
+                return tail_move
+        else:
+            tail_move = shortest_path_move(g.me.head, g.other.tail)
+            tail_move = [a for a in moves if a in tail_move]
+            if len(tail_move) != 0:
+                g.decision_path.append("chase other tail")
+                return tail_move
 
     def corner_push(moves):
         snakes = [snake for snake in g.others if sum(distance_to_border(snake.head)) <= 1 and snake.length < g.me.length]
