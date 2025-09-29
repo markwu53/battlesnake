@@ -117,11 +117,8 @@ def main(game_state, log=True, log_db=False):
             (cond(7 <= g.me.length <= 10)(split_choice)),
             cond(g.me.length <= 10)(killer_near_prefer_away_border),
             cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_to_the_end),
-            cond(len(g.others) == 1 and g.me.length >= 10)(
-                par([
-                    prefer_more_territory,
-                    cond(g.me.length > g.other.length)(chase_other_tail),
-                ])),
+            cond(len(g.others) == 1 and g.me.length >= 10)(prefer_more_territory),
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_other_tail),
 
             (get_food),
 
