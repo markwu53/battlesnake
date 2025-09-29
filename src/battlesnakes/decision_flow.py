@@ -1265,7 +1265,7 @@ def main(game_state, log=True, log_db=False):
             attack_move = shortest_path_move(g.me.head, snake2.head)
             attack_move = [a for a in moves if a in attack_move]
             if len(attack_move) != 0:
-                g.decision_path.append("attack vulnerables equal distance")
+                g.decision_path.append("attack vulnerables less or equal distance")
                 return attack_move
 
     def attack_vulnerables_path_distance_2(moves):
