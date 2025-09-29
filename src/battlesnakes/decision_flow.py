@@ -125,8 +125,7 @@ def main(game_state, log=True, log_db=False):
             (cond(g.me.length <= 12)(multi_step_collision)),
 
             #do split choice again with lower priority, no length condition
-            (split_choice),
-            split_choice_2,
+            seq([ (split_choice), split_choice_2, ]),
 
             (cond(g.me.length >= 12)(confined_follow_tail)),
 
@@ -134,6 +133,9 @@ def main(game_state, log=True, log_db=False):
             cond(len(g.others) == 1 and g.me.length < g.other.length)(border_go_up),
             (cond(g.me.length >= 10)(prefer_less_split)),
             (cond(g.me.length <= 16)(prefer_away_border)),
+
+            seq([ (split_choice), split_choice_2, ]),
+
             cond(g.me.length < 10 and len(g.others) >= 2)(prefer_open_space),
             prefer(is_straight),
 
@@ -2333,6 +2335,7 @@ if __name__ == "__main__":
     log = {'id': '1fea05a2-e488-4054-bac1-54237d5b2ec1', 'turn': 113, 'me': {'name': 'mark_snake', 'health': 100, 'length': 8, 'body': [(3, 0), (3, 1), (4, 1), (5, 1), (5, 2), (4, 2), (3, 2), (3, 2)], 'id': 'gs_xxRDYHPYFfSpcQjc8qxmPhv9'}, 'others': [{'name': 'Wim HU', 'health': 92, 'length': 9, 'body': [(3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (1, 8), (2, 8), (2, 9)], 'id': 'gs_Jt3ffmc6QbVgJDbbWf44FbdD'}, {'name': 'do you have any games on your phone', 'health': 88, 'length': 10, 'body': [(5, 8), (5, 7), (5, 6), (5, 5), (6, 5), (6, 6), (6, 7), (6, 8), (7, 8), (8, 8)], 'id': 'gs_kRrT8wH3GWbdgCSMhPKTCFd6'}, {'name': 'Red Yarn', 'health': 96, 'length': 13, 'body': [(0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3), (3, 3), (4, 3)], 'id': 'gs_4wJ4vW9drkXkXwDMkPyhVXXc'}], 'food': [(3, 4)], 'module': 'decision_flow', 'decision_path': ['1vn', 'preliminary cut kill target: Red Yarn', 'go cut to (1, 0)'], 'next_coord': (2, 0), 'next_move': 'left', 'time': '0.015s'}
     log = {'id': 'ab857078-101f-4984-a4cd-a38eede7a787', 'turn': 45, 'me': {'name': 'mark_snake', 'health': 74, 'length': 6, 'body': [(1, 4), (1, 5), (1, 6), (2, 6), (2, 5), (3, 5)], 'id': 'gs_XDQyMwwvxGWJYq6BMkw8M87f'}, 'others': [{'name': 'Rusty the Hungry Sneke', 'health': 97, 'length': 7, 'body': [(5, 6), (5, 7), (5, 8), (5, 9), (4, 9), (4, 10), (3, 10)], 'id': 'gs_7VHW69cd8j8PdFrt6QcF8Kx6'}, {'name': '#!/bin/shnake', 'health': 88, 'length': 6, 'body': [(0, 5), (0, 6), (0, 7), (0, 8), (1, 8), (1, 9)], 'id': 'gs_HDqCW73rDS3SBpm7VXTMPrxc'}, {'name': 'Red Yarn', 'health': 83, 'length': 6, 'body': [(5, 4), (5, 5), (6, 5), (7, 5), (8, 5), (8, 4)], 'id': 'gs_WT7fPWVB4XbDkjjfj8WKvtMH'}], 'food': [(10, 4)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('#!/bin/shnake', 2, (0, 3))]", 'preserve trap kill #!/bin/shnake', 'multi-step collision [((0, 4), 1)]'], 'next_coord': (2, 4), 'next_move': 'right', 'time': '0.012s'}
     log = {'id': '8a9d84d5-7772-4cad-a11d-46bb267c82c6', 'turn': 96, 'me': {'name': 'mark_snake', 'health': 94, 'length': 13, 'body': [(2, 4), (2, 5), (2, 6), (1, 6), (1, 7), (1, 8), (1, 9), (2, 9), (2, 8), (2, 7), (3, 7), (3, 8), (4, 8)], 'id': 'gs_wHbPdYHY94vfhhFXFDBTdKwW'}, 'others': [{'name': 'SmartyRat', 'health': 65, 'length': 6, 'body': [(3, 3), (2, 3), (1, 3), (1, 2), (1, 1), (2, 1)], 'id': 'gs_8vr638rWhtKC9YtVWfXtXgCB'}, {'name': 'do you have any games on your phone', 'health': 35, 'length': 8, 'body': [(5, 5), (4, 5), (3, 5), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6)], 'id': 'gs_TPdjXcq8GMQFGPHyrVpP4Frb'}, {'name': 'ich heisse marvin', 'health': 60, 'length': 9, 'body': [(7, 5), (6, 5), (6, 4), (6, 3), (6, 2), (5, 2), (5, 3), (4, 3), (4, 4)], 'id': 'gs_37xx8yB9xvgD6qB9vqjbP9xB'}], 'food': [(10, 8), (10, 4)], 'module': 'decision_flow', 'decision_path': ['1vn', 'vulnerable snakes: []', 'try split choice', 'try split choice', 'try split choice', 'split choice 2'], 'next_coord': (1, 4), 'next_move': 'left', 'time': '0.014s'}
+    log = {'id': '96c04d34-ada9-4212-9e7a-93430fdf6885', 'turn': 83, 'me': {'name': 'mark_snake', 'health': 89, 'length': 10, 'body': [(6, 7), (6, 8), (6, 9), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (9, 9)], 'id': 'gs_4mftRpgm8Kd7t9jdjcjdySxc'}, 'others': [{'name': 'Rusty the Hungry Sneke', 'health': 82, 'length': 9, 'body': [(4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (6, 2), (5, 2), (5, 3), (4, 3)], 'id': 'gs_rYPSCXMyWTjfbMgfWJkbgfmY'}, {'name': 'do you have any games on your phone', 'health': 100, 'length': 11, 'body': [(8, 5), (8, 4), (9, 4), (10, 4), (10, 3), (9, 3), (8, 3), (7, 3), (7, 4), (7, 5), (7, 5)], 'id': 'gs_QrMWQSw7TVR9jfVxRjQTV7P8'}], 'food': [(10, 7)], 'module': 'decision_flow', 'decision_path': ['1vn'], 'next_coord': (7, 7), 'next_move': 'right', 'time': '0.042s'}
 
 
     game_state = init_from_log(log)
