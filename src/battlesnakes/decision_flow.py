@@ -94,7 +94,7 @@ def main(game_state, log=True, log_db=False):
             general_suppressed_chasing_kill_oppotunity,
 
             #cond(g.me.length >= 12)(par([ split_choice, collision_take_risk, ])),
-            type_2_collision,
+            (type_2_collision),
 
             (attack_vulnerables),
             border_confront_kill_oppotunity,
@@ -680,6 +680,11 @@ def main(game_state, log=True, log_db=False):
         ngroup = move_connected_group(moves)
         if ngroup == 1:
             return
+
+        #split choice doesn't consider type-2 collision
+        type_2_collision = [snake for snake in g.others if snake.length > g.me.length and distance_vector_abs(snake.head, g.me.head) == (1,1) and len([a for a in g.me.allowed_moves if a in snake.allowed_moves]) == 2]
+        if len(type_2_collision) != 0: return
+
         if ngroup == 3:
             if path_connected(g.me.head, g.me.tail):
                 return shortest_path_move(g.me.head, g.me.tail)
@@ -702,6 +707,11 @@ def main(game_state, log=True, log_db=False):
         ngroup = move_connected_group(moves)
         if ngroup == 1:
             return
+
+        #split choice doesn't consider type-2 collision
+        type_2_collision = [snake for snake in g.others if snake.length > g.me.length and distance_vector_abs(snake.head, g.me.head) == (1,1) and len([a for a in g.me.allowed_moves if a in snake.allowed_moves]) == 2]
+        if len(type_2_collision) != 0: return
+
         if ngroup == 3:
             if path_connected(g.me.head, g.me.tail):
                 return shortest_path_move(g.me.head, g.me.tail)
@@ -1343,12 +1353,19 @@ def main(game_state, log=True, log_db=False):
 
     def make_forming_trap(moves):
         for snake in g.others:
+            if distance_vector_abs(g.me.head, snake.head) == (1,1):
+                if forming_trap_situation(g.me, snake):
+                    trap_move = [a for a in moves if off_border_1(a) and distance_pq(a, snake.head) == 3]
+                    if len(trap_move) != 0:
+                        g.decision_path.append("forming trap")
+                        return trap_move
             if distance_vector_abs(g.me.head, snake.head) == (2,2):
                 for a in g.me.allowed_moves:
                     for b in snake.allowed_moves:
                         me2 = possible_next_state(g.me, a)
                         snake2 = possible_next_state(snake, b)
                         if forming_trap_situation(me2, snake2):
+                            g.decision_path.append("make forming trap")
                             return [a]
 
     def forming_trap_situation(killer: Snake, target: Snake):
@@ -2370,6 +2387,8 @@ if __name__ == "__main__":
     log = {'id': 'ba22b52d-9cc0-4b99-b593-ee28c7a1e071', 'turn': 31, 'me': {'name': 'mark_snake', 'health': 91, 'length': 7, 'body': [(5, 6), (5, 5), (5, 4), (5, 3), (5, 2), (5, 1), (5, 0)], 'id': 'gs_q8rtSS3pkDvHYyGQV7xbP6JV'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 97, 'length': 5, 'body': [(3, 10), (2, 10), (1, 10), (0, 10), (0, 9)], 'id': 'gs_ttvvQbCyphTX6PDmHwwWKWRV'}, {'name': 'do you have any games on your phone', 'health': 88, 'length': 5, 'body': [(2, 3), (3, 3), (3, 2), (2, 2), (1, 2)], 'id': 'gs_bSCPxpFVy9JpbQvWTDKDq8BF'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 94, 'length': 7, 'body': [(3, 6), (2, 6), (1, 6), (1, 5), (2, 5), (3, 5), (4, 5)], 'id': 'gs_xPdyx3pJYFH7drQywFGm6b7H'}], 'food': [(9, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'general suppressed chasing'], 'next_coord': (4, 6), 'next_move': 'left', 'time': '0.016s'}
     log = {'id': '0e274666-e215-4f69-b763-f77a35d3ca8b', 'turn': 100, 'me': {'name': 'mark_snake', 'health': 87, 'length': 11, 'body': [(5, 9), (4, 9), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6), (2, 6), (3, 6), (3, 7)], 'id': 'gs_FJS6VYm4vgk7RVxXPvPXKHB7'}, 'others': [{'name': 'snakey_wakey', 'health': 95, 'length': 13, 'body': [(6, 8), (7, 8), (8, 8), (9, 8), (9, 7), (9, 6), (8, 6), (8, 5), (8, 4), (7, 4), (7, 5), (6, 5), (6, 6)], 'id': 'gs_DjSdWYHy8G8CCdGRYHXxBXmF'}, {'name': 'Snakeformatika', 'health': 97, 'length': 6, 'body': [(10, 0), (9, 0), (9, 1), (9, 2), (9, 3), (10, 3)], 'id': 'gs_dft6M9WpvpDT6RddTg6Bg7Rb'}, {'name': 'Lancer', 'health': 91, 'length': 13, 'body': [(6, 0), (7, 0), (7, 1), (7, 2), (6, 2), (6, 1), (5, 1), (5, 2), (5, 3), (4, 3), (3, 3), (3, 4), (3, 5)], 'id': 'gs_JTMKYGdKyHVT9HdpSyXF9SrK'}], 'food': [(2, 3), (7, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Snakeformatika', 2, (10, 2)), ('Lancer', 2, (4, 0))]", 'type 2 collision take risk'], 'next_coord': (5, 8), 'next_move': 'down', 'time': '0.013s'}
     log = {'id': 'be0b4f67-f2be-4599-b78b-ab36eafed702', 'turn': 80, 'me': {'name': 'mark_snake', 'health': 100, 'length': 10, 'body': [(7, 3), (7, 2), (7, 1), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 2)], 'id': 'gs_QTQwpJ3j4qPQcwDbPB3jQctY'}, 'others': [{'name': 'Fairy Rust', 'health': 22, 'length': 4, 'body': [(10, 4), (10, 5), (9, 5), (9, 6)], 'id': 'gs_pffBcbyvTjKCtcQT8XY8WHMb'}, {'name': 'Raptor', 'health': 96, 'length': 11, 'body': [(8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (5, 6), (5, 5), (5, 4), (4, 4)], 'id': 'gs_w9WTgkyMgByDSvcydcdBXpbV'}, {'name': 'the evening and the morning', 'health': 95, 'length': 7, 'body': [(1, 3), (2, 3), (2, 4), (2, 5), (3, 5), (3, 4), (3, 3)], 'id': 'gs_qMb4thHWdMyYYHW6S4cXbxC9'}], 'food': [(0, 7), (9, 8)], 'module': 'decision_flow', 'decision_path': ['1vn', 'general confront kill Fairy Rust'], 'next_coord': (8, 3), 'next_move': 'right', 'time': '0.002s'}
+    log = {'id': '374faffd-25a9-46d9-ac71-c3693eb28b5e', 'turn': 306, 'me': {'name': 'mark_snake', 'health': 89, 'length': 25, 'body': [(5, 1), (5, 2), (5, 3), (5, 4), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0)], 'id': 'gs_X4cpphwS8wrhWVxcvvrg79hG'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 100, 'length': 25, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (9, 5), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (8, 8), (7, 8), (7, 8)], 'id': 'gs_TcFVJpRM4M6tftxrx9VMpC63'}], 'food': [(0, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', 'try split choice', 'try split choice', 'try split choice', 'split choice 2'], 'next_coord': (6, 1), 'next_move': 'right', 'time': '0.017s'}
+
 
 
     game_state = init_from_log(log)
