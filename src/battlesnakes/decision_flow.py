@@ -1551,23 +1551,47 @@ def main(game_state, log=True, log_db=False):
                     return kill_moves
 
     def suppressed_chasing_kill_situation(killer: Snake, target: Snake):
-        if distance_pq(killer.head, target.head) == 2:
-            if killer.length > target.length:
-                if on_border(target.head):
-                    if not on_border(killer.head):
-                        if len(target.allowed_moves) == 2:
-                            a,b = target.allowed_moves
-                            if distance_vector_abs(a, b) == (1,1):
-                                collision_points = [a for a in killer.allowed_moves if a in target.allowed_moves]
-                                if len(collision_points) == 1:
-                                    if len([snake for snake in g.snakes 
-                                                if snake.name != killer.name and snake.name != target.name
-                                                and snake.length >= killer.length 
-                                                and take_first(collision_points) in snake.allowed_moves
-                                                ]) == 0:
-                                        g.target_snake = target
-                                        return True
-        return False
+        if distance_pq(killer.head, target.head) != 2: return False
+        if killer.length <= target.length: return False
+        if not on_border(target.head): return False
+        if on_border(killer.head): return False
+        if len(target.allowed_moves) != 2: return False
+        a,b = target.allowed_moves
+        if distance_vector_abs(a, b) != (1,1): return False
+        collision_points = [a for a in killer.allowed_moves if a in target.allowed_moves]
+        if len(collision_points) != 1: return False
+        if len([snake for snake in g.snakes 
+                    if snake.head != killer.head and snake.head != target.head
+                    and snake.length >= killer.length 
+                    and take_first(collision_points) in snake.allowed_moves
+                    ]) != 0: 
+            return False
+
+
+        target_taken_point = target.head
+        killer_catch_point = killer.head
+
+        for step in range(11):
+            killer_block_point = [a for a in adj_cells(killer_catch_point) if off_border_1(a) and is_adjacent(a, target_taken_point)]
+            if len(killer_block_point) != 1: return False
+            killer_block_point = take_first(killer_block_point)
+            if killer_block_point in killer.body:
+                index = take_first([i for i in range(killer.length) if killer.body[i] == killer_block_point])
+                print("index:", index)
+                if killer.length - index > step:
+                    #killer path is blocked
+                    g.decision_path.append("kill path is blocked")
+                    return False
+
+            target_taken_point = [a for a in adj_cells(target_taken_point) if on_border(a) and not is_adjacent(a, killer_catch_point)]
+            if len(target_taken_point) == 0:
+                #target die first
+                return True
+            target_taken_point = take_first(target_taken_point)
+            killer_catch_point = killer_block_point
+
+        g.target_snake = target
+        return True
 
     def collision_cut_oppotunity(moves):
         snakes = [snake for snake in g.others if distance_vector_abs(g.me.head, snake.head) == (1,1) and g.me.length > snake.length]
@@ -2422,6 +2446,7 @@ if __name__ == "__main__":
     log = {'id': 'ab993849-a109-4026-a440-9c1b0146febe', 'turn': 186, 'me': {'name': 'mark_snake', 'health': 89, 'length': 16, 'body': [(8, 4), (8, 5), (9, 5), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (8, 9), (9, 9), (9, 8), (9, 7), (9, 6)], 'id': 'gs_MfmxDB3XC6FqDChgtFDwpQKK'}, 'others': [{'name': 'Game of Chicken', 'health': 75, 'length': 10, 'body': [(9, 3), (9, 2), (8, 2), (7, 2), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0)], 'id': 'gs_p9Y9QfcTpTRYgSYMr7dBFvFf'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 79, 'length': 18, 'body': [(4, 10), (3, 10), (2, 10), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (1, 2), (2, 2), (3, 2), (3, 3), (4, 3)], 'id': 'gs_VDShmrFjRkg3Sd7S9PBhdd9d'}, {'name': 'ich heisse marvin', 'health': 76, 'length': 11, 'body': [(4, 4), (5, 4), (6, 4), (6, 5), (6, 6), (5, 6), (4, 6), (3, 6), (2, 6), (2, 7), (2, 8)], 'id': 'gs_vkBYChjjbDCXFWbyFt6JgvKJ'}], 'food': [(7, 10), (5, 8)], 'module': 'decision_flow', 'decision_path': ['1vn', 'preliminary cut kill target: Game of Chicken', 'try collision cut kill (9, 4)'], 'next_coord': (9, 4), 'next_move': 'right', 'time': '0.003s'}
     log = {'id': 'e8246849-fb12-43ae-a85f-09be2f16c88a', 'turn': 230, 'me': {'name': 'mark_snake', 'health': 98, 'length': 21, 'body': [(8, 8), (7, 8), (7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (2, 8), (2, 7), (2, 6), (3, 6), (3, 7), (4, 7), (5, 7), (5, 6), (5, 5), (5, 4), (4, 4), (3, 4), (2, 4)], 'id': 'gs_3QXkpQpk3SwC6yqyH6XjtRc4'}, 'others': [{'name': 'Frank The Tank', 'health': 86, 'length': 21, 'body': [(9, 7), (9, 6), (8, 6), (7, 6), (7, 5), (7, 4), (7, 3), (6, 3), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (1, 1), (1, 2), (2, 2)], 'id': 'gs_xkHccffxDbJrSKGhRdVSPDp9'}], 'food': [(1, 10), (10, 8), (1, 7), (0, 7), (10, 5)], 'module': 'decision_flow', 'decision_path': ['1v1', 'apparently cut is done', 'try split choice', 'try split choice', 'try split choice', 'split choice 2', 'prefer more territory'], 'next_coord': (9, 8), 'next_move': 'right', 'time': '0.023s'}
     log = {'id': 'e41f03cc-0706-4c8c-baec-d2f7738b1fc1', 'turn': 37, 'me': {'name': 'mark_snake', 'health': 100, 'length': 6, 'body': [(3, 8), (4, 8), (5, 8), (5, 9), (6, 9), (6, 9)], 'id': 'gs_tBw7pwCmP3jpq8hPXdFST8SJ'}, 'others': [{'name': 'snakey_wakey', 'health': 89, 'length': 5, 'body': [(5, 4), (4, 4), (4, 5), (4, 6), (5, 6)], 'id': 'gs_cJmJwhmKHpGcmVmjDmBTkdrY'}, {'name': 'Snakeformatika', 'health': 97, 'length': 7, 'body': [(2, 7), (1, 7), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10)], 'id': 'gs_4mqdRcgkMj8XmTvDp3pyq4WF'}, {'name': 'Frank The Tank', 'health': 98, 'length': 6, 'body': [(2, 3), (2, 2), (1, 2), (1, 3), (1, 4), (1, 5)], 'id': 'gs_FFKBJC3hYW98M9BXpCSY9Mv3'}], 'food': [(8, 2)], 'module': 'decision_flow', 'decision_path': ['1vn', 'type 2 collision take risk'], 'next_coord': (3, 7), 'next_move': 'down', 'time': '0.011s'}
+    log = {'id': 'e709e7f8-0f08-42f8-9efc-232e68f1b198', 'turn': 155, 'me': {'name': 'mark_snake', 'health': 98, 'length': 12, 'body': [(4, 1), (4, 2), (4, 3), (3, 3), (2, 3), (1, 3), (1, 2), (2, 2), (2, 1), (1, 1), (1, 0), (0, 0)], 'id': 'gs_vmXSRKqDHXPCjV7VDBTf3wR7'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 92, 'length': 13, 'body': [(10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (9, 9), (9, 8), (9, 7), (9, 6), (8, 6), (7, 6), (7, 7), (7, 8)], 'id': 'gs_Hbw88PmqfJyb3jjFVS6k4FVQ'}, {'name': 'Wim HU', 'health': 50, 'length': 11, 'body': [(3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (7, 1), (8, 1), (8, 0), (9, 0), (9, 1), (9, 2)], 'id': 'gs_qmPpSGR3QJJ6GDPd74qK8QkP'}, {'name': 'Lancer', 'health': 95, 'length': 16, 'body': [(4, 9), (3, 9), (3, 10), (2, 10), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (1, 5), (1, 6), (2, 6), (3, 6), (3, 7)], 'id': 'gs_yXSDRPGtVyBktXkRmBbtf3YS'}], 'food': [(7, 4)], 'module': 'decision_flow', 'decision_path': ['1vn', "chasing kill 'Wim HU'"], 'next_coord': (3, 1), 'next_move': 'left', 'time': '0.002s'}
 
 
 
