@@ -639,6 +639,7 @@ def main(game_state, log=True, log_db=False):
         cut_set = sorted(list(set(cut_set)))
 
         #check wayout
+        #consider this later
         #in type-2 collision case, you don't have the full g.me.territory to wiggle
 
         if any([snake.tail in g.me.territory for snake in g.snakes]):
@@ -651,8 +652,14 @@ def main(game_state, log=True, log_db=False):
                     ]
             if len(adjacent_indexes) == 0: continue
             max_index = max(adjacent_indexes)
+            wayout_point = g.me.body[max_index]
             wayout_length = snake.length - max_index - 1
-            if wayout_length <= len(cut_set): 
+            aset = g.me.territory
+            if len(cut_set) >= 5 and len(cut_set) >= len(aset) * 0.4:
+                if wayout_length <= len(cut_set):
+                    return False
+            aset = trim_aset(aset, g.me.head, wayout_point)
+            if wayout_length <= len(aset): 
                 return True
 
         return False
@@ -665,16 +672,18 @@ def main(game_state, log=True, log_db=False):
 
         if len(killers) != 1: return
         killer = take_first(killers)
-        if len(moves) == 3:
-            avoid = take_first([a for a in moves if not is_adjacent(a, killer.head)])
-            middle = take_first([a for a in moves if distance_vector_abs(a, avoid) == (1,1)])
-            collision = take_first([a for a in moves if a not in [avoid, middle]])
-            if collision_wayout(avoid):
-                g.decision_path.append(f"type 2 collision take avoid point {avoid}")
-                return [avoid]
-            else:
-                g.decision_path.append("type 2 collision take risk")
-                return [collision]
+
+        if len(moves) != 3: return
+
+        avoid = take_first([a for a in moves if not is_adjacent(a, killer.head)])
+        middle = take_first([a for a in moves if distance_vector_abs(a, avoid) == (1,1)])
+        collision = take_first([a for a in moves if a not in [avoid, middle]])
+        if collision_wayout(avoid):
+            g.decision_path.append(f"type 2 collision take avoid point {avoid}")
+            return [avoid]
+        else:
+            g.decision_path.append("type 2 collision take risk")
+            return [collision]
 
     def split_choice_2(moves):
         ngroup = move_connected_group(moves)
@@ -2389,6 +2398,8 @@ if __name__ == "__main__":
     log = {'id': 'be0b4f67-f2be-4599-b78b-ab36eafed702', 'turn': 80, 'me': {'name': 'mark_snake', 'health': 100, 'length': 10, 'body': [(7, 3), (7, 2), (7, 1), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 2)], 'id': 'gs_QTQwpJ3j4qPQcwDbPB3jQctY'}, 'others': [{'name': 'Fairy Rust', 'health': 22, 'length': 4, 'body': [(10, 4), (10, 5), (9, 5), (9, 6)], 'id': 'gs_pffBcbyvTjKCtcQT8XY8WHMb'}, {'name': 'Raptor', 'health': 96, 'length': 11, 'body': [(8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7), (5, 7), (5, 6), (5, 5), (5, 4), (4, 4)], 'id': 'gs_w9WTgkyMgByDSvcydcdBXpbV'}, {'name': 'the evening and the morning', 'health': 95, 'length': 7, 'body': [(1, 3), (2, 3), (2, 4), (2, 5), (3, 5), (3, 4), (3, 3)], 'id': 'gs_qMb4thHWdMyYYHW6S4cXbxC9'}], 'food': [(0, 7), (9, 8)], 'module': 'decision_flow', 'decision_path': ['1vn', 'general confront kill Fairy Rust'], 'next_coord': (8, 3), 'next_move': 'right', 'time': '0.002s'}
     log = {'id': '374faffd-25a9-46d9-ac71-c3693eb28b5e', 'turn': 306, 'me': {'name': 'mark_snake', 'health': 89, 'length': 25, 'body': [(5, 1), (5, 2), (5, 3), (5, 4), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (3, 8), (2, 8), (1, 8), (0, 8), (0, 7), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0)], 'id': 'gs_X4cpphwS8wrhWVxcvvrg79hG'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 100, 'length': 25, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (9, 5), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (8, 8), (7, 8), (7, 8)], 'id': 'gs_TcFVJpRM4M6tftxrx9VMpC63'}], 'food': [(0, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', 'try split choice', 'try split choice', 'try split choice', 'split choice 2'], 'next_coord': (6, 1), 'next_move': 'right', 'time': '0.017s'}
     log = {'id': '59f9f779-3e31-4013-ae0a-b1136299549d', 'turn': 156, 'me': {'name': 'mark_snake', 'health': 95, 'length': 13, 'body': [(3, 1), (4, 1), (5, 1), (6, 1), (6, 2), (6, 3), (7, 3), (8, 3), (8, 2), (8, 1), (9, 1), (9, 2), (9, 3)], 'id': 'gs_4mHfV6hgjbwYvty8t6XHgc7P'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 89, 'length': 18, 'body': [(2, 8), (2, 7), (1, 7), (1, 8), (1, 9), (1, 10), (0, 10), (0, 9), (0, 8), (0, 7), (0, 6), (0, 5), (1, 5), (1, 6), (2, 6), (2, 5), (3, 5), (4, 5)], 'id': 'gs_cYcpFtjYKtGKJfpk3YbxJbW6'}, {'name': 'Wim HU', 'health': 60, 'length': 9, 'body': [(10, 10), (9, 10), (8, 10), (7, 10), (7, 9), (6, 9), (5, 9), (5, 8), (5, 7)], 'id': 'gs_hYCpWWgQMqMbMqbBRCKMXhKH'}, {'name': 'Red Yarn', 'health': 85, 'length': 9, 'body': [(0, 4), (1, 4), (2, 4), (3, 4), (4, 4), (4, 3), (3, 3), (2, 3), (1, 3)], 'id': 'gs_6HdfPYQYtT8FyXWccQjHJdBC'}], 'food': [(3, 0)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Wim HU', 1, (10, 9)), ('Red Yarn', 1, (0, 3))]", 'next to food'], 'next_coord': (3, 0), 'next_move': 'down', 'time': '0.029s'}
+    log = {'id': '6fc4271f-bb0c-4733-9996-c0d1060d6fb2', 'turn': 191, 'me': {'name': 'mark_snake', 'health': 97, 'length': 18, 'body': [(8, 7), (8, 6), (8, 5), (7, 5), (7, 4), (7, 3), (7, 2), (7, 1), (7, 0), (6, 0), (5, 0), (4, 0), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 2)], 'id': 'gs_XGJRhK3BThtQgTrdXxdSxrjC'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 99, 'length': 27, 'body': [(7, 8), (7, 9), (8, 9), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5), (1, 5), (0, 5), (0, 4), (1, 4), (2, 4), (3, 4), (3, 5), (3, 6), (3, 7), (4, 7), (4, 6), (4, 5)], 'id': 'gs_dWywbCbyTQpbT3QJPmSTFgBT'}], 'food': [(0, 10), (9, 7), (8, 1), (10, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', 'type 2 collision take risk'], 'next_coord': (7, 7), 'next_move': 'left', 'time': '0.005s'}
+
 
 
 
