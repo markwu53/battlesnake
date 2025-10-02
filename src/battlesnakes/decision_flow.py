@@ -104,7 +104,7 @@ def main(game_state, log=True, log_db=False):
             (cond(g.me.length > 8)(avoid_next_step_confinement)),
             avoid_two_snake_trap,
             (cond(g.me.length >= 10)(split_choice)),
-            cond(7 <= g.me.length <= 9)(collision_take_risk),
+            #cond(7 <= g.me.length <= 9)(collision_take_risk),
             (cond(g.me.length <= 10)(multi_step_collision)),
 
             cond(len(g.others) == 1 and g.me.length >= g.other.length)(avoid_cornered_bordered),
@@ -113,7 +113,7 @@ def main(game_state, log=True, log_db=False):
 
             cond(g.me.health < 20)(get_food),
 
-            seq([ (split_choice), split_choice_2, ]),
+            seq([ (split_choice), (split_choice_2), ]),
 
             cond(len(g.others) == 1 and g.me.length > g.other.length)(push),
             (corner_push),
@@ -648,10 +648,10 @@ def main(game_state, log=True, log_db=False):
             config_10,
         ])(moves)
 
-    def collision_wayout(avoid):
+    def collision_wayout_11(avoid):
+
         cut_set = [p for a in g.me.territory for p in adj_cells(a) if p not in g.me.territory and p in g.me.head_space]
         cut_set = sorted(list(set(cut_set)))
-        print(cut_set)
 
         #has wayout
         if not cut_set_connected(cut_set): return True
@@ -666,26 +666,22 @@ def main(game_state, log=True, log_db=False):
 
         aset = sorted(list(set(g.me.territory)))
 
-        for snake in g.snakes:
-            adjacent_indexes = [i
-                    for i,c in enumerate(snake.body)
-                    for p in adj_cells(c) if p in g.me.territory
-                    ]
+        adjacent_indexes = [i
+                for i,c in enumerate(g.me.body)
+                for p in adj_cells(c) if p in g.me.territory
+                ]
 
-            if snake.head != g.me.head: continue
+        if len(adjacent_indexes) == 0: return False
 
-            if len(adjacent_indexes) == 0: continue
-            max_index = max(adjacent_indexes)
-            wayout_point = snake.body[max_index]
-            wayout_length = snake.length - max_index - 1
-            if len(g.others) == 1:
-                if snake.head == g.me.head:
-                    if len(cut_set) >= 5 and len(cut_set) >= len(aset) * 0.4:
-                        if wayout_length <= len(cut_set):
-                            return False
-            oset = trim_aset(aset, g.me.head, wayout_point)
-            if wayout_length <= len(oset): 
-                return True
+        max_index = max(adjacent_indexes)
+        wayout_point = g.me.body[max_index]
+        wayout_length = g.me.length - max_index - 1
+        if len(cut_set) >= 5 and len(cut_set) >= len(aset) * 0.4:
+            if wayout_length <= len(cut_set):
+                return False
+        oset = trim_aset(aset, g.me.head, wayout_point)
+        if wayout_length <= len(oset): 
+            return True
 
         return False
 
@@ -699,12 +695,11 @@ def main(game_state, log=True, log_db=False):
         avoid = take_first([a for a in moves if not is_adjacent(a, nonkiller.head)])
         middle = take_first([a for a in moves if distance_vector_abs(a, avoid) == (1,1)])
         collision = take_first([a for a in moves if a not in [avoid, middle]])
-        if collision_wayout(avoid):
-            g.decision_path.append(f"type 2 collision equal length take avoid point {avoid}")
-            return [avoid]
-        else:
+        if sum(distance_to_border(avoid)) <= 3:
             g.decision_path.append("type 2 collision equal length take risk")
-            return [collision]
+            return [middle, collision]
+        g.decision_path.append(f"type 2 collision take equal length avoid point {avoid}")
+        return [avoid]
 
     def type_2_collision(moves):
 
@@ -720,11 +715,66 @@ def main(game_state, log=True, log_db=False):
         avoid = take_first([a for a in moves if not is_adjacent(a, killer.head)])
         middle = take_first([a for a in moves if distance_vector_abs(a, avoid) == (1,1)])
         collision = take_first([a for a in moves if a not in [avoid, middle]])
-        if collision_wayout(avoid):
-            g.decision_path.append(f"type 2 collision take avoid point {avoid}")
+
+        if len(g.others) > 1 and sum(distance_to_border(avoid)) <= 2:
+            g.decision_path.append("collision type 2 take risk")
+            return [collision]
+
+        cut_set = [p for a in g.me.territory for p in adj_cells(a) if p not in g.me.territory and p in g.me.head_space]
+        cut_set = sorted(list(set(cut_set)))
+
+        #has wayout
+        if not cut_set_connected(cut_set): 
+            g.decision_path.append("collision type 2 take avoid point")
             return [avoid]
-        else:
-            g.decision_path.append("type 2 collision take risk")
+
+        if cut_set_dim(cut_set) >= 2:
+            g.decision_path.append("collision type 2 take avoid point")
+            return [avoid]
+
+        if any([snake.tail in g.me.territory for snake in g.snakes]):
+            g.decision_path.append("collision type 2 take avoid point")
+            return [avoid]
+
+        aset = sorted(list(set(g.me.territory)))
+
+        if len(aset) <= 2:
+            g.decision_path.append("collision type 2 take risk")
+            return [collision]
+
+        if len(aset) >= g.me.length:
+            g.decision_path.append("collision type 2 take avoid point")
+            return [avoid]
+
+        adjacent_indexes = [i
+                for i,c in enumerate(g.me.body)
+                for p in adj_cells(c) if p in g.me.territory
+                ]
+
+        if len(adjacent_indexes) == 0:
+            g.decision_path.append("collision type 2 take risk")
+            return [collision]
+
+        max_index = max(adjacent_indexes)
+        wayout_point = g.me.body[max_index]
+        wayout_length = g.me.length - max_index - 1
+
+        oset = trim_aset(aset, g.me.head, wayout_point)
+        if wayout_length <= len(oset): 
+            g.decision_path.append("collision type 2 take avoid point")
+            return [avoid]
+
+        if len(g.others) == 1 and len(cut_set) >= 5 and len(cut_set) >= len(aset) * 0.4:
+            if wayout_length <= len(cut_set):
+                g.decision_path.append("collision type 2 take risk")
+                return [collision]
+
+        if len(g.others) > 1 and len(oset) >= 2:
+            g.decision_path.append("collision type 2 take avoid point")
+            return [avoid]
+
+        if len(g.others) == 1 and len(oset) < wayout_length:
+            g.decision_path.append("collision type 2 take risk")
             return [collision]
 
     def split_choice_2(moves):
@@ -732,10 +782,6 @@ def main(game_state, log=True, log_db=False):
         if ngroup == 1:
             return
 
-        #split choice doesn't consider type-2 collision
-        type_2_collision = [snake for snake in g.others if snake.length > g.me.length and distance_vector_abs(snake.head, g.me.head) == (1,1) and len([a for a in g.me.allowed_moves if a in snake.allowed_moves]) == 2]
-        if len(type_2_collision) != 0: return
-
         if ngroup == 3:
             if path_connected(g.me.head, g.me.tail):
                 return shortest_path_move(g.me.head, g.me.tail)
@@ -746,22 +792,22 @@ def main(game_state, log=True, log_db=False):
                     return shortest_path_move(g.me.head, snake.tail)
             return prefer_by_score(lambda a: len(path_connected_set(a)))(moves)
         
-        g.decision_path.append("split choice 2")
-        return seq([
+        result = seq([
                 (avoid_preliminary_trap),
                 #(avoid_static_confinement),
                 (more_space),
                 (prefer_diagonal_cut_set),
         ])(moves)
 
+        if result is not None:
+            if len(result) != 0 and len(result) != len(moves):
+                g.decision_path.append("split choice 2")
+                return result
+
     def split_choice(moves):
         ngroup = move_connected_group(moves)
         if ngroup == 1:
             return
-
-        #split choice doesn't consider type-2 collision
-        type_2_collision = [snake for snake in g.others if snake.length > g.me.length and distance_vector_abs(snake.head, g.me.head) == (1,1) and len([a for a in g.me.allowed_moves if a in snake.allowed_moves]) == 2]
-        if len(type_2_collision) != 0: return
 
         if ngroup == 3:
             if path_connected(g.me.head, g.me.tail):
@@ -773,11 +819,9 @@ def main(game_state, log=True, log_db=False):
                     return shortest_path_move(g.me.head, snake.tail)
             return prefer_by_score(lambda a: len(path_connected_set(a)))(moves)
         
-        g.decision_path.append("try split choice")
-        #ngroup == 2
-        
         ok_set = [a for a in moves if combined_wayout(a)]
-        if len(ok_set) != 0:
+        if len(ok_set) != 0 and len(ok_set) != len(moves):
+            g.decision_path.append("split choice")
             return ok_set
 
     def more_space(moves):
@@ -2473,6 +2517,8 @@ if __name__ == "__main__":
     log = {'id': '59ff6d1f-4975-4c17-afac-e695e4089a77', 'turn': 136, 'me': {'name': 'mark_snake', 'health': 99, 'length': 9, 'body': [(0, 2), (1, 2), (2, 2), (3, 2), (3, 1), (3, 0), (4, 0), (5, 0), (6, 0)], 'id': 'gs_fgMv4BCBbX4VhBV99WRJQF8d'}, 'others': [{'name': 'snakey_wakey', 'health': 89, 'length': 11, 'body': [(3, 3), (2, 3), (2, 4), (2, 5), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6)], 'id': 'gs_Gpq3wT47bwbrtrDFFX3FhSJ9'}, {'name': 'Game of Chicken', 'health': 96, 'length': 14, 'body': [(9, 5), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1), (8, 1), (8, 2), (7, 2), (7, 3), (7, 4), (6, 4), (5, 4)], 'id': 'gs_8kDHv4wxB4trBr6bCbv7tBtT'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 86, 'length': 12, 'body': [(0, 6), (1, 6), (1, 7), (1, 8), (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (6, 10), (7, 10)], 'id': 'gs_GdkCDFQyCPhvgtWSxKxJrG3Y'}], 'food': [(4, 8)], 'module': 'decision_flow', 'decision_path': ['1vn', 'preliminary cut kill target: Copy of snake2_v3_FINAL_final(1)', 'go cut to (0, 3)'], 'next_coord': (0, 3), 'next_move': 'up', 'time': '0.006s'}
     log = {'id': 'f16c38d5-4c89-437d-bf1c-522e05372d14', 'turn': 90, 'me': {'name': 'mark_snake', 'health': 95, 'length': 12, 'body': [(1, 9), (1, 8), (0, 8), (0, 7), (0, 6), (0, 5), (1, 5), (2, 5), (3, 5), (3, 6), (2, 6), (1, 6)], 'id': 'gs_tpfMd3yK9KBjRKCwqyCg4VCP'}, 'others': [{'name': 'slieks', 'health': 81, 'length': 9, 'body': [(3, 3), (3, 2), (2, 2), (1, 2), (0, 2), (0, 3), (1, 3), (2, 3), (2, 4)], 'id': 'gs_grhFT3mdGX3gK7kK6YwjWSPX'}, {'name': 'ich heisse marvin', 'health': 91, 'length': 8, 'body': [(9, 5), (8, 5), (7, 5), (6, 5), (6, 4), (6, 3), (6, 2), (7, 2)], 'id': 'gs_dTYykSHpdjxtWJGJHQKSyC8Q'}, {'name': 'Red Yarn', 'health': 96, 'length': 12, 'body': [(3, 9), (3, 8), (4, 8), (4, 9), (5, 9), (5, 8), (5, 7), (5, 6), (6, 6), (7, 6), (7, 7), (7, 8)], 'id': 'gs_6JgBpt44hGxbv4wV4hGxkKJ7'}], 'food': [(10, 3), (2, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', 'multi-step collision [((2, 9), 1)]'], 'next_coord': (0, 9), 'next_move': 'left', 'time': '0.035s'}
     log = {'id': '65b6f4ed-5c67-488a-87c5-9c15078cf253', 'turn': 131, 'me': {'name': 'mark_snake', 'health': 87, 'length': 12, 'body': [(5, 6), (5, 7), (6, 7), (7, 7), (8, 7), (8, 8), (8, 9), (9, 9), (9, 10), (8, 10), (7, 10), (6, 10)], 'id': 'gs_jfwPScvVCjwGrWSMHrpMThH3'}, 'others': [{'name': 'go-st', 'health': 92, 'length': 14, 'body': [(4, 5), (3, 5), (2, 5), (2, 4), (2, 3), (2, 2), (2, 1), (1, 1), (1, 2), (1, 3), (0, 3), (0, 4), (0, 5), (0, 6)], 'id': 'gs_WVbr3cjpPHjGRRTVfqV3QQVG'}, {'name': 'Snaky  McSnakeface', 'health': 78, 'length': 11, 'body': [(8, 1), (8, 2), (8, 3), (8, 4), (7, 4), (6, 4), (5, 4), (5, 3), (6, 3), (6, 2), (6, 1)], 'id': 'gs_ryCGB4G3xH97YqXHQtJ4S8JF'}, {'name': 'soma-mini v1[standard]', 'health': 91, 'length': 6, 'body': [(10, 1), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5)], 'id': 'gs_fJVHjkfhvgd7vHXYwTHtjWgV'}], 'food': [(7, 2), (10, 6)], 'module': 'decision_flow', 'decision_path': ['1vn', 'type 2 collision take risk'], 'next_coord': (4, 6), 'next_move': 'left', 'time': '0.013s'}
+    log = {'id': '5bea9626-7c53-400f-92d9-f11874707aa5', 'turn': 111, 'me': {'name': 'mark_snake', 'health': 99, 'length': 9, 'body': [(1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9)], 'id': 'gs_mXRbkvCqy3gGGXy7K7MhYgWc'}, 'others': [{'name': 'rustiger', 'health': 92, 'length': 12, 'body': [(4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8)], 'id': 'gs_VmBr8t7yCGxvhwQJcctMh8f8'}, {'name': 'the evening and the morning', 'health': 91, 'length': 14, 'body': [(5, 4), (6, 4), (7, 4), (7, 5), (7, 6), (6, 6), (5, 6), (4, 6), (3, 6), (2, 6), (2, 7), (3, 7), (3, 8), (2, 8)], 'id': 'gs_GdfWBTkjFtGtDQrm3bCgQVGV'}], 'food': [(10, 2)], 'module': 'decision_flow', 'decision_path': ['1vn', 'avoid next step confinement [(1, 1)]'], 'next_coord': (2, 2), 'next_move': 'right', 'time': '0.048s'}
+    log = {'id': '3c7270d5-138f-401a-8946-b4e68cfa2c4c', 'turn': 281, 'me': {'name': 'mark_snake', 'health': 100, 'length': 21, 'body': [(9, 2), (9, 1), (8, 1), (7, 1), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (1, 2), (2, 2), (2, 3), (1, 3), (1, 4), (0, 4), (0, 4)], 'id': 'gs_933DjGYpcwq9tSb7RPhk3d7G'}, 'others': [{'name': 'Wim HU', 'health': 69, 'length': 17, 'body': [(10, 3), (9, 3), (8, 3), (7, 3), (7, 4), (7, 5), (7, 6), (8, 6), (8, 7), (8, 8), (8, 9), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7)], 'id': 'gs_qPWDJ3XwqXVfk66dgrY7Md9X'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 85, 'length': 29, 'body': [(5, 6), (6, 6), (6, 7), (7, 7), (7, 8), (6, 8), (5, 8), (5, 9), (6, 9), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6), (2, 6), (3, 6), (3, 7), (2, 7), (2, 8), (3, 8), (4, 8), (4, 7)], 'id': 'gs_4B37jtvHfmvFqPg8gTvPXPSP'}], 'food': [(3, 9), (10, 1), (8, 4), (5, 3)], 'module': 'decision_flow', 'decision_path': ['1vn', 'try split choice', 'try split choice', 'try split choice', 'split choice 2'], 'next_coord': (10, 2), 'next_move': 'right', 'time': '0.017s'}
 
 
 
