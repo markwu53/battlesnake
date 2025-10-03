@@ -250,7 +250,7 @@ def main(game_state, log=True, log_db=False):
                 if path_distance_pq(g.me.head, g.other.head) == distance_pq(g.me.head, g.other.head):
                     g.decision_path.append("avoid cornered bordered")
                     #return prefer_by_rank(lambda a: min(distance_vector_abs(a, g.other.head)))(moves)
-                    return prefer_by_rank(lambda: path_distance_pq(a, g.other.head))(moves)
+                    return prefer_by_rank(lambda a: path_distance_pq(a, g.other.head))(moves)
 
     def border_go_up(moves):
         if not on_border(g.me.head): return
