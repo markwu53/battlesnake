@@ -510,7 +510,6 @@ def main(game_state, log=True, log_db=False):
             if coming_to(g.me, g.other.head) and coming_to(g.other, g.me.head):
                 if distance_pq(g.me.head, g.other.head) == 4:
                     moves = [a for a in moves if distance_pq(a, g.other.head) < distance_pq(g.me.head, g.other.head)]
-                    print(moves)
                     if len(moves) != 0:
                         g.decision_path.append("coming push")
                         return moves
@@ -1318,6 +1317,19 @@ def main(game_state, log=True, log_db=False):
             if any([snake.tail in oset for snake in g.snakes]): continue
             if any([any([is_adjacent(snake.tail, a) for a in oset]) for snake in g.snakes if snake.health == 100]): continue
 
+            v2 = [p for p in [(x0,y1), (x1,y0)] if min(distance_vector_abs(g.me.head, p)) == 0]
+            v2 = take_first(v2)
+
+            #path to v via v2
+            path_1 = [(x,y) for x0,y0 in [g.me.head] for x1,y1 in [v2] for x in irange(x0,x1) for y in irange(y0,y1)]
+            path_2 = [(x,y) for x0,y0 in [v2] for x1,y1 in [v] for x in irange(x0,x1) for y in irange(y0,y1)]
+            path = path_1 + path_2
+            path = [p for p in path if p != v]
+            path = sorted(list(set(path)))
+            #path must touch target territory
+            if not any([q in oset for p in path for q in adj_cells(p)]):
+                continue
+
             oset = trim_aset(oset, target.head, target.head)
             if len(oset) > target.length * 1.1:
                 continue
@@ -1325,10 +1337,6 @@ def main(game_state, log=True, log_db=False):
             if path_distance_pq(g.me.head, v) != distance_pq(g.me.head, v):
                 continue
 
-            v2 = [p for p in [(x0,y1), (x1,y0)] if min(distance_vector_abs(g.me.head, p)) == 0]
-            v2 = take_first(v2)
-
-            print(v, v2, rect)
             g.decision_path.append(f"go cut to {(x0,y0)}")
             cut_moves = shortest_path_move(g.me.head, v)
             cut_moves = prefer_by_rank(lambda a: distance_pq(a, target.head))(cut_moves)
@@ -2524,6 +2532,7 @@ if __name__ == "__main__":
     log = {'id': '832e9516-1fba-4f37-b792-34a99ae712fc', 'turn': 366, 'me': {'name': 'mark_snake', 'health': 95, 'length': 32, 'body': [(9, 1), (9, 0), (8, 0), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (2, 7), (2, 8), (2, 9), (2, 10), (3, 10), (4, 10), (5, 10), (5, 9), (6, 9), (6, 8), (6, 7), (5, 7), (4, 7)], 'id': 'gs_q6Kt3k3r6cT6H7pgbWdXXpyF'}, 'others': [{'name': 'ich heisse marvin', 'health': 86, 'length': 22, 'body': [(8, 4), (7, 4), (7, 3), (6, 3), (6, 4), (5, 4), (4, 4), (3, 4), (3, 3), (4, 3), (5, 3), (5, 2), (4, 2), (3, 2), (3, 1), (4, 1), (5, 1), (6, 1), (6, 2), (7, 2), (8, 2), (8, 3)], 'id': 'gs_yB8tBmMvXpfQ93CqyR7JWfGB'}], 'food': [(9, 3), (6, 6), (10, 0), (9, 9), (7, 10), (7, 5), (7, 8)], 'module': 'decision_flow', 'decision_path': ['1v1', 'avoid cornered bordered'], 'next_coord': (8, 1), 'next_move': 'left', 'time': '0.016s'}
     log = {'id': '6432a529-267a-4cec-9ec6-7d9b495db17c', 'turn': 120, 'me': {'name': 'mark_snake', 'health': 75, 'length': 14, 'body': [(9, 7), (8, 7), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (7, 2), (7, 1), (7, 0), (6, 0), (5, 0), (4, 0), (3, 0)], 'id': 'gs_McfWryYq8WJf4QKdKqfBQ4QG'}, 'others': [{'name': 'snakey_wakey', 'health': 95, 'length': 15, 'body': [(7, 5), (7, 6), (6, 6), (6, 7), (6, 8), (5, 8), (4, 8), (4, 7), (4, 6), (3, 6), (2, 6), (2, 5), (2, 4), (2, 3), (3, 3)], 'id': 'gs_744pbvpKBjyMrGj9VDDkqXkF'}, {'name': 'Snakeformatika', 'health': 45, 'length': 9, 'body': [(10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (8, 9), (9, 9)], 'id': 'gs_KvFYv36Cmk9cFDqMFKCG3XSC'}, {'name': 'Game of Chicken', 'health': 93, 'length': 7, 'body': [(1, 5), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9)], 'id': 'gs_g3bqS9jHrFpMVGDXgV3VhHVC'}], 'food': [(10, 4)], 'module': 'decision_flow', 'decision_path': ['1vn', 'split choice 2'], 'next_coord': (9, 8), 'next_move': 'up', 'time': '0.010s'}
     log = {'id': 'c30e0466-f467-4a9e-bb79-81a3fcfde353', 'turn': 81, 'me': {'name': 'mark_snake', 'health': 89, 'length': 8, 'body': [(8, 7), (8, 8), (7, 8), (6, 8), (5, 8), (5, 7), (4, 7), (3, 7)], 'id': 'gs_gcT4gjPCcY8gBVGVVjfx83K8'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 88, 'length': 11, 'body': [(9, 6), (9, 5), (9, 4), (9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9)], 'id': 'gs_vwfWYvhyfM9gVHhKtQVTHyXY'}, {'name': 'Wim HU', 'health': 100, 'length': 11, 'body': [(7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (9, 2), (8, 2), (8, 3), (7, 3), (7, 3)], 'id': 'gs_fGDjmYQMDTRHYjM6JVSMHwxb'}, {'name': 'Game of Chicken', 'health': 86, 'length': 9, 'body': [(4, 5), (4, 4), (3, 4), (3, 3), (3, 2), (3, 1), (3, 0), (4, 0), (5, 0)], 'id': 'gs_cHJVvxXhJyVGdbSgkwdHfg8V'}], 'food': [(0, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'collision type 2 take risk'], 'next_coord': (9, 7), 'next_move': 'right', 'time': '0.017s'}
+    log = {'id': 'eb69f344-199d-4f9a-96c2-06008061dd4a', 'turn': 119, 'me': {'name': 'mark_snake', 'health': 86, 'length': 14, 'body': [(3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (8, 3), (8, 2), (7, 2), (6, 2), (6, 1), (6, 0), (7, 0), (8, 0)], 'id': 'gs_YpCQh3PCWTj8X7wGbMhPH36M'}, 'others': [{'name': 'SmartyRat', 'health': 40, 'length': 8, 'body': [(3, 8), (4, 8), (4, 9), (3, 9), (2, 9), (1, 9), (1, 8), (2, 8)], 'id': 'gs_X4kCKppqR3QTV4mQmTKDPJ88'}, {'name': 'Lancer', 'health': 99, 'length': 12, 'body': [(0, 3), (0, 4), (0, 5), (1, 5), (1, 6), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (6, 6)], 'id': 'gs_BRYQrk6xJYtfFCFBthVPMfjc'}, {'name': '@~~~~@', 'health': 99, 'length': 8, 'body': [(8, 9), (7, 9), (7, 8), (7, 7), (7, 6), (7, 5), (8, 5), (8, 6)], 'id': 'gs_8g7Ww8p8BVb3gRXq6YydWwYT'}], 'food': [(0, 7), (0, 6), (7, 3)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('SmartyRat', 2, (1, 8))]", 'preliminary cut kill target: Lancer', 'go cut to (2, 0)'], 'next_coord': (3, 3), 'next_move': 'down', 'time': '0.013s'}
 
 
 
