@@ -707,6 +707,12 @@ def main(game_state, log=True, log_db=False):
         nonkillers = [snake for snake in g.others if snake.length == g.me.length and distance_vector_abs(g.me.head, snake.head) == (1,1)]
         if len(killers) == 0 and len(nonkillers) == 0: return
 
+        if len(killers) > 1:
+            avoid = [a for a in moves if not any([is_adjacent(a, killer.head) for killer in killers])]
+            if len(avoid) != 0:
+                g.decision_path.append("multiple killers take avoid point")
+                return avoid
+
         if len(killers) != 1: return
         killer = take_first(killers)
 
