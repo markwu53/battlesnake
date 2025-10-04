@@ -114,6 +114,8 @@ def main(game_state, log=True, log_db=False):
 
             cond(g.me.health < 20)(get_food),
 
+            attack_vulnerables_lower_priority,
+
             seq([ (split_choice), (split_choice_2), ]),
 
             cond(len(g.others) == 1 and g.me.length > g.other.length)(push),
@@ -391,8 +393,9 @@ def main(game_state, log=True, log_db=False):
             return prefer(lambda a: a in food_moves)(moves)
 
         if is_adjacent(g.me.head, food_target):
-            g.decision_path.append("next to food")
-            return [food_target]
+            if food_target in moves:
+                g.decision_path.append("next to food")
+                return [food_target]
 
         def food_space(a):
             occupied = g.occupied_cells[1]+[a]
@@ -1387,6 +1390,21 @@ def main(game_state, log=True, log_db=False):
             [v, (0 if x1 < x0 else width-1, y1)],
         ]
         return rectangles
+
+    def attack_vulnerables_lower_priority(moves):
+        vul = [snake for snake in g.vulnerables if snake.length < g.me.length and distance_pq(snake.head, g.me.head) <= 4]
+        if len(vul) == 0: return
+
+        vul = take_first(vul)
+        vul2 = vul.vulnerable_emerge
+        if vul.vulnerable_steps > 2: return
+        if sum(distance_to_border(vul2.head)) > 2: return
+
+        #push it
+        moves = [a for a in moves if distance_pq(a, vul2.head) < distance_pq(g.me.head, vul2.head)]
+        if len(moves) != 0:
+            g.decision_path.append("vulnerable snake is near and cornered try kill it")
+            return moves
 
     def attack_vulnerables(moves):
         for snake in g.vulnerables:
@@ -2559,6 +2577,9 @@ if __name__ == "__main__":
     log = {'id': '55211a55-1a32-4ef9-b7e4-1514b9dd27f8', 'turn': 70, 'me': {'name': 'mark_snake', 'health': 75, 'length': 7, 'body': [(9, 9), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10)], 'id': 'gs_xkdfMdpfgk7pb4qcDxcBgbKd'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 83, 'length': 12, 'body': [(4, 6), (4, 5), (4, 4), (5, 4), (6, 4), (7, 4), (7, 5), (7, 6), (8, 6), (9, 6), (10, 6), (10, 7)], 'id': 'gs_wHr4rJYVv9vGHvfW8vgVHG4c'}, {'name': 'Lancer', 'health': 97, 'length': 9, 'body': [(1, 3), (0, 3), (0, 4), (0, 5), (0, 6), (1, 6), (2, 6), (3, 6), (3, 5)], 'id': 'gs_hcCr9gt9yHvcSRpWPfGc9Mkc'}, {'name': 'ich heisse marvin', 'health': 88, 'length': 9, 'body': [(8, 8), (8, 7), (7, 7), (6, 7), (5, 7), (5, 8), (5, 9), (6, 9), (7, 9)], 'id': 'gs_wmMF6VmrxgCWQpRR6jgTmbmB'}], 'food': [(0, 10), (2, 7), (2, 1), (9, 0)], 'module': 'decision_flow', 'decision_path': ['1vn', 'avoid serious cut danger (10, 9)'], 'next_coord': (9, 8), 'next_move': 'down', 'time': '0.001s'}
     log = {'id': '220826c8-2315-407e-abe5-be8459fd9add', 'turn': 10, 'me': {'name': 'mark_snake', 'health': 94, 'length': 4, 'body': [(3, 7), (3, 6), (3, 5), (2, 5)], 'id': 'gs_WkdfyYK3tchRtY7rFGQdFHcS'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 92, 'length': 4, 'body': [(7, 9), (7, 8), (7, 7), (7, 6)], 'id': 'gs_SmkJXbRShcMtDTrCjthyVGM6'}, {'name': 'Wim HU', 'health': 92, 'length': 4, 'body': [(1, 5), (1, 4), (1, 3), (1, 2)], 'id': 'gs_pVJCFf6YMjhyYDh8XxYgQyPR'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 98, 'length': 5, 'body': [(4, 6), (4, 5), (5, 5), (5, 6), (5, 7)], 'id': 'gs_cSj7j4m6XCvMmpGDCWhppdPF'}], 'food': [(4, 9)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Copy of snake2_v3_FINAL_final(1)', 1, (4, 7))]", 'go to open space (2, 5)'], 'next_coord': (2, 7), 'next_move': 'left', 'time': '0.072s'}
     log = {'id': '93dcfe4b-6f16-455d-a562-b42fecf4228c', 'turn': 44, 'me': {'name': 'mark_snake', 'health': 86, 'length': 6, 'body': [(9, 1), (8, 1), (7, 1), (7, 2), (8, 2), (8, 3)], 'id': 'gs_JtqyhbkQWKXb7yRPhDTR4dkb'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 66, 'length': 5, 'body': [(9, 7), (9, 8), (9, 9), (8, 9), (8, 8)], 'id': 'gs_x6WwjpgbJHCtCxTrXXxbwwH3'}, {'name': 'snakey_wakey', 'health': 79, 'length': 6, 'body': [(6, 4), (6, 5), (7, 5), (7, 6), (7, 7), (6, 7)], 'id': 'gs_St9b3qGcFRpgKrpQXdW8qGgD'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 93, 'length': 8, 'body': [(6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0)], 'id': 'gs_H4yTc7CFwychXm83KvJPYJRJ'}], 'food': [(9, 0), (7, 0)], 'module': 'decision_flow', 'decision_path': ['1vn', 'get food (7, 0)'], 'next_coord': (9, 0), 'next_move': 'down', 'time': '0.022s'}
+    log = {'id': '474d461e-56c1-42ea-8170-9d2319d93f77', 'turn': 91, 'me': {'name': 'mark_snake', 'health': 86, 'length': 13, 'body': [(3, 4), (2, 4), (1, 4), (1, 5), (2, 5), (2, 6), (2, 7), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10)], 'id': 'gs_CxyYthSwCH4X9CvKvBRd76q7'}, 'others': [{'name': 'Game of Chicken', 'health': 74, 'length': 7, 'body': [(1, 2), (0, 2), (0, 3), (1, 3), (2, 3), (2, 2), (2, 1)], 'id': 'gs_Gftm3pqWyYhVqx99f3pyymTY'}, {'name': 'Lancer', 'health': 93, 'length': 8, 'body': [(8, 7), (8, 8), (7, 8), (6, 8), (5, 8), (4, 8), (4, 7), (5, 7)], 'id': 'gs_C9BYRHMhVdQYtVdBb43wdhRd'}, {'name': 'Frank The Tank', 'health': 99, 'length': 11, 'body': [(9, 2), (9, 1), (8, 1), (7, 1), (6, 1), (5, 1), (5, 2), (5, 3), (4, 3), (4, 4), (4, 5)], 'id': 'gs_3PFftJvMxCJcCMfgydTr93Vb'}], 'food': [(10, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Game of Chicken', 1, (1, 1))]", 'split choice 2'], 'next_coord': (3, 5), 'next_move': 'up', 'time': '0.028s'}
+    log = {'id': '474d461e-56c1-42ea-8170-9d2319d93f77', 'turn': 98, 'me': {'name': 'mark_snake', 'health': 79, 'length': 13, 'body': [(6, 4), (6, 5), (6, 6), (5, 6), (4, 6), (3, 6), (3, 5), (3, 4), (2, 4), (1, 4), (1, 5), (2, 5), (2, 6)], 'id': 'gs_CxyYthSwCH4X9CvKvBRd76q7'}, 'others': [{'name': 'Game of Chicken', 'health': 67, 'length': 7, 'body': [(5, 3), (4, 3), (3, 3), (3, 2), (3, 1), (2, 1), (1, 1)], 'id': 'gs_Gftm3pqWyYhVqx99f3pyymTY'}, {'name': 'Lancer', 'health': 95, 'length': 9, 'body': [(7, 9), (8, 9), (9, 9), (9, 8), (10, 8), (10, 7), (9, 7), (8, 7), (8, 8)], 'id': 'gs_C9BYRHMhVdQYtVdBb43wdhRd'}, {'name': 'Frank The Tank', 'health': 92, 'length': 11, 'body': [(8, 2), (8, 3), (8, 4), (8, 5), (9, 5), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1), (7, 1)], 'id': 'gs_3PFftJvMxCJcCMfgydTr93Vb'}], 'food': [(10, 1), (5, 4)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Frank The Tank', 1, (7, 2))]", 'split choice', 'next to food'], 'next_coord': (5, 4), 'next_move': 'left', 'time': '0.028s'}
+
 
 
 
