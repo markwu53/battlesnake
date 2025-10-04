@@ -1433,13 +1433,14 @@ def main(game_state, log=True, log_db=False):
                 attack_point = [q 
                                 for p in adj_cells(snake2.head) if not on_border(p) 
                                 for q in adj_cells(p) if distance_vector_abs(q, snake2.head) in [(0,2), (2,0)]]
-                attack_point = take_first(attack_point)
-                if path_distance_pq(g.me.head, attack_point) == snake.vulnerable_steps:
-                    attack_move = shortest_path_move(g.me.head, attack_point)
-                    attack_move = [a for a in moves if a in attack_move]
-                    if len(attack_move) != 0:
-                        g.decision_path.append("attack vulnerables distance 2")
-                        return attack_move
+                if len(attack_point) != 0:
+                    attack_point = take_first(attack_point)
+                    if path_distance_pq(g.me.head, attack_point) == snake.vulnerable_steps:
+                        attack_move = shortest_path_move(g.me.head, attack_point)
+                        attack_move = [a for a in moves if a in attack_move]
+                        if len(attack_move) != 0:
+                            g.decision_path.append("attack vulnerables distance 2")
+                            return attack_move
 
     def attack_vulnerables_distance_4(moves):
         snake = g.target_snake
