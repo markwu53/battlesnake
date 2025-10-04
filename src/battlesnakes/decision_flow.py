@@ -969,8 +969,8 @@ def main(game_state, log=True, log_db=False):
             me2 = possible_next_state(g.me, a)
             for b in killer.allowed_moves:
 
+                if b in moves and killer.length <= g.me.length: continue
                 if b == a: continue
-                if b in [p for p in moves if p in killer.allowed_moves and killer.length <= g.me.length]: continue
 
                 snake2 = possible_next_state(killer, b)
                 hypothetic_development_territories([snake2, me2])
