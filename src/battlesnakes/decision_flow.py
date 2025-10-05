@@ -125,8 +125,14 @@ def main(game_state, log=True, log_db=False):
             cond(g.me.length < 10)(split_choice),
             cond(g.me.length <= 10)(killer_near_prefer_away_border),
             cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_to_the_end),
+
+            #there are effective in killing the only other
             cond(len(g.others) == 1 and g.me.length >= 10)(prefer_more_territory),
             cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_other_tail),
+
+            #try to reproduce this effect earlier when I'm longer than local target
+            cond(len(g.others) > 1 and g.me.length >= 12)(local_chasing),
+
             cond(g.me.length >= 35)(chase_my_tail),
             avoid_next_step_suppressed,
 
@@ -478,6 +484,42 @@ def main(game_state, log=True, log_db=False):
                     g.decision_path.append(f"chase tail {tail}")
                     return moves
         return fn
+
+    def local_chasing(moves):
+        snakes = [snake for snake in g.others if distance_pq(snake.head, g.me.head) <= 6]
+        if len(snakes) != 1: return
+        target = take_first(snakes)
+        if target.length >= g.me.length: return
+
+        def push(moves):
+            if sum(distance_to_border(g.me.head)) < sum(distance_to_border(target.head)): return
+            if distance_pq(g.me.head, target.head) != path_distance_pq(g.me.head, target.head): return
+            push_move = [a for a in moves if distance_pq(a, target.head) < distance_pq(g.me.head, target.head)]
+            if len(push_move) != 0:
+                g.decision_path.append("local push")
+                return push_move
+
+        def chase(moves):
+            if path_distance_pq(g.me.head, target.tail) > 8: return
+
+            if is_adjacent(g.me.head, target.tail):
+                #don't follow too close
+                tail_move = [a for a in moves if path_connected(a, target.tail)]
+                if len(tail_move) != 0:
+                    g.decision_path.append("local chase detour")
+                    return tail_move
+            else:
+                tail_move = shortest_path_move(g.me.head, target.tail)
+                tail_move = [a for a in moves if a in tail_move]
+                if len(tail_move) != 0:
+                    g.decision_path.append("local chase")
+                    return tail_move
+
+        #push or chase
+        return par([
+            push,
+            chase,
+        ])(moves)
 
     def chase_other_tail(moves):
         if is_adjacent(g.me.head, g.other.tail):
