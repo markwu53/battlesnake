@@ -513,7 +513,8 @@ def main(game_state, log=True, log_db=False):
             if distance_vector_abs(snake_move, g.me.head) in [(0,3), (3,0)]:
                 push_move = [a for a in moves if distance_vector_abs(a, snake_move) in [(0,2), (2,0)]]
                 if len(push_move) == 0: return
-                push_move_next_step = [a for a in adj_cells(push_move) if get_adjacent_dir(push_move, push_move_next_step) == get_adjacent_dir(snake.head, snake_move)]
+                push_move = take_first(push_move)
+                push_move_next_step = [a for a in adj_cells(push_move) if get_adjacent_dir(push_move, a) == get_adjacent_dir(snake.head, snake_move)]
                 if len(push_move_next_step) != 1: return
                 push_move_next_step = take_first(push_move_next_step)
                 if push_move_next_step in g.occupied_cells[1]: return
