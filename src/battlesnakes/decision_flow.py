@@ -814,6 +814,10 @@ def main(game_state, log=True, log_db=False):
         if len(moves) == 2:
             if not all([is_adjacent(a, killer.head) for a in moves]): return
             if len(killer.allowed_moves) != 3: return
+            border_move = [a for a in moves if on_border(a)]
+            if len(border_move) != 0:
+                g.decision_path.append("type 2 collision take border risk")
+                return border_move
             killer_other_move = [a for a in killer.allowed_moves if a not in moves]
             if len(killer_other_move) != 1: return
             killer_other_move = take_first(killer_other_move)
