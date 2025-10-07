@@ -130,7 +130,7 @@ def main(game_state, log=True, log_db=False):
             cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_to_the_end),
 
             #these are effective in killing the only other
-            cond(len(g.others) == 1 and g.me.length > g.other.length)(prefer_more_territory),
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(longer_push),
             cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_other_tail),
 
             #try to reproduce this effect earlier when I'm longer than local target
@@ -332,7 +332,7 @@ def main(game_state, log=True, log_db=False):
         if not any([distance_pq(a, snake.head) < distance_pq(snake.head, snake2.head) for a in snake2.allowed_moves]): return False
         return True
 
-    def prefer_more_territory(moves):
+    def longer_push(moves):
         ngroup = move_connected_group(moves)
         if ngroup != 1: return
         if distance_pq(g.me.head, g.other.head) != path_distance_pq(g.me.head, g.other.head): return
@@ -666,8 +666,11 @@ def main(game_state, log=True, log_db=False):
             x,y = p
             return x**2 + y**2
 
-        avoids = [a for a in moves if a in g.other.allowed_moves] if g.me.length == g.other.length else [
-            a for a in moves if a in g.other.allowed_moves or any([distance_vector_abs(a,b) == (1,1) for b in g.other.allowed_moves])]
+        avoids = []
+        if g.me.length == g.other.length:
+            avoids = [a for a in moves if a in g.other.allowed_moves]
+        elif g.me.length < g.other.length:
+            avoids = [a for a in moves if a in g.other.allowed_moves or any([distance_vector_abs(a,b) == (1,1) for b in g.other.allowed_moves])]
         push_move = [a for a in moves if a not in avoids]
         if len(push_move) != 0:
             g.decision_path.append("equal or short push")
