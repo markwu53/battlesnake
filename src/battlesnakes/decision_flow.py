@@ -331,17 +331,12 @@ def main(game_state, log=True, log_db=False):
 
     def coming_to_each_other(snake: Snake, snake2: Snake):
         if distance_pq(snake.head, snake2.head) != path_distance_pq(snake.head, snake2.head): return False
-        if not any([distance_pq(a, snake2.head) < distance_pq(snake.head, snake2.head) for a in snake.allowed_moves]): return False
-        if not any([distance_pq(a, snake.head) < distance_pq(snake.head, snake2.head) for a in snake2.allowed_moves]): return False
-        return True
+        return coming_to(snake, snake2.head) and coming_to(snake2, snake.head)
 
     def longer_push(moves):
         #assume 1v1
-        if distance_vector_abs(g.me.head, g.other.head) != (1,1):
-            ngroup = move_connected_group(moves)
-            if ngroup != 1: 
-                return
-        if distance_pq(g.me.head, g.other.head) != path_distance_pq(g.me.head, g.other.head): return
+        if not coming_to_each_other(g.me, g.other): return
+ 
         #return prefer_by_score(lambda a: len(new_territory(a)))(moves)
         moves = [a for a in moves if a in shortest_path_move(g.me.head, g.other.head)]
         if len(moves) != 0:
@@ -566,6 +561,7 @@ def main(game_state, log=True, log_db=False):
                 g.decision_path.append("chase other tail detour")
                 return tail_move
         else:
+            if path_distance_pq(g.me.head, g.other.tail) > 8: return
             tail_move = shortest_path_move(g.me.head, g.other.tail)
             tail_move = [a for a in moves if a in tail_move]
             if len(tail_move) != 0:
@@ -2778,6 +2774,7 @@ if __name__ == "__main__":
     log = {'id': 'be30e154-f24d-433b-a0ac-ef0ecec58398', 'turn': 177, 'me': {'name': 'mark_snake', 'health': 81, 'length': 9, 'body': [(4, 5), (4, 4), (4, 3), (4, 2), (3, 2), (3, 3), (2, 3), (1, 3), (0, 3)], 'id': 'gs_tSc4xY7JPx6Wb7WpbSjtJ4tP'}, 'others': [{'name': 'Game of Chicken', 'health': 76, 'length': 17, 'body': [(5, 8), (6, 8), (6, 7), (6, 6), (6, 5), (6, 4), (6, 3), (7, 3), (8, 3), (9, 3), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0)], 'id': 'gs_mW9hVt9FBxC4dhf6SpQJxxTc'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 92, 'length': 19, 'body': [(3, 4), (2, 4), (1, 4), (1, 5), (1, 6), (2, 6), (2, 7), (3, 7), (3, 8), (2, 8), (2, 9), (3, 9), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (7, 8)], 'id': 'gs_CSkxKyMRD6SCxBWy4my6BKqX'}], 'food': [(10, 10), (8, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Copy of snake2_v3_FINAL_final(1)', 1, (3, 5))]", 'preliminary cut kill target: Copy of snake2_v3_FINAL_final(1)', 'go cut to (4, 6)'], 'next_coord': (4, 6), 'next_move': 'up', 'time': '0.010s'}
     log = {'id': '02c01f73-49fa-45ba-88ca-dd55d672fee2', 'turn': 171, 'me': {'name': 'mark_snake', 'health': 64, 'length': 17, 'body': [(3, 2), (2, 2), (2, 1), (1, 1), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (1, 6), (2, 6), (3, 6), (4, 6), (4, 5)], 'id': 'gs_drkBdcPYY3fyMfXcHKqrBtD3'}, 'others': [{'name': 'Game of Chicken', 'health': 98, 'length': 20, 'body': [(6, 1), (6, 2), (6, 3), (6, 4), (5, 4), (5, 5), (5, 6), (5, 7), (4, 7), (3, 7), (3, 8), (3, 9), (4, 9), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (9, 8), (10, 8)], 'id': 'gs_8hJWkBq4F7jRfMVyM8tjCJcK'}], 'food': [(5, 1), (10, 4)], 'module': 'decision_flow', 'decision_path': ['1v1', 'equal or short push'], 'next_coord': (3, 1), 'next_move': 'down', 'time': '0.031s'}
     log = {'id': '02c011c9-ad16-428d-a435-dffdf330cc6f', 'turn': 172, 'me': {'name': 'mark_snake', 'health': 76, 'length': 12, 'body': [(2, 6), (1, 6), (1, 5), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (1, 9), (2, 9), (3, 9), (3, 8)], 'id': 'gs_KrtHYHmgCSKjWd4kJFd4vVFM'}, 'others': [{'name': 'SmartyRat', 'health': 94, 'length': 8, 'body': [(9, 3), (10, 3), (10, 4), (10, 5), (10, 6), (9, 6), (9, 5), (9, 4)], 'id': 'gs_tQT4h8fmFf9mmd8QtV3PtTCd'}, {'name': 'Geriatric Jagwire', 'health': 97, 'length': 13, 'body': [(7, 9), (8, 9), (9, 9), (9, 8), (9, 7), (8, 7), (8, 8), (7, 8), (6, 8), (6, 9), (5, 9), (5, 8), (5, 7)], 'id': 'gs_S8hvHRqcPvfttcFFphRW9GmT'}, {'name': '@~~~~@', 'health': 97, 'length': 14, 'body': [(3, 3), (3, 2), (3, 1), (4, 1), (4, 2), (4, 3), (5, 3), (6, 3), (6, 4), (5, 4), (4, 4), (4, 5), (4, 6), (3, 6)], 'id': 'gs_7tKMM79R9RjTQRRGfydCTXD8'}], 'food': [(5, 10), (9, 0)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Geriatric Jagwire', 1, (7, 10))]", 'avoid two step collision'], 'next_coord': (2, 7), 'next_move': 'up', 'time': '0.036s'}
+    log = {'id': 'abc96f79-004f-47d8-bbe8-9139c3ea6b11', 'turn': 178, 'me': {'name': 'mark_snake', 'health': 89, 'length': 19, 'body': [(9, 5), (8, 5), (7, 5), (6, 5), (5, 5), (4, 5), (4, 4), (4, 3), (3, 3), (3, 2), (2, 2), (1, 2), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1)], 'id': 'gs_m4WXMRJpx7WbJYJwrHhpYbb8'}, 'others': [{'name': 'soma-mini v1[standard]', 'health': 98, 'length': 8, 'body': [(8, 8), (8, 7), (8, 6), (7, 6), (6, 6), (5, 6), (4, 6), (4, 7)], 'id': 'gs_hHMjycjSScqTc3vWMvjPj6vC'}], 'food': [(0, 8), (10, 5), (4, 2), (7, 9), (9, 3), (5, 3)], 'module': 'decision_flow', 'decision_path': ['1v1', '1v1 longer push'], 'next_coord': (9, 6), 'next_move': 'up', 'time': '0.031s'}
 
 
 
