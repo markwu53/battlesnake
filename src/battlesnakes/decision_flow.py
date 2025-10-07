@@ -2056,6 +2056,7 @@ def main(game_state, log=True, log_db=False):
         occupied = g.occupied_cells[0]+cut_set
         oset = path_connected_set(target.head, occupied)
         oset = [p for p in oset if p != target.head]
+        oset = sorted(list(set(oset)))
 
         if len(oset) == 0:
             g.decision_path.append("cut case collision 2")
@@ -2082,6 +2083,14 @@ def main(game_state, log=True, log_db=False):
 
         #cut_set can be long
         #if len(cut_set) > 4: return False
+
+        #if target oset is bordered by more than killer and target body then no case
+        if len(g.snakes) > 2:
+            oset_border = [q for p in oset for q in adj_cells(p) if q not in oset]
+            oset_border = sorted(list(set(oset_border)))
+            others = [snake for snake in g.snakes if snake.head not in [killer.head, target.head]]
+            if any([a in snake.body for a in oset_border for snake in others]):
+                return False
 
         target.cut_set = cut_set
         g.decision_path.append(f"preliminary cut kill target: {target.name}")
@@ -2720,6 +2729,7 @@ if __name__ == "__main__":
     log = {'id': '54f93f62-3340-4fa7-a2e9-6056f890bef6', 'turn': 302, 'me': {'name': 'mark_snake', 'health': 98, 'length': 21, 'body': [(0, 4), (0, 3), (0, 2), (1, 2), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (5, 2), (5, 3), (4, 3), (3, 3), (3, 4), (3, 5), (2, 5), (1, 5), (1, 6), (1, 7), (0, 7), (0, 6)], 'id': 'gs_bRVXgwh7fH9YKcQxjSVthx6d'}, 'others': [{'name': 'Prüzze v2', 'health': 90, 'length': 22, 'body': [(5, 5), (6, 5), (7, 5), (7, 4), (8, 4), (9, 4), (10, 4), (10, 5), (9, 5), (9, 6), (8, 6), (7, 6), (7, 7), (6, 7), (5, 7), (4, 7), (3, 7), (2, 7), (2, 6), (3, 6), (4, 6), (5, 6)], 'id': 'gs_B8rhxDJ4rHFCBRxS7yBQSyG7'}], 'food': [(0, 10), (10, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', 'avoid serious cut danger (0, 5)'], 'next_coord': (1, 4), 'next_move': 'right', 'time': '0.001s'}
     log = {'id': 'c829ce43-d2a9-4e88-8894-8fd03d27cbe5', 'turn': 278, 'me': {'name': 'mark_snake', 'health': 96, 'length': 23, 'body': [(3, 7), (3, 6), (3, 5), (3, 4), (2, 4), (1, 4), (1, 3), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (2, 9), (3, 9), (4, 9), (5, 9)], 'id': 'gs_S8gqWVCJgYHF7BxmvDb6y9d8'}, 'others': [{'name': 'soma-mini v1[standard]', 'health': 94, 'length': 23, 'body': [(5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (9, 6), (9, 5), (8, 5), (7, 5), (7, 4), (7, 3), (7, 2), (7, 1), (6, 1), (6, 2), (5, 2), (5, 1), (4, 1), (4, 2), (3, 2), (3, 3), (4, 3), (4, 4)], 'id': 'gs_w6hSFKh9PBhm96qQXWWQVc8T'}], 'food': [(9, 2), (3, 10)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (2, 7), 'next_move': 'left', 'time': '0.023s'}
     log = {'id': 'c829ce43-d2a9-4e88-8894-8fd03d27cbe5', 'turn': 277, 'me': {'name': 'mark_snake', 'health': 97, 'length': 23, 'body': [(3, 6), (3, 5), (3, 4), (2, 4), (1, 4), (1, 3), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9)], 'id': 'gs_S8gqWVCJgYHF7BxmvDb6y9d8'}, 'others': [{'name': 'soma-mini v1[standard]', 'health': 95, 'length': 23, 'body': [(6, 7), (7, 7), (8, 7), (9, 7), (9, 6), (9, 5), (8, 5), (7, 5), (7, 4), (7, 3), (7, 2), (7, 1), (6, 1), (6, 2), (5, 2), (5, 1), (4, 1), (4, 2), (3, 2), (3, 3), (4, 3), (4, 4), (4, 5)], 'id': 'gs_w6hSFKh9PBhm96qQXWWQVc8T'}], 'food': [(9, 2), (3, 10)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (3, 7), 'next_move': 'up', 'time': '0.033s'}
+    log = {'id': '7c192f62-d511-47a8-a906-0d28c9d6f4bb', 'turn': 231, 'me': {'name': 'mark_snake', 'health': 83, 'length': 14, 'body': [(0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4), (3, 4), (2, 4), (2, 3), (2, 2), (1, 2), (1, 3)], 'id': 'gs_BTjc9V68KT7drDm9YVpymW7M'}, 'others': [{'name': 'Natterlie', 'health': 100, 'length': 20, 'body': [(2, 7), (2, 6), (2, 5), (3, 5), (4, 5), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1), (6, 1), (5, 1), (5, 2), (5, 2)], 'id': 'gs_QS7rjwfqPgd7w3WwCbPBybdJ'}, {'name': 'ich heisse marvin', 'health': 96, 'length': 15, 'body': [(1, 8), (2, 8), (2, 9), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (6, 9), (5, 9), (5, 8), (5, 7), (4, 7)], 'id': 'gs_Kq8GMvtdv679myhFxr8CMYrF'}], 'food': [(10, 10), (1, 0), (0, 0), (1, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'preliminary cut kill target: ich heisse marvin', 'go cut to (1, 3)'], 'next_coord': (0, 2), 'next_move': 'up', 'time': '0.013s'}
 
 
 
