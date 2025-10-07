@@ -152,8 +152,8 @@ def main(game_state, log=True, log_db=False):
 
             (cond(g.me.length >= 12)(confined_follow_tail)),
 
-            cond(len(g.others) == 1 and g.me.length <= g.other.length)(equal_push),
-            #cond(len(g.others) == 1 and g.me.length <= g.other.length)(equal_shorter_push),
+            #cond(len(g.others) == 1 and g.me.length <= g.other.length)(equal_push),
+            cond(len(g.others) == 1 and g.me.length <= g.other.length)(equal_shorter_push),
 
             #cond(len(g.others) == 1 and g.me.length > g.other.length)(border_go_up),
             cond(len(g.others) == 1 and g.me.length < g.other.length)(border_go_up),
@@ -521,6 +521,7 @@ def main(game_state, log=True, log_db=False):
         def push(moves):
             if sum(distance_to_border(g.me.head)) < sum(distance_to_border(target.head)): return
             if distance_pq(g.me.head, target.head) != path_distance_pq(g.me.head, target.head): return
+            if not coming_to_each_other(g.me, target): return
             push_move = [a for a in moves if distance_pq(a, target.head) < distance_pq(g.me.head, target.head)]
             if len(push_move) != 0:
                 g.decision_path.append("local push")
@@ -689,6 +690,7 @@ def main(game_state, log=True, log_db=False):
     def equal_shorter_push(moves):
         if g.me.length > g.other.length: return
         if distance_pq(g.me.head, g.other.head) != path_distance_pq(g.me.head, g.other.head): return
+        if not coming_to_each_other(g.me, g.other): return
 
         def distance_rank(p):
             x,y = p
