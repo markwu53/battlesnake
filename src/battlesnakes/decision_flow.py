@@ -551,7 +551,12 @@ def main(game_state, log=True, log_db=False):
     def chase_other_tail(moves):
         if is_adjacent(g.me.head, g.other.tail):
             #don't follow too close
-            tail_move = [a for a in moves if path_connected(a, g.other.tail)]
+            tail_move = [a for a in moves if path_connected(a, g.other.tail) and distance_pq(a, g.other.tail) == 2]
+            if len(tail_move) != 0:
+                g.decision_path.append("chase other tail detour")
+                return tail_move
+        elif distance_pq(g.me.head, g.other.tail) == 2:
+            tail_move = [a for a in moves if path_connected(a, g.other.tail) and distance_pq(a, g.other.tail) == 3]
             if len(tail_move) != 0:
                 g.decision_path.append("chase other tail detour")
                 return tail_move
