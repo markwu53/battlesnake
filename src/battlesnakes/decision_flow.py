@@ -1454,6 +1454,8 @@ def main(game_state, log=True, log_db=False):
         cut_set = g.target_snake.cut_set
         target = g.target_snake
 
+        rects = []
+
         for v,rect in [(v, rect) for v in cut_set for rect in cut_rectangles(v)]:
             (x0,y0), (x1,y1) = rect
 
@@ -1496,13 +1498,16 @@ def main(game_state, log=True, log_db=False):
             if path_distance_pq(g.me.head, v) != distance_pq(g.me.head, v):
                 continue
 
-            g.decision_path.append(f"go cut to {(x0,y0)}")
-            cut_moves = shortest_path_move(g.me.head, v)
-            cut_moves = prefer_by_rank(lambda a: distance_pq(a, target.head))(cut_moves)
-            cut_moves = prefer_by_rank(lambda a: distance_pq(a, v2))(cut_moves)
-            return cut_moves
+            rects.append((rect, len(oset), v, v2))
 
-        g.decision_path.append("no cut path")
+        if len(rects) == 0: return
+        rect, n, v, v2 = take_first(prefer_by_rank(lambda a: a[1])(rects))
+
+        g.decision_path.append(f"go cut to {v}")
+        cut_moves = shortest_path_move(g.me.head, v)
+        cut_moves = prefer_by_rank(lambda a: distance_pq(a, target.head))(cut_moves)
+        cut_moves = prefer_by_rank(lambda a: distance_pq(a, v2))(cut_moves)
+        return cut_moves
 
     def irange(a, b):
         return list([a] if a == b else range(a, b+1) if a < b else range(a,b-1,-1,))
@@ -2733,6 +2738,7 @@ if __name__ == "__main__":
     log = {'id': 'c829ce43-d2a9-4e88-8894-8fd03d27cbe5', 'turn': 278, 'me': {'name': 'mark_snake', 'health': 96, 'length': 23, 'body': [(3, 7), (3, 6), (3, 5), (3, 4), (2, 4), (1, 4), (1, 3), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (2, 9), (3, 9), (4, 9), (5, 9)], 'id': 'gs_S8gqWVCJgYHF7BxmvDb6y9d8'}, 'others': [{'name': 'soma-mini v1[standard]', 'health': 94, 'length': 23, 'body': [(5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (9, 6), (9, 5), (8, 5), (7, 5), (7, 4), (7, 3), (7, 2), (7, 1), (6, 1), (6, 2), (5, 2), (5, 1), (4, 1), (4, 2), (3, 2), (3, 3), (4, 3), (4, 4)], 'id': 'gs_w6hSFKh9PBhm96qQXWWQVc8T'}], 'food': [(9, 2), (3, 10)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (2, 7), 'next_move': 'left', 'time': '0.023s'}
     log = {'id': 'c829ce43-d2a9-4e88-8894-8fd03d27cbe5', 'turn': 277, 'me': {'name': 'mark_snake', 'health': 97, 'length': 23, 'body': [(3, 6), (3, 5), (3, 4), (2, 4), (1, 4), (1, 3), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9)], 'id': 'gs_S8gqWVCJgYHF7BxmvDb6y9d8'}, 'others': [{'name': 'soma-mini v1[standard]', 'health': 95, 'length': 23, 'body': [(6, 7), (7, 7), (8, 7), (9, 7), (9, 6), (9, 5), (8, 5), (7, 5), (7, 4), (7, 3), (7, 2), (7, 1), (6, 1), (6, 2), (5, 2), (5, 1), (4, 1), (4, 2), (3, 2), (3, 3), (4, 3), (4, 4), (4, 5)], 'id': 'gs_w6hSFKh9PBhm96qQXWWQVc8T'}], 'food': [(9, 2), (3, 10)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (3, 7), 'next_move': 'up', 'time': '0.033s'}
     log = {'id': '7c192f62-d511-47a8-a906-0d28c9d6f4bb', 'turn': 231, 'me': {'name': 'mark_snake', 'health': 83, 'length': 14, 'body': [(0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4), (3, 4), (2, 4), (2, 3), (2, 2), (1, 2), (1, 3)], 'id': 'gs_BTjc9V68KT7drDm9YVpymW7M'}, 'others': [{'name': 'Natterlie', 'health': 100, 'length': 20, 'body': [(2, 7), (2, 6), (2, 5), (3, 5), (4, 5), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1), (6, 1), (5, 1), (5, 2), (5, 2)], 'id': 'gs_QS7rjwfqPgd7w3WwCbPBybdJ'}, {'name': 'ich heisse marvin', 'health': 96, 'length': 15, 'body': [(1, 8), (2, 8), (2, 9), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (6, 9), (5, 9), (5, 8), (5, 7), (4, 7)], 'id': 'gs_Kq8GMvtdv679myhFxr8CMYrF'}], 'food': [(10, 10), (1, 0), (0, 0), (1, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'preliminary cut kill target: ich heisse marvin', 'go cut to (1, 3)'], 'next_coord': (0, 2), 'next_move': 'up', 'time': '0.013s'}
+    log = {'id': '7d70578f-42b4-44d6-897a-b7ae0e6a3d34', 'turn': 336, 'me': {'name': 'mark_snake', 'health': 97, 'length': 18, 'body': [(7, 9), (8, 9), (9, 9), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (4, 9), (4, 8), (5, 8), (5, 7), (5, 6), (5, 5), (5, 4), (5, 3), (4, 3)], 'id': 'gs_7RSTRJ346r4Mf9hxw9hFchrd'}, 'others': [{'name': 'Red Yarn', 'health': 84, 'length': 32, 'body': [(6, 6), (6, 5), (6, 4), (6, 3), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (7, 6), (7, 5), (7, 4)], 'id': 'gs_rQTM6QY3qxp38qkyd3rmjMmR'}], 'food': [(10, 10), (5, 1), (9, 6), (3, 1), (10, 4), (3, 3)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('Red Yarn', 3, (7, 8))]", 'preliminary cut kill target: Red Yarn', 'go cut to (6, 9)'], 'next_coord': (6, 9), 'next_move': 'left', 'time': '0.002s'}
 
 
 
