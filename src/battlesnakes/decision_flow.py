@@ -110,7 +110,7 @@ def main(game_state, log=True, log_db=False):
             #cond(7 <= g.me.length <= 9)(collision_take_risk),
             (cond(g.me.length <= 10)(multi_step_collision)),
 
-            cond(len(g.others) == 1 and g.me.length >= g.other.length)(avoid_cornered_bordered),
+            (cond(len(g.others) == 1 and g.me.length >= g.other.length)(avoid_cornered_bordered)),
             cond(g.me.length <= 6)(short_avoid_corner),
 
             (type_2_collision_equal_length),
@@ -130,8 +130,7 @@ def main(game_state, log=True, log_db=False):
             cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_to_the_end),
 
             #these are effective in killing the only other
-            cond(len(g.others) == 1 and g.me.length > g.other.length)(longer_push),
-            cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_other_tail),
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(par([longer_push, chase_other_tail])),
 
             #try to reproduce this effect earlier when I'm longer than local target
             cond(len(g.others) > 1 and g.me.length >= 12)(local_chasing),
@@ -285,11 +284,11 @@ def main(game_state, log=True, log_db=False):
     def avoid_cornered_bordered(moves):
         #only one opponent
         if sum(distance_to_border(g.me.head)) <= 1:
-            if distance_pq(g.me.head, g.other.head) <= 8:
+            if 4 <= distance_pq(g.me.head, g.other.head) <= 8:
                 if path_distance_pq(g.me.head, g.other.head) == distance_pq(g.me.head, g.other.head):
                     g.decision_path.append("avoid cornered bordered")
                     return prefer_not(on_border)(moves)
-        if sum(distance_to_border(g.me.head)) <= 2:
+        elif sum(distance_to_border(g.me.head)) <= 2:
             if distance_pq(g.me.head, g.other.head) <= 6:
                 if path_distance_pq(g.me.head, g.other.head) == distance_pq(g.me.head, g.other.head):
                     g.decision_path.append("avoid cornered bordered")
@@ -333,8 +332,11 @@ def main(game_state, log=True, log_db=False):
         return True
 
     def longer_push(moves):
-        ngroup = move_connected_group(moves)
-        if ngroup != 1: return
+        #assume 1v1
+        if distance_vector_abs(g.me.head, g.other.head) != (1,1):
+            ngroup = move_connected_group(moves)
+            if ngroup != 1: 
+                return
         if distance_pq(g.me.head, g.other.head) != path_distance_pq(g.me.head, g.other.head): return
         #return prefer_by_score(lambda a: len(new_territory(a)))(moves)
         moves = [a for a in moves if a in shortest_path_move(g.me.head, g.other.head)]
@@ -2739,6 +2741,7 @@ if __name__ == "__main__":
     log = {'id': 'c829ce43-d2a9-4e88-8894-8fd03d27cbe5', 'turn': 277, 'me': {'name': 'mark_snake', 'health': 97, 'length': 23, 'body': [(3, 6), (3, 5), (3, 4), (2, 4), (1, 4), (1, 3), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9)], 'id': 'gs_S8gqWVCJgYHF7BxmvDb6y9d8'}, 'others': [{'name': 'soma-mini v1[standard]', 'health': 95, 'length': 23, 'body': [(6, 7), (7, 7), (8, 7), (9, 7), (9, 6), (9, 5), (8, 5), (7, 5), (7, 4), (7, 3), (7, 2), (7, 1), (6, 1), (6, 2), (5, 2), (5, 1), (4, 1), (4, 2), (3, 2), (3, 3), (4, 3), (4, 4), (4, 5)], 'id': 'gs_w6hSFKh9PBhm96qQXWWQVc8T'}], 'food': [(9, 2), (3, 10)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (3, 7), 'next_move': 'up', 'time': '0.033s'}
     log = {'id': '7c192f62-d511-47a8-a906-0d28c9d6f4bb', 'turn': 231, 'me': {'name': 'mark_snake', 'health': 83, 'length': 14, 'body': [(0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4), (3, 4), (2, 4), (2, 3), (2, 2), (1, 2), (1, 3)], 'id': 'gs_BTjc9V68KT7drDm9YVpymW7M'}, 'others': [{'name': 'Natterlie', 'health': 100, 'length': 20, 'body': [(2, 7), (2, 6), (2, 5), (3, 5), (4, 5), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1), (6, 1), (5, 1), (5, 2), (5, 2)], 'id': 'gs_QS7rjwfqPgd7w3WwCbPBybdJ'}, {'name': 'ich heisse marvin', 'health': 96, 'length': 15, 'body': [(1, 8), (2, 8), (2, 9), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (6, 9), (5, 9), (5, 8), (5, 7), (4, 7)], 'id': 'gs_Kq8GMvtdv679myhFxr8CMYrF'}], 'food': [(10, 10), (1, 0), (0, 0), (1, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'preliminary cut kill target: ich heisse marvin', 'go cut to (1, 3)'], 'next_coord': (0, 2), 'next_move': 'up', 'time': '0.013s'}
     log = {'id': '7d70578f-42b4-44d6-897a-b7ae0e6a3d34', 'turn': 336, 'me': {'name': 'mark_snake', 'health': 97, 'length': 18, 'body': [(7, 9), (8, 9), (9, 9), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (4, 9), (4, 8), (5, 8), (5, 7), (5, 6), (5, 5), (5, 4), (5, 3), (4, 3)], 'id': 'gs_7RSTRJ346r4Mf9hxw9hFchrd'}, 'others': [{'name': 'Red Yarn', 'health': 84, 'length': 32, 'body': [(6, 6), (6, 5), (6, 4), (6, 3), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (7, 6), (7, 5), (7, 4)], 'id': 'gs_rQTM6QY3qxp38qkyd3rmjMmR'}], 'food': [(10, 10), (5, 1), (9, 6), (3, 1), (10, 4), (3, 3)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('Red Yarn', 3, (7, 8))]", 'preliminary cut kill target: Red Yarn', 'go cut to (6, 9)'], 'next_coord': (6, 9), 'next_move': 'left', 'time': '0.002s'}
+    log = {'id': '6cdb1190-a3ef-4278-9150-68067d7a4352', 'turn': 275, 'me': {'name': 'mark_snake', 'health': 21, 'length': 21, 'body': [(1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2)], 'id': 'gs_rHKccvVrSvFT3yJ7kT9dBQPP'}, 'others': [{'name': 'soma-mini v1[standard]', 'health': 94, 'length': 12, 'body': [(2, 1), (3, 1), (4, 1), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (4, 6), (4, 7), (4, 8)], 'id': 'gs_SWbF6WPXdk83FgDBhKgVSVWc'}], 'food': [(6, 4), (10, 9), (7, 3), (9, 5), (8, 5), (7, 2), (6, 7), (3, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', 'avoid cornered bordered'], 'next_coord': (1, 1), 'next_move': 'up', 'time': '0.033s'}
 
 
 
