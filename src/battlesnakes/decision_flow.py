@@ -92,6 +92,9 @@ def main(game_state, log=True, log_db=False):
             (prefer_not(entering_danger(border_confront_kill_situation))),
             (prefer_not(entering_danger(trap_kill_situation))),
 
+            #two step collision mean crowded, don't go
+            (cond(len(g.others) > 1)(avoid_two_step_collision)),
+
             (make_forming_trap),
             (cut_kill_oppotunity),
             general_suppressed_chasing_kill_oppotunity,
@@ -678,30 +681,41 @@ def main(game_state, log=True, log_db=False):
             g.decision_path.append("equal or short push")
             return prefer_by_rank(lambda a: square_sum(distance_vector_abs(a, g.other.head)))(push_move)
 
-    def multi_step_collision(moves):
+    def collision_score(a, consider_equal=True):
         killers = [snake for snake in g.others if snake.length > g.me.length if distance_pq(snake.head, g.me.head) <= 8]
         nonkillers = [snake for snake in g.others if snake.length == g.me.length if distance_pq(snake.head, g.me.head) <= 8]
+        def path_collision_score(apath):
+            length = len(apath)
+            if length == 5:
+                return 999
+            if len(g.me.head_paths) <= length:
+                return length - 1
+            snakes = (killers+nonkillers) if length <= (3 if consider_equal else 2) else killers
+            if apath[-1] in [ path[-1]
+                for snake in snakes if len(snake.head_paths) >= length
+                for path in snake.head_paths[length-1]
+            ]:
+                return length - 1
+            npaths = [path for path in g.me.head_paths[length] if path[:length] == apath ]
+            if len(npaths) == 0:
+                return length - 1
+            return max([path_collision_score(path) for path in npaths])
+        return path_collision_score([g.me.head, a])
+
+    def avoid_two_step_collision(moves):
         for snake in g.snakes:
             snake.head_paths = grow_path(snake.head, 5)
 
-        def collision_score(a, consider_equal=True):
-            def path_collision_score(apath):
-                length = len(apath)
-                if length == 5:
-                    return 999
-                if len(g.me.head_paths) <= length:
-                    return length - 1
-                snakes = (killers+nonkillers) if length <= (3 if consider_equal else 2) else killers
-                if apath[-1] in [ path[-1]
-                    for snake in snakes if len(snake.head_paths) >= length
-                    for path in snake.head_paths[length-1]
-                ]:
-                    return length - 1
-                npaths = [path for path in g.me.head_paths[length] if path[:length] == apath ]
-                if len(npaths) == 0:
-                    return length - 1
-                return max([path_collision_score(path) for path in npaths])
-            return path_collision_score([g.me.head, a])
+        two_step_collision = [a for a in moves if collision_score(a, consider_equal=False) == 2]
+        if len(two_step_collision) != 0:
+            moves = [a for a in moves if a not in two_step_collision]
+            if len(moves) != 0:
+                g.decision_path.append("avoid two step collision")
+                return moves
+
+    def multi_step_collision(moves):
+        for snake in g.snakes:
+            snake.head_paths = grow_path(snake.head, 5)
 
         move_score = [(a, collision_score(a, consider_equal=False)) for a in moves]
         low_score = [(a, score) for a, score in move_score if score < 999]
@@ -2742,6 +2756,7 @@ if __name__ == "__main__":
     log = {'id': '7c192f62-d511-47a8-a906-0d28c9d6f4bb', 'turn': 231, 'me': {'name': 'mark_snake', 'health': 83, 'length': 14, 'body': [(0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (4, 2), (4, 3), (4, 4), (3, 4), (2, 4), (2, 3), (2, 2), (1, 2), (1, 3)], 'id': 'gs_BTjc9V68KT7drDm9YVpymW7M'}, 'others': [{'name': 'Natterlie', 'health': 100, 'length': 20, 'body': [(2, 7), (2, 6), (2, 5), (3, 5), (4, 5), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (8, 5), (8, 4), (8, 3), (8, 2), (8, 1), (7, 1), (6, 1), (5, 1), (5, 2), (5, 2)], 'id': 'gs_QS7rjwfqPgd7w3WwCbPBybdJ'}, {'name': 'ich heisse marvin', 'health': 96, 'length': 15, 'body': [(1, 8), (2, 8), (2, 9), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (6, 9), (5, 9), (5, 8), (5, 7), (4, 7)], 'id': 'gs_Kq8GMvtdv679myhFxr8CMYrF'}], 'food': [(10, 10), (1, 0), (0, 0), (1, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'preliminary cut kill target: ich heisse marvin', 'go cut to (1, 3)'], 'next_coord': (0, 2), 'next_move': 'up', 'time': '0.013s'}
     log = {'id': '7d70578f-42b4-44d6-897a-b7ae0e6a3d34', 'turn': 336, 'me': {'name': 'mark_snake', 'health': 97, 'length': 18, 'body': [(7, 9), (8, 9), (9, 9), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (4, 9), (4, 8), (5, 8), (5, 7), (5, 6), (5, 5), (5, 4), (5, 3), (4, 3)], 'id': 'gs_7RSTRJ346r4Mf9hxw9hFchrd'}, 'others': [{'name': 'Red Yarn', 'health': 84, 'length': 32, 'body': [(6, 6), (6, 5), (6, 4), (6, 3), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (7, 6), (7, 5), (7, 4)], 'id': 'gs_rQTM6QY3qxp38qkyd3rmjMmR'}], 'food': [(10, 10), (5, 1), (9, 6), (3, 1), (10, 4), (3, 3)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('Red Yarn', 3, (7, 8))]", 'preliminary cut kill target: Red Yarn', 'go cut to (6, 9)'], 'next_coord': (6, 9), 'next_move': 'left', 'time': '0.002s'}
     log = {'id': '6cdb1190-a3ef-4278-9150-68067d7a4352', 'turn': 275, 'me': {'name': 'mark_snake', 'health': 21, 'length': 21, 'body': [(1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2)], 'id': 'gs_rHKccvVrSvFT3yJ7kT9dBQPP'}, 'others': [{'name': 'soma-mini v1[standard]', 'health': 94, 'length': 12, 'body': [(2, 1), (3, 1), (4, 1), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (4, 6), (4, 7), (4, 8)], 'id': 'gs_SWbF6WPXdk83FgDBhKgVSVWc'}], 'food': [(6, 4), (10, 9), (7, 3), (9, 5), (8, 5), (7, 2), (6, 7), (3, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', 'avoid cornered bordered'], 'next_coord': (1, 1), 'next_move': 'up', 'time': '0.033s'}
+    log = {'id': 'be30e154-f24d-433b-a0ac-ef0ecec58398', 'turn': 177, 'me': {'name': 'mark_snake', 'health': 81, 'length': 9, 'body': [(4, 5), (4, 4), (4, 3), (4, 2), (3, 2), (3, 3), (2, 3), (1, 3), (0, 3)], 'id': 'gs_tSc4xY7JPx6Wb7WpbSjtJ4tP'}, 'others': [{'name': 'Game of Chicken', 'health': 76, 'length': 17, 'body': [(5, 8), (6, 8), (6, 7), (6, 6), (6, 5), (6, 4), (6, 3), (7, 3), (8, 3), (9, 3), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0)], 'id': 'gs_mW9hVt9FBxC4dhf6SpQJxxTc'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 92, 'length': 19, 'body': [(3, 4), (2, 4), (1, 4), (1, 5), (1, 6), (2, 6), (2, 7), (3, 7), (3, 8), (2, 8), (2, 9), (3, 9), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (7, 9), (7, 8)], 'id': 'gs_CSkxKyMRD6SCxBWy4my6BKqX'}], 'food': [(10, 10), (8, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Copy of snake2_v3_FINAL_final(1)', 1, (3, 5))]", 'preliminary cut kill target: Copy of snake2_v3_FINAL_final(1)', 'go cut to (4, 6)'], 'next_coord': (4, 6), 'next_move': 'up', 'time': '0.010s'}
 
 
 
