@@ -513,7 +513,6 @@ def main(game_state, log=True, log_db=False):
         return fn
 
     def local_chasing(moves):
-        print(moves)
         snakes = [snake for snake in g.others if distance_pq(snake.head, g.me.head) <= 6]
         if len(snakes) != 1: return
         target = take_first(snakes)
