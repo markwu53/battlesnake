@@ -979,23 +979,15 @@ def main(game_state, log=True, log_db=False):
             return [collision]
 
     def split_choice_2(moves):
-        ngroup = move_connected_group(moves)
-        if ngroup != 2: return
-        
-        result = seq([
-                (avoid_preliminary_trap),
+        return seq([
+                split_avoid_preliminary_trap,
                 #(avoid_static_confinement),
-                spacious,
+                split_choose_spacious,
                 split_choose_my_tail,
-                split_choose_other_tail,
-                (more_space),
-                (prefer_diagonal_cut_set),
+                (split_choose_other_tail),
+                (split_choose_more_space),
+                split_prefer_diagonal_cut_set,
         ])(moves)
-
-        if result is not None:
-            if len(result) != 0 and len(result) != len(moves):
-                g.decision_path.append("split choice 2")
-                return result
 
     def split_choice(moves):
         ngroup = move_connected_group(moves)
@@ -1022,13 +1014,17 @@ def main(game_state, log=True, log_db=False):
             return []
         return path_connected_set(a, complement(g.me.territory))
 
-    def spacious(moves):
+    def split_choose_spacious(moves):
+        ngroup = move_connected_group(moves)
+        if ngroup != 2: return
         spacious_move = [a for a in moves if len(move_space(a)) >= 0.8 * g.me.length]
         if len(spacious_move) != 0:
             g.decision_path.append("split2 choose spacious")
             return spacious_move
 
     def split_choose_my_tail(moves):
+        ngroup = move_connected_group(moves)
+        if ngroup != 2: return
         def has_my_tail(a):
             aset = path_connected_set(a, complement(g.me.territory))
             if g.me.tail in aset:
@@ -1043,6 +1039,8 @@ def main(game_state, log=True, log_db=False):
             return moves
 
     def split_choose_other_tail(moves):
+        ngroup = move_connected_group(moves)
+        if ngroup != 2: return
         def has_other_tail(a):
             aset = path_connected_set(a, complement(g.me.territory))
             if any([snake.tail in aset for snake in g.others]):
@@ -1055,11 +1053,15 @@ def main(game_state, log=True, log_db=False):
             g.decision_path.append("split2 choose other tail")
             return moves
 
-    def more_space(moves):
+    def split_choose_more_space(moves):
+        ngroup = move_connected_group(moves)
+        if ngroup != 2: return
         g.decision_path.append("split2 choose more space")
         return prefer_by_score(lambda a: len(move_space(a)))(moves)
  
-    def prefer_diagonal_cut_set(moves):
+    def split_prefer_diagonal_cut_set(moves):
+        ngroup = move_connected_group(moves)
+        if ngroup != 2: return
         ok_set = []
         occupied = complement(g.me.territory)
         for a in moves:
@@ -1090,7 +1092,9 @@ def main(game_state, log=True, log_db=False):
         if len(ok_set) != 0:
             return ok_set
 
-    def avoid_preliminary_trap(moves):
+    def split_avoid_preliminary_trap(moves):
+        ngroup = move_connected_group(moves)
+        if ngroup != 2: return
         danger_set = []
         for snake in g.others:
             if len(snake.allowed_moves) != 0:
@@ -2814,6 +2818,7 @@ if __name__ == "__main__":
     log = {'id': '157af97f-c015-4c16-89ee-68d930887f8a', 'turn': 166, 'me': {'name': 'mark_snake', 'health': 58, 'length': 15, 'body': [(1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (2, 1), (3, 1), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (3, 5), (3, 4), (4, 4)], 'id': 'gs_YrDbkdHKP6B7c8BKpJCpYpm9'}, 'others': [{'name': 'SmartyRat', 'health': 70, 'length': 10, 'body': [(0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9), (3, 9), (2, 9), (1, 9), (1, 8)], 'id': 'gs_fgQYHDpmYqkxB6YH8QCBmkxM'}, {'name': 'Red Yarn', 'health': 91, 'length': 13, 'body': [(6, 10), (5, 10), (5, 9), (5, 8), (5, 7), (4, 7), (3, 7), (3, 6), (4, 6), (4, 5), (5, 5), (6, 5), (7, 5)], 'id': 'gs_wM34fDQ9YWvFCVGw7k4STmBD'}], 'food': [(10, 3), (7, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('SmartyRat', 1, (0, 9))]", 'local chase'], 'next_coord': (1, 6), 'next_move': 'up', 'time': '0.025s'}
     log = {'id': '157af97f-c015-4c16-89ee-68d930887f8a', 'turn': 167, 'me': {'name': 'mark_snake', 'health': 58, 'length': 15, 'body': [(1,6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (2, 1), (3, 1), (3, 2), (2, 2), (2, 3), (2, 4), (2, 5), (3, 5), (3, 4)], 'id': 'gs_YrDbkdHKP6B7c8BKpJCpYpm9'}, 'others': [{'name': 'SmartyRat', 'health': 70, 'length': 10, 'body': [(0,9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9), (3, 9), (2, 9), (1, 9)], 'id': 'gs_fgQYHDpmYqkxB6YH8QCBmkxM'}, {'name': 'Red Yarn', 'health': 91, 'length': 13, 'body': [(7,10), (6, 10), (5, 10), (5, 9), (5, 8), (5, 7), (4, 7), (3, 7), (3, 6), (4, 6), (4, 5), (5, 5), (6, 5)], 'id': 'gs_wM34fDQ9YWvFCVGw7k4STmBD'}], 'food': [(10, 3), (7, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('SmartyRat', 1, (0, 9))]", 'local chase'], 'next_coord': (1, 6), 'next_move': 'up', 'time': '0.025s'}
     log = {'id': '1230c62d-365e-4cc8-a719-cd9c4ea7e8c5', 'turn': 216, 'me': {'name': 'mark_snake', 'health': 89, 'length': 20, 'body': [(7, 3), (8, 3), (9, 3), (9, 4), (8, 4), (8, 5), (9, 5), (10, 5), (10, 4), (10, 3), (10, 2), (9, 2), (8, 2), (8, 1), (9, 1), (9, 0), (8, 0), (7, 0), (7, 1), (7, 2)], 'id': 'gs_wY8wB3kJSSSBBpP4YVYp3JQ3'}, 'others': [{'name': 'ich heisse marvin', 'health': 91, 'length': 13, 'body': [(4, 4), (5, 4), (6, 4), (6, 5), (6, 6), (6, 7), (5, 7), (5, 6), (4, 6), (4, 7), (3, 7), (3, 6), (3, 5)], 'id': 'gs_XKTtmQhTWhHvw9dRKXwb8mXW'}, {'name': 'soma-mini v1[standard]', 'health': 94, 'length': 11, 'body': [(7, 9), (8, 9), (8, 10), (9, 10), (10, 10), (10, 9), (9, 9), (9, 8), (8, 8), (7, 8), (6, 8)], 'id': 'gs_pgxyFmbp3CDyFhWR9SCwrFHM'}], 'food': [(3, 2), (1, 2), (0, 4), (5, 0), (1, 5), (0, 7), (0, 9)], 'module': 'decision_flow', 'decision_path': ['1vn', 'split choice 2'], 'next_coord': (7, 4), 'next_move': 'up', 'time': '0.021s'}
+    log = {'id': 'aba72b2f-8513-410c-a834-b045a8fef92e', 'turn': 325, 'me': {'name': 'mark_snake', 'health': 92, 'length': 19, 'body': [(8, 7), (8, 8), (7, 8), (7, 9), (8, 9), (9, 9), (10, 9), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0)], 'id': 'gs_K69tt73PR6qRVgY6SRYrPGWX'}, 'others': [{'name': 'Sandworm', 'health': 98, 'length': 22, 'body': [(5, 10), (6, 10), (6, 9), (6, 8), (6, 7), (5, 7), (5, 6), (5, 5), (4, 5), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4), (9, 5), (8, 5), (7, 5), (6, 5), (6, 6), (7, 6), (8, 6)], 'id': 'gs_TbTFBcjRf4K9JqDg9MWCmKdb'}], 'food': [(0, 8), (3, 8), (2, 9), (1, 0), (3, 10), (0, 6)], 'module': 'decision_flow', 'decision_path': ['1v1', 'split2 choose other tail', 'split2 choose more space', 'split choice 2'], 'next_coord': (8, 6), 'next_move': 'down', 'time': '0.005s'}
 
 
 
