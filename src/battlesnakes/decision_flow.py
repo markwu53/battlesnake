@@ -1926,16 +1926,17 @@ def main(game_state, log=True, log_db=False):
 
         snake = take_first(snakes)
         collision = [a for a in moves if a in snake.allowed_moves]
-        c = take_first([c for c in snake.allowed_moves if c not in collision])
-        snake2 = possible_next_state(snake, c)
+        avoid = take_first([a for a in snake.allowed_moves if a not in collision])
+        snake2 = possible_next_state(snake, avoid)
+        c = take_first([a for a in snake.allowed_moves if distance_vector_abs(a, avoid) == (1,1)])
+        me2 = possible_next_state(g.me, c)
+        k = take_first([a for a in snake.allowed_moves if a not in [avoid, c]])
         others = [possible_next_state(s, take_first(s.allowed_moves)) for s in g.others if s.head != snake.head and len(s.allowed_moves) != 0]
 
-        for m in collision:
-            me2 = possible_next_state(g.me, m)
-            hypothetic_development_territories([me2]+[snake2]+others)
-            if preliminary_cut_kill_situation(me2, snake2):
-                g.decision_path.append(f"try collision cut kill {m}")
-                return [m]
+        hypothetic_development_territories([me2]+[snake2]+others)
+        if preliminary_cut_kill_situation(me2, snake2):
+            g.decision_path.append(f"try collision cut kill {c}")
+            return [c]
 
     def trim_aset(aset, a, b=None):
         #aset is a path connected set
@@ -2047,7 +2048,7 @@ def main(game_state, log=True, log_db=False):
     def preliminary_cut_kill_situation(killer: Snake, target: Snake):
 
         #target is too short - cut kill is not reliable
-        if target.length < 10:
+        if target.length < 7:
             return False
 
         #cut_set is the set that killer will take to block target from escaping
@@ -2068,7 +2069,7 @@ def main(game_state, log=True, log_db=False):
                 cut_set += [a for a in killer.allowed_moves if a in target.allowed_moves]
 
         cut_set = sorted(list(set(cut_set)))
-        
+
         if len(cut_set) != 0:
             if any([a for a in cut_set if not path_connected(killer.head, a)]):
                 return False
@@ -2137,7 +2138,7 @@ def main(game_state, log=True, log_db=False):
         if len(g.snakes) > 2:
             oset_border = [q for p in oset for q in adj_cells(p) if q not in oset]
             oset_border = sorted(list(set(oset_border)))
-            others = [snake for snake in g.snakes if snake.head not in [killer.head, target.head]]
+            others = [snake for snake in g.snakes if snake.name not in [killer.name, target.name]]
             if any([a in snake.body for a in oset_border for snake in others]):
                 return False
 
@@ -2779,6 +2780,7 @@ if __name__ == "__main__":
     log = {'id': 'abc96f79-004f-47d8-bbe8-9139c3ea6b11', 'turn': 178, 'me': {'name': 'mark_snake', 'health': 89, 'length': 19, 'body': [(9, 5), (8, 5), (7, 5), (6, 5), (5, 5), (4, 5), (4, 4), (4, 3), (3, 3), (3, 2), (2, 2), (1, 2), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1)], 'id': 'gs_m4WXMRJpx7WbJYJwrHhpYbb8'}, 'others': [{'name': 'soma-mini v1[standard]', 'health': 98, 'length': 8, 'body': [(8, 8), (8, 7), (8, 6), (7, 6), (6, 6), (5, 6), (4, 6), (4, 7)], 'id': 'gs_hHMjycjSScqTc3vWMvjPj6vC'}], 'food': [(0, 8), (10, 5), (4, 2), (7, 9), (9, 3), (5, 3)], 'module': 'decision_flow', 'decision_path': ['1v1', '1v1 longer push'], 'next_coord': (9, 6), 'next_move': 'up', 'time': '0.031s'}
     log = {'id': '06fa0c49-9318-4366-b6f1-8e4a8db5cfc8', 'turn': 123, 'me': {'name': 'mark_snake', 'health': 90, 'length': 10, 'body': [(9, 4), (8, 4), (8, 5), (8, 6), (8, 7), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9)], 'id': 'gs_ghfPfVPmKRY6DJgTBcFTT6fJ'}, 'others': [{'name': 'iSnek', 'health': 100, 'length': 20, 'body': [(10, 1), (9, 1), (8, 1), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (6, 5), (6, 4), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (1, 0)], 'id': 'gs_48VK8JMxVxQVCDJJ9CjBTp39'}], 'food': [(9, 2), (0, 10), (7, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', 'preliminary cut kill target: iSnek', 'go cut to (8, 3)'], 'next_coord': (9, 3), 'next_move': 'down', 'time': '0.010s'}
     log = {'id': '06fa0c49-9318-4366-b6f1-8e4a8db5cfc8', 'turn': 122, 'me': {'name': 'mark_snake', 'health': 91, 'length': 10, 'body': [(8, 4), (8, 5), (8, 6), (8, 7), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (6, 9)], 'id': 'gs_ghfPfVPmKRY6DJgTBcFTT6fJ'}, 'others': [{'name': 'iSnek', 'health': 93, 'length': 19, 'body': [(9, 1), (8, 1), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (6, 5), (6, 4), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0)], 'id': 'gs_48VK8JMxVxQVCDJJ9CjBTp39'}], 'food': [(10, 1), (9, 2), (0, 10), (7, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', 'preliminary cut kill target: iSnek', 'go cut to (9, 4)'], 'next_coord': (9, 4), 'next_move': 'right', 'time': '0.010s'}
+    log = {'id': 'f6049d6d-86b0-41db-90ee-63af9406498a', 'turn': 97, 'me': {'name': 'mark_snake', 'health': 81, 'length': 8, 'body': [(7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (3, 1), (4, 1), (5, 1)], 'id': 'gs_xRf8cYRwkXw898KVdHRVcxGC'}, 'others': [{'name': 'SmartyRat', 'health': 89, 'length': 7, 'body': [(8, 1), (9, 1), (10, 1), (10, 2), (10, 3), (10, 4), (9, 4)], 'id': 'gs_YmRfVRmR7dhY383YfTw3fv9b'}, {'name': 'go-st', 'health': 86, 'length': 15, 'body': [(9, 8), (9, 7), (9, 6), (8, 6), (8, 7), (7, 7), (6, 7), (6, 6), (5, 6), (4, 6), (4, 5), (4, 4), (5, 4), (6, 4), (7, 4)], 'id': 'gs_STMWxHhrk7JcpRbYXM6WFdcb'}, {'name': 'Red Yarn', 'health': 94, 'length': 10, 'body': [(2, 3), (2, 4), (2, 5), (2, 6), (1, 6), (0, 6), (0, 7), (1, 7), (2, 7), (3, 7)], 'id': 'gs_KxGFdrc4QtmYHFkc7FWkgFkS'}], 'food': [(9, 10), (1, 9)], 'module': 'decision_flow', 'decision_path': ['1vn', 'split choice 2'], 'next_coord': (8, 2), 'next_move': 'right', 'time': '0.121s'}
 
 
 
