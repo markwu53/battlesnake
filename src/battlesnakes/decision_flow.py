@@ -1478,14 +1478,14 @@ def main(game_state, log=True, log_db=False):
 
     def move_connected_group(moves, occupied=None):
         if occupied is None:
-            occupied = g.occupied_cells[0]
+            #tail -1 will not split routes
+            occupied = g.occupied_cells[1]
 
         if len(moves) == 1:
             return 1
         if len(moves) == 2:
             a,b = moves
-            distv = distance_vector_abs(a,b)
-            if distv == (1,1):
+            if distance_vector_abs(a,b) == (1,1):
                 if not all([p in occupied for p in adj_cells(a) if p in adj_cells(b)]):
                     return 1
             return 2
