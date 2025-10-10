@@ -563,12 +563,40 @@ def main(game_state, log=True, log_db=False):
                 g.decision_path.append("chase other tail detour")
                 return tail_move
         else:
+            """
             if path_distance_pq(g.me.head, g.other.tail) > 8: return
             tail_move = shortest_path_move(g.me.head, g.other.tail)
             tail_move = [a for a in moves if a in tail_move]
             if len(tail_move) != 0:
                 g.decision_path.append("chase other tail")
                 return tail_move
+            """
+            #chase to the closest body point
+            chasing_info = [(i, c, path_distance_pq(g.me.head, c)) for i,c in enumerate(g.other.body) if c != g.other.head and path_connected(g.me.head, c)]
+            if len(chasing_info) == 0: return
+            #closest to me, then closest to its own tail
+            chasing_info = prefer_by_rank(lambda a: a[2])(chasing_info)
+            chasing_info = prefer_by_score(lambda a: a[0])(chasing_info)
+            i, c, path_distance = take_first(chasing_info)
+            if path_distance >= 8: return
+
+            tail_length = g.other.length - i
+            if path_distance >= tail_length:
+                tail_move = shortest_path_move(g.me.head, c)
+                tail_move = [a for a in moves if a in tail_move]
+                if len(tail_move) != 0:
+                    g.decision_path.append("chase other tail")
+                    return tail_move
+            else:
+                direct_move = shortest_path_move(g.me.head, c)
+                meander_move = [a for a in moves if a not in direct_move]
+                if len(meander_move) != 0:
+                    g.decision_path.append(f"chase other tail via {c}")
+                    return meander_move
+                direct_move = [a for a in moves if a in direct_move]
+                if len(direct_move) != 0:
+                    g.decision_path.append(f"chase other tail via {c}")
+                    return direct_move
 
     def corner_push(moves):
         snakes = [snake for snake in g.others if sum(distance_to_border(snake.head)) <= 1 and snake.length < g.me.length]
