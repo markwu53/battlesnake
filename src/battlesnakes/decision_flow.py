@@ -730,7 +730,8 @@ def main(game_state, log=True, log_db=False):
         push_move = [a for a in moves if a not in avoids]
         if len(push_move) != 0:
             g.decision_path.append("equal push")
-            return prefer_by_rank(lambda a: distance_rank(distance_vector_abs(a, g.other.head)))(push_move)
+            #return prefer_by_rank(lambda a: distance_rank(distance_vector_abs(a, g.other.head)))(push_move)
+            return prefer_by_score(lambda a: len(new_territory(a)))(push_move)
 
     def shorter_push(moves):
         if g.me.length >= g.other.length: return
@@ -746,7 +747,8 @@ def main(game_state, log=True, log_db=False):
         push_move = [a for a in moves if a not in avoids]
         if len(push_move) != 0:
             g.decision_path.append("short push")
-            return prefer_by_rank(lambda a: distance_rank(distance_vector_abs(a, g.other.head)))(push_move)
+            #return prefer_by_rank(lambda a: distance_rank(distance_vector_abs(a, g.other.head)))(push_move)
+            return prefer_by_score(lambda a: len(new_territory(a)))(push_move)
 
     def collision_score(a, consider_equal=True):
         killers = [snake for snake in g.others if snake.length > g.me.length if distance_pq(snake.head, g.me.head) <= 8]
