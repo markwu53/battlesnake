@@ -153,7 +153,7 @@ def main(game_state, log=True, log_db=False):
             (cond(g.me.length >= 12)(confined_follow_tail)),
 
             cond(len(g.others) == 1 and g.me.length == g.other.length)(equal_push),
-            #cond(len(g.others) == 1 and g.me.length < g.other.length)(shorter_push),
+            cond(len(g.others) == 1 and g.me.length < g.other.length)(shorter_push),
 
             #cond(len(g.others) == 1 and g.me.length > g.other.length)(border_go_up),
             cond(len(g.others) == 1 and g.me.length < g.other.length)(border_go_up),
@@ -719,17 +719,14 @@ def main(game_state, log=True, log_db=False):
     def shorter_push(moves):
         if g.me.length >= g.other.length: return
         if distance_pq(g.me.head, g.other.head) != path_distance_pq(g.me.head, g.other.head): return
+        if sum(distance_to_border(g.me.head)) <= sum(distance_to_border(g.other.head)): return
         #if not coming_to_each_other(g.me, g.other): return
 
         def distance_rank(p):
             x,y = p
             return x**2 + y**2
 
-        avoids = []
-        if g.me.length == g.other.length:
-            avoids = [a for a in moves if a in g.other.allowed_moves]
-        elif g.me.length < g.other.length:
-            avoids = [a for a in moves if a in g.other.allowed_moves or any([distance_vector_abs(a,b) == (1,1) for b in g.other.allowed_moves])]
+        avoids = [a for a in moves if a in g.other.allowed_moves or any([distance_vector_abs(a,b) == (1,1) for b in g.other.allowed_moves])]
         push_move = [a for a in moves if a not in avoids]
         if len(push_move) != 0:
             g.decision_path.append("short push")
