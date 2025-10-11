@@ -86,11 +86,6 @@ def main(game_state, log=True, log_db=False):
 
             #])),
 
-            #these are effective in killing the only other
-            cond(len(g.others) == 1 and g.me.length > g.other.length)(par([longer_push, chase_other_tail])),
-
-            (wayout),
-
             (prefer_not(entering_danger(suppressed_chasing_kill_situation))),
             (prefer_not(entering_danger(border_confront_kill_situation))),
             (prefer_not(entering_danger(trap_kill_situation))),
@@ -108,6 +103,12 @@ def main(game_state, log=True, log_db=False):
             (attack_vulnerables),
             border_confront_kill_oppotunity,
             general_confront_kill_oppotunity,
+
+            #these are effective in killing the only other
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(par([longer_push, chase_other_tail])),
+
+            (wayout),
+
             (cond(g.me.length >= 12)(split_choice)),
 
             (cond(g.me.length > 8)(avoid_next_step_confinement)),
