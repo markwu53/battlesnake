@@ -588,8 +588,9 @@ def main(game_state, log=True, log_db=False):
                     g.decision_path.append("chase other tail")
                     return tail_move
             else:
+                #meander
                 direct_move = shortest_path_move(g.me.head, c)
-                meander_move = [a for a in moves if a not in direct_move]
+                meander_move = [a for a in moves if a not in direct_move and path_connected(a, c)]
                 if len(meander_move) != 0:
                     g.decision_path.append(f"chase other tail via {c}")
                     return meander_move
