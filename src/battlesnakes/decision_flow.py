@@ -86,6 +86,9 @@ def main(game_state, log=True, log_db=False):
 
             #])),
 
+            #these are effective in killing the only other
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(par([longer_push, chase_other_tail])),
+
             (wayout),
 
             (prefer_not(entering_danger(suppressed_chasing_kill_situation))),
@@ -133,7 +136,7 @@ def main(game_state, log=True, log_db=False):
             cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_to_the_end),
 
             #these are effective in killing the only other
-            cond(len(g.others) == 1 and g.me.length > g.other.length)(par([longer_push, chase_other_tail])),
+            #cond(len(g.others) == 1 and g.me.length > g.other.length)(par([longer_push, chase_other_tail])),
 
             #try to reproduce this effect earlier when I'm longer than local target
             cond(len(g.others) > 1 and g.me.length >= 12)(local_chasing),
@@ -583,6 +586,9 @@ def main(game_state, log=True, log_db=False):
             chasing_info = prefer_by_rank(lambda a: a[4])(chasing_info)
             chasing_info = prefer_by_score(lambda a: a[0])(chasing_info)
             i, c, path_distance, tail_length, meander_length = take_first(chasing_info)
+
+            #not enough room to meander
+            if tail_length * 1.2 > len(g.me.territory): return
 
             if meander_length <= 0:
                 tail_move = shortest_path_move(g.me.head, c)
