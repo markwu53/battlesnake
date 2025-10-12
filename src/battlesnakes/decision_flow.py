@@ -348,6 +348,7 @@ def main(game_state, log=True, log_db=False):
         #assume 1v1
         #if not coming_to_each_other(g.me, g.other): return
         if not coming_to(g.other, g.me.head): return
+        if not path_distance_pq(g.other.head, g.me.head) == distance_pq(g.other.head, g.me.head): return
  
         g.decision_path.append("1v1 longer push")
         return prefer_by_score(lambda a: len(new_territory(a)))(moves)
