@@ -595,6 +595,8 @@ def main(game_state, log=True, log_db=False):
 
     def body_chasing(moves):
         target = g.target_snake
+        if path_distance_pq(g.me.head, target.tail) <= 2: return
+
         chasing_info = [(i,c,p, path_distance_pq(g.me.head, p), target.length-i-1) 
                         for i,c in enumerate(target.body)
                         if c != target.head
@@ -2888,6 +2890,7 @@ if __name__ == "__main__":
     log = {'id': '98e76b6e-8e3c-4d19-afb9-7422cdd0f6c8', 'turn': 70, 'me': {'name': 'mark_snake', 'health': 76, 'length': 8, 'body': [(2, 6), (2, 5), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0), (1, 0)], 'id': 'gs_RBm6SqRgXx6Dcwm3ykwhfhm3'}, 'others': [{'name': 'go-st', 'health': 71, 'length': 6, 'body': [(3, 7), (3, 6), (3, 5), (3, 4), (3, 3), (3, 2)], 'id': 'gs_JSpX7SBhMBVCvT77P8kpV8F4'}], 'food': [(8, 2), (7, 8), (9, 5), (9, 0), (1, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (1, 10)'], 'next_coord': (2, 7), 'next_move': 'up', 'time': '0.011s'}
     log = {'id': '98e76b6e-8e3c-4d19-afb9-7422cdd0f6c8', 'turn': 71, 'me': {'name': 'mark_snake', 'health': 75, 'length': 8, 'body': [(2, 7), (2, 6), (2, 5), (2, 4), (2, 3), (2, 2), (2, 1), (2, 0)], 'id': 'gs_RBm6SqRgXx6Dcwm3ykwhfhm3'}, 'others': [{'name': 'go-st', 'health': 70, 'length': 6, 'body': [(4, 7), (3, 7), (3, 6), (3, 5), (3, 4), (3, 3)], 'id': 'gs_JSpX7SBhMBVCvT77P8kpV8F4'}], 'food': [(8, 2), (7, 8), (9, 5), (9, 0), (1, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase other tail via (3, 7)'], 'next_coord': (2, 8), 'next_move': 'up', 'time': '0.007s'}
     log = {'id': '98e76b6e-8e3c-4d19-afb9-7422cdd0f6c8', 'turn': 72, 'me': {'name': 'mark_snake', 'health': 74, 'length': 8, 'body': [(2, 8), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3), (2, 2), (2, 1)], 'id': 'gs_RBm6SqRgXx6Dcwm3ykwhfhm3'}, 'others': [{'name': 'go-st', 'health': 69, 'length': 6, 'body': [(4, 8), (4, 7), (3, 7), (3, 6), (3, 5), (3, 4)], 'id': 'gs_JSpX7SBhMBVCvT77P8kpV8F4'}], 'food': [(8, 2), (7, 8), (9, 5), (9, 0), (1, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase other tail via (3, 7)'], 'next_coord': (3, 8), 'next_move': 'right', 'time': '0.005s'}
+    log = {'id': 'c64334df-e869-4ca4-9c17-3e601bd5bb30', 'turn': 251, 'me': {'name': 'mark_snake', 'health': 66, 'length': 19, 'body': [(2, 7), (2, 6), (3, 6), (3, 5), (3, 4), (2, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (3, 1), (2, 1), (2, 2), (2, 3), (3, 3), (4, 3)], 'id': 'gs_CJqkrd4bkpttvwThWjpGcTvB'}, 'others': [{'name': 'Sandworm', 'health': 99, 'length': 18, 'body': [(6, 7), (6, 6), (6, 5), (6, 4), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (4, 9), (4, 10), (3, 10), (3, 9), (3, 8), (4, 8), (4, 7), (3, 7)], 'id': 'gs_b6XSMY64kt7KkSbH8kFVCVTW'}], 'food': [(6, 10), (8, 10), (0, 9), (6, 8), (7, 6)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase other tail via (4, 7)'], 'next_coord': (3, 7), 'next_move': 'right', 'time': '0.007s'}
 
 
 
