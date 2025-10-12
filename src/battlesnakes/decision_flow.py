@@ -617,10 +617,11 @@ def main(game_state, log=True, log_db=False):
             if len(moves) != 0:
                 g.decision_path.append(f"chase other tail via {c} detour")
                 return moves
-        moves = [a for a in moves if a in tail_move]
-        if len(moves) != 0:
-            g.decision_path.append(f"chase other tail via {c}")
-            return moves
+        else:
+            moves = [a for a in moves if a in tail_move]
+            if len(moves) != 0:
+                g.decision_path.append(f"chase other tail via {c}")
+                return moves
 
     def chase_other_tail(moves):
         g.target_snake = g.other
