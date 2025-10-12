@@ -539,7 +539,7 @@ def main(game_state, log=True, log_db=False):
                 g.decision_path.append("local push")
                 return push_move
 
-        def chase(moves):
+        def chase_old(moves):
             if path_distance_pq(g.me.head, target.tail) > 8: return
 
             if is_adjacent(g.me.head, target.tail):
@@ -555,6 +555,29 @@ def main(game_state, log=True, log_db=False):
                     if len(tail_move) != 0:
                         g.decision_path.append("local chase")
                         return tail_move
+
+        def chase(moves):
+            if is_adjacent(g.me.head, target.tail):
+                #don't follow too close
+                tail_move = [a for a in moves if path_connected(a, g.other.tail) and distance_pq(a, g.other.tail) == 2]
+                if len(tail_move) != 0:
+                    g.decision_path.append("local chase other tail detour")
+                    return tail_move
+            chasing_info = [(i,c,p, path_distance_pq(g.me.head, p), target.length-i-1) 
+                            for i,c in enumerate(target.body)
+                            if c != target.head
+                            #and path_distance_pq(g.me.head, c) == distance_pq(g.me.head, c) 
+                            for p in adj_cells(c) if p in g.me.territory
+                            ]
+            chasing_info = [info for info in chasing_info for i,c,p,d,t in [info] if abs(d-t) <= 1]
+            if len(chasing_info) == 0: return
+            chasing_info = prefer_by_score(lambda a: a[0])(chasing_info)
+            i, c, p, d, t = take_first(chasing_info)
+            tail_move = shortest_path_move(g.me.head, p)
+            moves = [a for a in moves if a in tail_move]
+            if len(moves) != 0:
+                g.decision_path.append(f"local chase other tail via {c}")
+                return moves
 
         #push or chase
         return par([
