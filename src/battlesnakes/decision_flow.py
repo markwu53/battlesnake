@@ -78,13 +78,8 @@ def main(game_state, log=True, log_db=False):
 
             (collision_cut_oppotunity),
 
-            #(par([
-            
-            #this need some avoid first
             (suppressed_chasing_kill_oppotunity),
             (trap_kill_oppotunity),
-
-            #])),
 
             (prefer_not(entering_danger(suppressed_chasing_kill_situation))),
             (prefer_not(entering_danger(border_confront_kill_situation))),
@@ -967,26 +962,31 @@ def main(game_state, log=True, log_db=False):
         if len(killers) != 1: return
         killer = take_first(killers)
 
-        if len(moves) == 2:
-            if not all([is_adjacent(a, killer.head) for a in moves]): return
-            if len(killer.allowed_moves) != 3: return
+        for i in range(1):
+            if len(moves) != 2: continue
+            if not all([is_adjacent(a, killer.head) for a in moves]): continue
+            if len(killer.allowed_moves) != 3: continue
             border_move = [a for a in moves if on_border(a)]
             if len(border_move) != 0:
                 g.decision_path.append("type 2 collision take border risk")
                 return border_move
             killer_other_move = [a for a in killer.allowed_moves if a not in moves]
-            if len(killer_other_move) != 1: return
+            if len(killer_other_move) != 1: continue
             killer_other_move = take_first(killer_other_move)
             risk_move = [a for a in moves if distance_vector_abs(a, killer_other_move) != (1,1)]
-            if len(risk_move) != 1: return
+            if len(risk_move) != 1: continue
             g.decision_path.append("take risk so that killer can no longer chase")
             return risk_move
 
-        if len(moves) != 3: return
+        #if len(moves) != 3: return
 
-        avoid = take_first([a for a in moves if not is_adjacent(a, killer.head)])
-        middle = take_first([a for a in moves if distance_vector_abs(a, avoid) == (1,1)])
-        collision = take_first([a for a in moves if a not in [avoid, middle]])
+        avoid = ([a for a in moves if not is_adjacent(a, killer.head)])
+        if len(avoid) == 0: return
+        avoid = take_first(avoid)
+        middle = ([a for a in moves if distance_vector_abs(a, avoid) == (1,1)])
+        collision = ([a for a in moves if a != avoid and a not in middle])
+        if len(collision) == 0: return
+        collision = take_first(collision)
 
         if len(g.others) > 1 and sum(distance_to_border(avoid)) <= 2:
             g.decision_path.append("collision type 2 take risk")
@@ -2143,7 +2143,7 @@ def main(game_state, log=True, log_db=False):
 
         cut_set = sorted(list(set(cut_set)))
 
-        if len(cut_set) == 1: return True
+        if len(cut_set) <= 1: return True
 
         def connected(a, b):
             return is_adjacent(a, b) or distance_vector_abs(a,b) == (1,1)
@@ -2901,6 +2901,7 @@ if __name__ == "__main__":
     log = {'id': 'c64334df-e869-4ca4-9c17-3e601bd5bb30', 'turn': 251, 'me': {'name': 'mark_snake', 'health': 66, 'length': 19, 'body': [(2, 7), (2, 6), (3, 6), (3, 5), (3, 4), (2, 4), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (3, 1), (2, 1), (2, 2), (2, 3), (3, 3), (4, 3)], 'id': 'gs_CJqkrd4bkpttvwThWjpGcTvB'}, 'others': [{'name': 'Sandworm', 'health': 99, 'length': 18, 'body': [(6, 7), (6, 6), (6, 5), (6, 4), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (4, 9), (4, 10), (3, 10), (3, 9), (3, 8), (4, 8), (4, 7), (3, 7)], 'id': 'gs_b6XSMY64kt7KkSbH8kFVCVTW'}], 'food': [(6, 10), (8, 10), (0, 9), (6, 8), (7, 6)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase other tail via (4, 7)'], 'next_coord': (3, 7), 'next_move': 'right', 'time': '0.007s'}
     log = {'id': 'eca2b7bd-97a8-466f-8781-e9b355767be4', 'turn': 24, 'me': {'name': 'mark_snake', 'health': 86, 'length': 5, 'body': [(4, 4), (4, 5), (3, 5), (3, 6), (3, 7)], 'id': 'gs_qJcgMSkxhxP9fWMP9fQTQY79'}, 'others': [{'name': 'Geriatric Jagwire', 'health': 87, 'length': 5, 'body': [(5, 5), (5, 6), (6, 6), (6, 5), (6, 4)], 'id': 'gs_XRvpFbMRpf9cJjBbgmGT3q9H'}, {'name': 'go-st', 'health': 100, 'length': 6, 'body': [(2, 4), (2, 3), (3, 3), (4, 3), (4, 2), (4, 2)], 'id': 'gs_fSXHSCBr43yP6BmTKPry6Hq4'}, {'name': 'Natterlie', 'health': 97, 'length': 6, 'body': [(7, 9), (7, 10), (6, 10), (5, 10), (5, 9), (6, 9)], 'id': 'gs_gyvMmVThgyJ9QxbcG7r9G4G9'}], 'food': [(8, 8)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('Geriatric Jagwire', 1, (5, 4))]"], 'next_coord': (3, 4), 'next_move': 'left', 'time': '0.002s'}
     log = {'id': '6411a45e-f98d-46e4-b493-02a9296379a7', 'turn': 252, 'me': {'name': 'mark_snake', 'health': 95, 'length': 23, 'body': [(6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (5, 5), (5, 6), (4, 6), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5), (1, 5), (2, 5), (2, 4), (1, 4), (0, 4), (0, 3), (1, 3), (2, 3), (2, 2)], 'id': 'gs_gMtPWvrJm8CHx7bSJcTbtV8B'}, 'others': [{'name': 'slieks', 'health': 68, 'length': 16, 'body': [(8, 2), (8, 1), (7, 1), (7, 2), (7, 3), (8, 3), (9, 3), (9, 4), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0)], 'id': 'gs_btvfB7q8HQScDBfXKkQHqmj7'}, {'name': 'ich heisse marvin', 'health': 54, 'length': 12, 'body': [(9, 9), (8, 9), (7, 9), (6, 9), (6, 8), (7, 8), (8, 8), (9, 8), (9, 7), (9, 6), (9, 5), (8, 5)], 'id': 'gs_WwDMcPffxYxvtfTY7SX9wyB4'}, {'name': 'soma-mini v1[standard]', 'health': 77, 'length': 11, 'body': [(2, 8), (3, 8), (3, 7), (4, 7), (5, 7), (5, 8), (5, 9), (5, 10), (4, 10), (4, 9), (3, 9)], 'id': 'gs_BrJPqQM7BCcjCX69tY3TrdF3'}], 'food': [(8, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('slieks', 3, (9, 0))]"], 'next_coord': (5, 0), 'next_move': 'left', 'time': '0.002s'}
+    log = {'id': '25084781-c620-4c00-9a26-cf836cf8c8a9', 'turn': 437, 'me': {'name': 'mark_snake', 'health': 90, 'length': 24, 'body': [(7, 4), (8, 4), (9, 4), (10, 4), (10, 3), (10, 2), (9, 2), (8, 2), (7, 2), (6, 2), (6, 3), (5, 3), (5, 2), (5, 1), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (1, 1), (2, 1), (3, 1)], 'id': 'gs_JvGtDmmrkfhXmWCXytxVPGFJ'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 86, 'length': 44, 'body': [(6, 5), (6, 6), (6, 7), (6, 8), (5, 8), (5, 7), (5, 6), (4, 6), (3, 6), (2, 6), (2, 7), (2, 8), (3, 8), (3, 7), (4, 7), (4, 8), (4, 9), (5, 9), (6, 9), (7, 9), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (0, 5), (0, 4), (0, 3), (0, 2), (1, 2), (2, 2), (3, 2), (3, 3), (3, 4), (2, 4), (2, 5), (3, 5)], 'id': 'gs_3SDkTrjDBjpBRykScxQVm3qX'}], 'food': [(9, 1), (8, 1)], 'module': 'decision_flow', 'decision_path': ['1v1', 'split2 choose more space'], 'next_coord': (7, 3), 'next_move': 'down', 'time': '0.006s'}
 
 
 
@@ -2911,4 +2912,3 @@ if __name__ == "__main__":
     #game_state = init_from_db_log(id, turn, self_name)
     #game_state = init_from_game_engine_log(log, "mark_snake_test GREEN")
     main(game_state, log=True, log_db=False)
-
