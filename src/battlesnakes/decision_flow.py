@@ -620,6 +620,7 @@ def main(game_state, log=True, log_db=False):
         chasing_info = prefer_by_rank(lambda a: abs(a[3]-a[4]))(chasing_info)
         chasing_info = prefer_by_score(lambda a: a[0])(chasing_info)
         i, c, p, d, t = take_first(chasing_info)
+        if path_distance_pq(g.me.head, p) > 5: return
 
         tail_move = shortest_path_move(g.me.head, p)
         if t > d:
