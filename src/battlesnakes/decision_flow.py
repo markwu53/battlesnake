@@ -107,6 +107,8 @@ def main(game_state, log=True, log_db=False):
 
             (cond(g.me.length >= 12)(split_choice)),
 
+            cond(g.me.health < 20)(get_food),
+
             par([
                 #these are effective in killing the only other
                 cond(len(g.others) == 1 and g.me.length > g.other.length)(longer_push),
@@ -127,8 +129,6 @@ def main(game_state, log=True, log_db=False):
             cond(g.me.length <= 6)(short_avoid_corner),
 
             (type_2_collision_equal_length),
-
-            cond(g.me.health < 20)(get_food),
 
             attack_vulnerables_lower_priority,
 
