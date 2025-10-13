@@ -576,9 +576,14 @@ def main(game_state, log=True, log_db=False):
         target = g.target_snake
         if is_adjacent(g.me.head, target.tail):
             #don't follow too close
+            tail_move = [a for a in moves if path_connected(a, target.tail) and distance_vector_abs(a, target.tail) == (1,1)]
+            if len(tail_move) != 0:
+                g.decision_path.append("chase other tail detour")
+                return tail_move
+            """
             path_2 = grow_path(target.head, 2)[2]
             if any([len([f for f in path if f in g.food]) >= 1 for path in path_2]):
-                tail_move = [a for a in moves if path_connected(a, target.tail) and distance_pq(a, target.tail) == 2]
+                tail_move = [a for a in moves if path_connected(a, target.tail) and distance_vector_abs(a, target.tail) == (1,1)]
                 if len(tail_move) != 0:
                     g.decision_path.append("chase other tail detour")
                     return tail_move
@@ -586,6 +591,7 @@ def main(game_state, log=True, log_db=False):
                 if target.tail in moves:
                     g.decision_path.append("chase other tail direct")
                     return [target.tail]
+            """
 
     def distance_2_chasing(moves):
         target = g.target_snake
