@@ -88,7 +88,9 @@ def main(game_state, log=True, log_db=False):
 
             (prefer_not(entering_danger(suppressed_chasing_kill_situation))),
             (prefer_not(entering_danger(border_confront_kill_situation))),
-            (prefer_not(entering_danger(trap_kill_situation))),
+
+            #disable this since this should be taken care of by split_choice
+            #(prefer_not(entering_danger(trap_kill_situation))),
 
             #two step collision mean crowded, don't go
             (cond(len(g.others) > 1)(avoid_two_step_collision)),
