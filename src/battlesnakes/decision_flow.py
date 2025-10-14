@@ -71,6 +71,8 @@ def main(game_state, log=True, log_db=False):
             (immediate_kill_oppotunity),
             (prefer_not(entering_danger(immediate_kill_situation))),
 
+            split_avoid_confinement,
+
             (type_1_collision),
             
             #looks not useful, disable it
@@ -1073,6 +1075,26 @@ def main(game_state, log=True, log_db=False):
                 split_prefer_diagonal_cut_set,
             ]),
         ])(moves)
+
+    def split_self_confinement(a):
+        occupied = complement(g.me.territory)
+        aset = path_connected_set(a, occupied)
+        aset = sorted(list(set(aset)))
+        #self confined
+        if not all([p in g.me.body for a in aset for p in adj_cells(a) if p not in aset]): return
+
+        wayout_point = has_wayout_on_myself2(aset, a)
+        return wayout_point is not None
+
+    def split_avoid_confinement(moves):
+        ngroup = move_connected_group(moves)
+        if ngroup != 2: return
+        confined_moves = [a for a in moves if split_self_confinement(a)]
+        if len(confined_moves) != 0:
+            moves = [a for a in moves if a not in confined_moves]
+            if len(moves) != 0:
+                g.decision_path.append("avoid self confined moves")
+                return moves
 
     def split_choice(moves):
         ngroup = move_connected_group(moves)
