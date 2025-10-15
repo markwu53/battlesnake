@@ -102,6 +102,8 @@ def main(game_state, log=True, log_db=False):
             border_confront_kill_oppotunity,
             general_confront_kill_oppotunity,
 
+            partial_cut_oppotunity,
+
             (cond(g.me.length >= 12)(split_choice)),
 
             cond(g.me.health < 20)(get_food),
@@ -2199,6 +2201,53 @@ def main(game_state, log=True, log_db=False):
             cut_set[i] = b
 
         return True
+
+    def connected_to(one, cut_set):
+        result = [one]
+        for a in cut_set:
+            if a == one: continue
+            if any([is_adjacent(a, p) for p in result]):
+                result.append(a)
+                continue
+            if any([distance_vector_abs(a, p) == (1,1) for p in result]):
+                result.append(a)
+                continue
+        return sorted(result)
+
+    def connected_pieces(cut_set):
+        one_set = connected_to(take_first(cut_set), cut_set)
+        rest_set = [a for a in cut_set if a not in one_set]
+        if len(rest_set) == 0:
+            return [one_set]
+        return [one_set] + connected_pieces(rest_set)
+
+    def partial_cut_oppotunity(moves):
+        #choose a target
+        for snake in g.others:
+            cut_set = [p for a in snake.territory for p in adj_cells(a) if a not in snake.territory]
+            cut_set = sorted(list(set(cut_set)))
+            if len(cut_set) == 0: continue
+            cut_set_pieces = connected_pieces(cut_set)
+            pieces = [piece for piece in cut_set_pieces if any([a in g.me.territory for a in piece])]
+            if len(pieces) == 0: continue
+            piece = take_first(pieces)
+            if len(piece) > 2: continue
+            if len(piece) == 1:
+                cut_point = take_first(piece)
+                cut_move = shortest_path_move(g.me.head, cut_point)
+                moves = [a for a in moves if a in cut_move]
+                if len(moves) != 0:
+                    return moves
+            elif len(piece) == 2:
+                a,b = piece
+                if distance_vector_abs(a,b) == (1,1):
+                    c = [p for p in adj_cells(a) if p in adj_cells(b) and p in g.me.territory]
+                    if len(c) != 0:
+                        cut_point = take_first(c)
+                        cut_move = shortest_path_move(g.me.head, cut_point)
+                        moves = [a for a in moves if a in cut_move]
+                        if len(moves) != 0:
+                            return moves
 
     def preliminary_cut_kill_situation(killer: Snake, target: Snake):
 
