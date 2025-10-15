@@ -1081,10 +1081,10 @@ def main(game_state, log=True, log_db=False):
         aset = path_connected_set(a, occupied)
         aset = sorted(list(set(aset)))
         #self confined
-        if not all([p in g.me.body for a in aset for p in adj_cells(a) if p not in aset]): return
+        if not all([p in g.me.body for a in aset for p in adj_cells(a) if p not in aset]): return False
 
         wayout_point = has_wayout_on_myself2(aset, a)
-        return wayout_point is not None
+        return wayout_point is None
 
     def split_avoid_confinement(moves):
         ngroup = move_connected_group(moves)
@@ -2931,6 +2931,7 @@ if __name__ == "__main__":
     log = {'id': '2a2b53fb-d8cd-4905-bafa-d57373dc50a3', 'turn': 227, 'me': {'name': 'mark_snake', 'health': 44, 'length': 22, 'body': [(8, 3), (9, 3), (10, 3), (10, 4), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (8, 8), (8, 9), (7, 9), (6, 9), (5, 9), (4, 9), (4, 8), (5, 8), (6, 8), (7, 8), (7, 7), (7, 6), (6, 6)], 'id': 'gs_vYD8DbGJYTfFyVDdJpMTRSb3'}, 'others': [{'name': 'ich heisse marvin', 'health': 95, 'length': 17, 'body': [(7, 4), (6, 4), (5, 4), (4, 4), (3, 4), (2, 4), (1, 4), (0, 4), (0, 3), (1, 3), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2)], 'id': 'gs_hDQR3btSMxqH8Fwh7fHJDYFd'}], 'food': [(0, 2), (1, 10), (6, 1), (7, 10), (0, 0), (3, 1), (0, 9), (2, 10), (6, 3), (3, 8)], 'module': 'decision_flow', 'decision_path': ['1v1', '1v1 longer push'], 'next_coord': (8, 4), 'next_move': 'up', 'time': '0.025s'}
     log = {'id': '2e97c0e8-3ce2-4d6b-8b0b-794a2187339a', 'turn': 260, 'me': {'name': 'mark_snake', 'health': 97, 'length': 22, 'body': [(0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (8, 2), (9, 2), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10)], 'id': 'gs_VYhWKp6WfftDC9tyHX7wMgBD'}, 'others': [{'name': 'mini snake', 'health': 89, 'length': 15, 'body': [(1, 5), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (5, 3), (5, 4), (6, 4), (6, 3), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2)], 'id': 'gs_6CpDTVYJHYwm9gX7CbjYyf8V'}], 'food': [(7, 0), (2, 6), (5, 6)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase other tail direct'], 'next_coord': (1, 2), 'next_move': 'right', 'time': '0.014s'}
     log = {'id': '2e97c0e8-3ce2-4d6b-8b0b-794a2187339a', 'turn': 250, 'me': {'name': 'mark_snake', 'health': 88, 'length': 21, 'body': [(8, 2), (9, 2), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (6, 10), (6, 9), (6, 8), (6, 7), (6, 6), (6, 5), (6, 4)], 'id': 'gs_VYhWKp6WfftDC9tyHX7wMgBD'}, 'others': [{'name': 'mini snake', 'health': 99, 'length': 15, 'body': [(6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (1, 5), (2, 5), (2, 6), (2, 7), (2, 8)], 'id': 'gs_6CpDTVYJHYwm9gX7CbjYyf8V'}], 'food': [(2, 1), (7, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', '1v1 longer push'], 'next_coord': (7, 2), 'next_move': 'left', 'time': '0.034s'}
+    log = {'id': 'a36aaf84-e945-4f51-89f1-95635c9da527', 'turn': 282, 'me': {'name': 'mark_snake', 'health': 97, 'length': 25, 'body': [(9, 1), (9, 2), (10, 2), (10, 3), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (9, 9), (8, 9), (8, 8), (7, 8), (7, 7), (7, 6), (7, 5), (7, 4), (7, 3), (7, 2), (7, 1), (7, 0), (8, 0), (9, 0), (10, 0)], 'id': 'gs_WrcSByJX9ctw438jr6BGtcvc'}, 'others': [{'name': 'ich heisse marvin', 'health': 93, 'length': 27, 'body': [(0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5), (1, 5), (1, 4), (2, 4), (2, 3), (2, 2)], 'id': 'gs_w7bRyXwDmHmfrdyJX36wYhrD'}], 'food': [(5, 7), (4, 2)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('ich heisse marvin', 1, (0, 3))]", 'avoid self confined moves'], 'next_coord': (8, 1), 'next_move': 'left', 'time': '0.002s'}
 
 
 
