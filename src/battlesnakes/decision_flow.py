@@ -1090,7 +1090,8 @@ def main(game_state, log=True, log_db=False):
         ])(moves)
 
     def split_self_confinement(a):
-        occupied = complement(g.me.territory)
+        #occupied = complement(g.me.territory)
+        occupied = g.occupied_cells[1]
         aset = path_connected_set(a, occupied)
         aset = sorted(list(set(aset)))
         #self confined
@@ -1524,7 +1525,7 @@ def main(game_state, log=True, log_db=False):
     def has_wayout_on_myself2(aset, a):
         adjacent_indexes = [i
                         for i,c in enumerate(g.me.body) if c != g.me.head and c != g.me.tail
-                        for p in adj_cells(c) if p in aset #and p != a
+                        for p in adj_cells(c) if p in aset and p != a
                         ]
         if len(adjacent_indexes) == 0: return
         max_index = max(adjacent_indexes)
