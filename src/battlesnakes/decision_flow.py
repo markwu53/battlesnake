@@ -2268,7 +2268,7 @@ def main(game_state, log=True, log_db=False):
     def partial_cut_oppotunity(moves):
         #choose a target
         for snake in g.others:
-            cut_set = [p for a in snake.territory for p in adj_cells(a) if a not in snake.territory]
+            cut_set = [p for a in snake.territory for p in adj_cells(a) if p not in snake.territory]
             cut_set = sorted(list(set(cut_set)))
             if len(cut_set) == 0: continue
             cut_set_pieces = connected_pieces(cut_set)
