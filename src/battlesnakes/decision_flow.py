@@ -2281,6 +2281,7 @@ def main(game_state, log=True, log_db=False):
                 cut_move = shortest_path_move(g.me.head, cut_point)
                 moves = [a for a in moves if a in cut_move]
                 if len(moves) != 0:
+                    g.decision_path.append(f"partial cut {piece}")
                     return moves
             elif len(piece) == 2:
                 a,b = piece
@@ -2291,6 +2292,7 @@ def main(game_state, log=True, log_db=False):
                         cut_move = shortest_path_move(g.me.head, cut_point)
                         moves = [a for a in moves if a in cut_move]
                         if len(moves) != 0:
+                            g.decision_path.append(f"partial cut {piece}")
                             return moves
 
     def preliminary_cut_kill_situation(killer: Snake, target: Snake):
