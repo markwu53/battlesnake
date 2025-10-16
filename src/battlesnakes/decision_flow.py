@@ -1028,6 +1028,7 @@ def main(game_state, log=True, log_db=False):
             return [avoid]
 
         aset = sorted(list(set(g.me.territory)))
+        #aset = path_connected_set(avoid, g.occupied_cells[1])
 
         """
         if len(aset) <= 2:
@@ -1039,9 +1040,17 @@ def main(game_state, log=True, log_db=False):
             g.decision_path.append("collision type 2 take avoid point")
             return [avoid]
 
+        if any([snake.tail in aset for snake in g.snakes]):
+            g.decision_path.append("collision type 2 take avoid point - tail")
+            return [avoid]
+
+        if any([any([is_adjacent(snake.tail, a) for a in aset]) and snake.tail not in cut_set for snake in g.snakes if snake.health == 100]):
+            g.decision_path.append("collision type 2 take avoid point - tail")
+            return [avoid]
+
         adjacent_indexes = [i
-                for i,c in enumerate(g.me.body)
-                for p in adj_cells(c) if p in g.me.territory
+                for i,c in enumerate(g.me.body) if c != g.me.head and c != g.me.tail
+                for p in adj_cells(c) if p in aset and p != avoid
                 ]
 
         if len(adjacent_indexes) == 0:
@@ -2985,6 +2994,7 @@ if __name__ == "__main__":
     log = {'id': '23a676f2-d240-4c30-8ccf-9e29d2bcaabe', 'turn': 326, 'me': {'name': 'mark_snake', 'health': 85, 'length': 30, 'body': [(7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (6, 4), (5, 4), (4, 4), (3, 4), (3, 3), (4, 3), (5, 3), (5, 2), (5, 1), (5, 0), (6, 0), (7, 0), (8, 0), (8, 1)], 'id': 'gs_X9SSxRXhPmKxKckvY8YVXwBQ'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 100, 'length': 29, 'body': [(7, 3), (7, 4), (8, 4), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (9, 9), (9, 10), (8, 10), (8, 9), (8, 8), (8, 7), (8, 6), (8, 5), (7, 5), (7, 6), (7, 7), (6, 7), (5, 7), (4, 7), (3, 7), (2, 7), (2, 8), (3, 8), (4, 8), (5, 8), (5, 8)], 'id': 'gs_WT7gXg7Db34JS6rJXq4HV7FB'}], 'food': [(6, 10), (1, 2), (4, 2), (9, 0), (10, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase other tail via (5, 8)'], 'next_coord': (7, 8), 'next_move': 'down', 'time': '0.007s'}
     log = {'id': 'cd889e0a-759e-4bf1-951b-9f783d68a3ed', 'turn': 193, 'me': {'name': 'mark_snake', 'health': 90, 'length': 20, 'body': [(9, 4), (8, 4), (8, 5), (8, 6), (7, 6), (6, 6), (5, 6), (4, 6), (4, 5), (4, 4), (3, 4), (2, 4), (1, 4), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (5, 4), (5, 5)], 'id': 'gs_FxVM6CKtpB7VWgdXFpMQcxBM'}, 'others': [{'name': 'slieks', 'health': 98, 'length': 16, 'body': [(10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (6, 1), (7, 1), (8, 1), (9, 1), (9, 2), (9, 3)], 'id': 'gs_fqCMJm7SQQPVKSJcq46xBCHH'}, {'name': 'soma-mini v1[standard]', 'health': 89, 'length': 12, 'body': [(8, 9), (9, 9), (9, 8), (8, 8), (8, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (4, 7), (3, 7)], 'id': 'gs_vt7fjWtjj3d9H7Txt4gjVBhQ'}], 'food': [(9, 10), (5, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', "chasing kill 'slieks'"], 'next_coord': (9, 5), 'next_move': 'up', 'time': '0.002s'}
     log = {'id': '259a0812-c83c-4959-b0a6-16b5b5077c1a', 'turn': 321, 'me': {'name': 'mark_snake', 'health': 76, 'length': 24, 'body': [(1, 10), (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (9, 9), (9, 8), (9, 7), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (6, 10), (5, 10), (4, 10), (3, 10), (2, 10)], 'id': 'gs_r4XGcYWHy4PGDk7kxqyqTMCW'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 98, 'length': 38, 'body': [(1, 8), (0, 8), (0, 7), (1, 7), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3), (2, 2), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (0, 6), (0, 5), (0, 4), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (5, 1), (6, 1), (6, 2), (6, 3), (6, 4), (7, 4), (8, 4), (8, 5), (7, 5), (6, 5), (5, 5)], 'id': 'gs_pvGYyvxJBjVBxHSCySxkMdrH'}], 'food': [(9, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('Copy of snake2_v3_FINAL_final(1)', 2, (3, 8))]", 'avoid self confined moves'], 'next_coord': (0, 10), 'next_move': 'left', 'time': '0.001s'}
+    log = {'id': '9cf91249-5176-42ef-b10b-7cbcc53d9527', 'turn': 69, 'me': {'name': 'mark_snake', 'health': 97, 'length': 8, 'body': [(2, 7), (2, 6), (1, 6), (0, 6), (0, 5), (1, 5), (2, 5), (3, 5)], 'id': 'gs_bhvRc6rQYxWKFdPgrdVPyMbB'}, 'others': [{'name': 'SmartyRat', 'health': 37, 'length': 4, 'body': [(7, 2), (6, 2), (6, 3), (5, 3)], 'id': 'gs_fMwxPCqTwb9Tg4HjH9tkSBFK'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 89, 'length': 10, 'body': [(3, 8), (4, 8), (5, 8), (5, 7), (6, 7), (6, 6), (6, 5), (6, 4), (7, 4), (8, 4)], 'id': 'gs_PJrhvbH33Pq37TyRjDymrdtW'}, {'name': 'soma-mini v1[standard]', 'health': 50, 'length': 5, 'body': [(7, 6), (7, 7), (7, 8), (7, 9), (6, 9)], 'id': 'gs_RWD393YWFtKDPjxf3cptbCFf'}], 'food': [(3, 4), (1, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', 'collision type 2 take avoid point'], 'next_coord': (1, 7), 'next_move': 'left', 'time': '0.013s'}
 
 
 
