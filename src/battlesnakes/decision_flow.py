@@ -560,10 +560,7 @@ def main(game_state, log=True, log_db=False):
 
         def chase(moves):
             g.target_snake = target
-            return par([
-                adjacent_chasing,
-                body_chasing,
-            ])(moves)
+            return chase_target_tail(moves)
 
         #push or chase
         return par([
@@ -594,16 +591,13 @@ def main(game_state, log=True, log_db=False):
 
     def distance_2_chasing(moves):
         target = g.target_snake
-        if path_distance_pq(g.me.head, target.tail) == 2:
+        if path_distance_pq(g.me.head, target.tail) in [2,3]:
             path_3 = grow_path(target.head, 3)[3]
-            if any([len([f for f in path if f in g.food]) >= 2 for path in path_3]):
-                tail_move = [a for a in moves if path_connected(a, target.tail) and distance_pq(a, target.tail) == 3]
-                if len(tail_move) != 0:
-                    g.decision_path.append("chase other tail detour")
-                    return tail_move
-            else:
+            if not any([len([f for f in path if f in g.food]) >= 2 for path in path_3]):
                 tail_move = shortest_path_move(g.me.head, target.tail)
-                moves = [a for a in moves if a in tail_move]
+                moves = [a for a in moves if a in tail_move
+                         and len([b for b in adj_cells(a) if b not in g.occupied_cells[1]]) != 1
+                         ]
                 if len(moves) != 0:
                     g.decision_path.append("chase other tail direct")
                     return moves
@@ -614,7 +608,7 @@ def main(game_state, log=True, log_db=False):
 
         chasing_info = [(i,c,p, path_distance_pq(g.me.head, p), target.length-i-1) 
                         for i,c in enumerate(target.body)
-                        if c != target.head
+                        if c != target.head and c not in target.body[-3:]
                         #and path_distance_pq(g.me.head, c) == distance_pq(g.me.head, c) 
                         for p in adj_cells(c) if p in g.me.territory
                         ]
@@ -652,13 +646,16 @@ def main(game_state, log=True, log_db=False):
         aset = path_connected_set(chase_move, occupied)
         aset_trimmed = trim_aset(aset, chase_move)
 
-    def chase_other_tail(moves):
-        g.target_snake = g.other
+    def chase_target_tail(moves):
         return par([
             adjacent_chasing,
             (distance_2_chasing),
             (body_chasing),
         ])(moves)
+
+    def chase_other_tail(moves):
+        g.target_snake = g.other
+        return chase_target_tail(moves)
 
     def corner_push(moves):
         snakes = [snake for snake in g.others if sum(distance_to_border(snake.head)) <= 1 and snake.length < g.me.length]
