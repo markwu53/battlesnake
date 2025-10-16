@@ -1,10 +1,5 @@
-a = [
-    1,
-        2,
-        3,
-    4,
-    5,
-]
+a = list(range(5))
+b = list(range(1,6))
 
-print(a)
+print(b)
 

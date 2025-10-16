@@ -187,7 +187,7 @@ def main(game_state, log=True, log_db=False):
         #estimated 5-step occupied cells
         g.occupied_cells = [
             occupied_cells(step)
-            for step in [1,2,3,4,5]
+            for step in range(1,11)
         ]
         for snake in g.snakes:
             snake.allowed_moves = [a for a in adj_cells(snake.head) if a not in g.occupied_cells[0]]
@@ -641,11 +641,22 @@ def main(game_state, log=True, log_db=False):
                 g.decision_path.append(f"chase other tail via {c}")
                 return moves
 
+    def chase_single_move_length(moves):
+        #unfinished
+        ngroup = move_connected_group(moves)
+        if ngroup == 1: return
+        chase_move = [a for a in moves if path_connected(a, g.other.tail)]
+        if len(chase_move) != 1: return
+        chase_move = take_first(chase_move)
+        occupied = complement(g.me.territory)
+        aset = path_connected_set(chase_move, occupied)
+        aset_trimmed = trim_aset(aset, chase_move)
+
     def chase_other_tail(moves):
         g.target_snake = g.other
         return par([
             adjacent_chasing,
-            distance_2_chasing,
+            (distance_2_chasing),
             (body_chasing),
         ])(moves)
 
@@ -2020,7 +2031,7 @@ def main(game_state, log=True, log_db=False):
             if suppressed_chasing_kill_situation(g.me, snake):
                 kill_moves = [a for a in moves if a in snake.allowed_moves]
                 if len(kill_moves) != 0:
-                    g.decision_path.append(f"chasing kill '{snake.name}'")
+                    g.decision_path.append(f"chasing kill {snake.name}")
                     return kill_moves
 
     def suppressed_chasing_kill_situation(killer: Snake, target: Snake):
@@ -2040,7 +2051,7 @@ def main(game_state, log=True, log_db=False):
                     ]) != 0: 
             return False
 
-
+        """
         target_contact_point = target.neck
         target_taken_point = target.head
         killer_catch_point = killer.head
@@ -2069,6 +2080,26 @@ def main(game_state, log=True, log_db=False):
 
         g.target_snake = target
         return True
+        """
+
+        target_head = target.head
+        target_neck = target.neck
+        killer_head = killer.head
+
+        for step in range(11):
+            new_target_head = [a for a in adj_cells(target_head) if get_adjacent_dir(target_head, a) == get_adjacent_dir(target_neck, target_head)]
+            new_killer_head = [a for a in adj_cells(killer_head) if get_adjacent_dir(killer_head, a) == get_adjacent_dir(target_neck, target_head)]
+            if len(new_killer_head) == 0: return False
+            new_killer_head = take_first(new_killer_head)
+            if new_killer_head in g.occupied_cells[step]: return False
+            if len(new_target_head) == 0: return True
+            new_target_head = take_first(new_target_head)
+            if new_target_head in g.occupied_cells[step]: return True
+            target_neck = target_head
+            target_head = new_target_head
+            killer_head = new_killer_head
+
+        return False
 
     def collision_cut_oppotunity(moves):
         snakes = [snake for snake in g.others if distance_vector_abs(g.me.head, snake.head) == (1,1) and g.me.length > snake.length]
@@ -2420,36 +2451,6 @@ def main(game_state, log=True, log_db=False):
                                    snake.cell_distance[p] <= other.cell_distance.get(p, 999) 
                                        for other in others])
                                ]
-
-    def vulnerable_snakes2(moves):
-        targets = [snake for snake in g.others if len(snake.allowed_moves) == 1]
-        if len(targets) == 0:
-            return
-
-        snakes = g.snakes
-        while True:
-            one_step_world(snakes)
-            snakes = [snake.next for snake in snakes if snake.next is not None]
-            remain = [snake for snake in snakes if len(snake.allowed_moves) == 1 and snake.name != g.me.name]
-            if len(remain) == 0: break
-
-        for snake in targets:
-            snake.vulnerable_steps = 1
-            snake.dead = False
-            ns = snake
-            while True:
-                ns = ns.next
-                if ns is None:
-                    snake.dead = True
-                    break
-                if len(ns.allowed_moves) > 1:
-                    snake.vulnerable_emerge = ns
-                    break
-                snake.vulnerable_steps += 1
-        
-        vulnerables = [snake for snake in targets if not snake.dead]
-        g.decision_path.append(f"vulnerable snakes: {[(snake.name, snake.vulnerable_steps, snake.vulnerable_emerge.head) for snake in vulnerables]}")
-        g.vulnerables = vulnerables
 
     def vulnerable_snakes(moves):
         #count dead development as vulnerable
@@ -2981,6 +2982,8 @@ if __name__ == "__main__":
     log = {'id': '2e97c0e8-3ce2-4d6b-8b0b-794a2187339a', 'turn': 260, 'me': {'name': 'mark_snake', 'health': 97, 'length': 22, 'body': [(0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (8, 2), (9, 2), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10)], 'id': 'gs_VYhWKp6WfftDC9tyHX7wMgBD'}, 'others': [{'name': 'mini snake', 'health': 89, 'length': 15, 'body': [(1, 5), (1, 4), (2, 4), (2, 3), (3, 3), (4, 3), (5, 3), (5, 4), (6, 4), (6, 3), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2)], 'id': 'gs_6CpDTVYJHYwm9gX7CbjYyf8V'}], 'food': [(7, 0), (2, 6), (5, 6)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase other tail direct'], 'next_coord': (1, 2), 'next_move': 'right', 'time': '0.014s'}
     log = {'id': '2e97c0e8-3ce2-4d6b-8b0b-794a2187339a', 'turn': 250, 'me': {'name': 'mark_snake', 'health': 88, 'length': 21, 'body': [(8, 2), (9, 2), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (9, 10), (8, 10), (7, 10), (6, 10), (6, 9), (6, 8), (6, 7), (6, 6), (6, 5), (6, 4)], 'id': 'gs_VYhWKp6WfftDC9tyHX7wMgBD'}, 'others': [{'name': 'mini snake', 'health': 99, 'length': 15, 'body': [(6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2), (0, 2), (0, 3), (0, 4), (0, 5), (1, 5), (2, 5), (2, 6), (2, 7), (2, 8)], 'id': 'gs_6CpDTVYJHYwm9gX7CbjYyf8V'}], 'food': [(2, 1), (7, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', '1v1 longer push'], 'next_coord': (7, 2), 'next_move': 'left', 'time': '0.034s'}
     log = {'id': 'a36aaf84-e945-4f51-89f1-95635c9da527', 'turn': 282, 'me': {'name': 'mark_snake', 'health': 97, 'length': 25, 'body': [(9, 1), (9, 2), (10, 2), (10, 3), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (9, 9), (8, 9), (8, 8), (7, 8), (7, 7), (7, 6), (7, 5), (7, 4), (7, 3), (7, 2), (7, 1), (7, 0), (8, 0), (9, 0), (10, 0)], 'id': 'gs_WrcSByJX9ctw438jr6BGtcvc'}, 'others': [{'name': 'ich heisse marvin', 'health': 93, 'length': 27, 'body': [(0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (1, 10), (2, 10), (3, 10), (4, 10), (5, 10), (6, 10), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5), (1, 5), (1, 4), (2, 4), (2, 3), (2, 2)], 'id': 'gs_w7bRyXwDmHmfrdyJX36wYhrD'}], 'food': [(5, 7), (4, 2)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('ich heisse marvin', 1, (0, 3))]", 'avoid self confined moves'], 'next_coord': (8, 1), 'next_move': 'left', 'time': '0.002s'}
+    log = {'id': '23a676f2-d240-4c30-8ccf-9e29d2bcaabe', 'turn': 326, 'me': {'name': 'mark_snake', 'health': 85, 'length': 30, 'body': [(7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (1, 9), (1, 8), (1, 7), (1, 6), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (6, 4), (5, 4), (4, 4), (3, 4), (3, 3), (4, 3), (5, 3), (5, 2), (5, 1), (5, 0), (6, 0), (7, 0), (8, 0), (8, 1)], 'id': 'gs_X9SSxRXhPmKxKckvY8YVXwBQ'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 100, 'length': 29, 'body': [(7, 3), (7, 4), (8, 4), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (9, 9), (9, 10), (8, 10), (8, 9), (8, 8), (8, 7), (8, 6), (8, 5), (7, 5), (7, 6), (7, 7), (6, 7), (5, 7), (4, 7), (3, 7), (2, 7), (2, 8), (3, 8), (4, 8), (5, 8), (5, 8)], 'id': 'gs_WT7gXg7Db34JS6rJXq4HV7FB'}], 'food': [(6, 10), (1, 2), (4, 2), (9, 0), (10, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase other tail via (5, 8)'], 'next_coord': (7, 8), 'next_move': 'down', 'time': '0.007s'}
+    log = {'id': 'cd889e0a-759e-4bf1-951b-9f783d68a3ed', 'turn': 193, 'me': {'name': 'mark_snake', 'health': 90, 'length': 20, 'body': [(9, 4), (8, 4), (8, 5), (8, 6), (7, 6), (6, 6), (5, 6), (4, 6), (4, 5), (4, 4), (3, 4), (2, 4), (1, 4), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (5, 4), (5, 5)], 'id': 'gs_FxVM6CKtpB7VWgdXFpMQcxBM'}, 'others': [{'name': 'slieks', 'health': 98, 'length': 16, 'body': [(10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (8, 0), (7, 0), (6, 0), (6, 1), (7, 1), (8, 1), (9, 1), (9, 2), (9, 3)], 'id': 'gs_fqCMJm7SQQPVKSJcq46xBCHH'}, {'name': 'soma-mini v1[standard]', 'health': 89, 'length': 12, 'body': [(8, 9), (9, 9), (9, 8), (8, 8), (8, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8), (4, 7), (3, 7)], 'id': 'gs_vt7fjWtjj3d9H7Txt4gjVBhQ'}], 'food': [(9, 10), (5, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', "chasing kill 'slieks'"], 'next_coord': (9, 5), 'next_move': 'up', 'time': '0.002s'}
 
 
 
