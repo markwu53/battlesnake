@@ -168,7 +168,6 @@ def main(game_state, log=True, log_db=False):
 
             cond(len(g.others) == 1 and g.me.length == g.other.length)(equal_push),
             cond(len(g.others) == 1 and g.me.length < g.other.length)(shorter_push),
-
             #cond(len(g.others) == 1 and g.me.length > g.other.length)(border_go_up),
             cond(len(g.others) == 1 and g.me.length < g.other.length)(border_go_up),
             (cond(g.me.length <= 15)(avoid_single_move)),
@@ -522,19 +521,28 @@ def main(game_state, log=True, log_db=False):
                 return moves
     
     def chase_my_tail_body(moves):
-        chase_points = [(i,c, path_distance_pq(g.me.head, c)) for i,c in enumerate(g.me.body) 
+        chase_points = [(i,c, p, path_distance_pq(g.me.head, p), g.me.length-i-1) 
+                        for i,c in enumerate(g.me.body) 
                         if c != g.me.head and c != g.me.tail
                         and not on_border(c)
                         and path_connected(g.me.head, c)
+                        for p in adj_cells(c) if p in g.me.territory
                         ]
-        chase_points_12 = [(i,c,d) for i,c,d in chase_points if abs(g.me.length-i-1-d) <= 1]
-        if len(chase_points_12) == 0: return
-        i,c,d = take_first(prefer_by_rank(lambda a: a[0])(chase_points_12))
-        tail_move = shortest_path_move(g.me.head, c)
-        moves = [a for a in moves if a in tail_move]
-        if len(moves) != 0:
-            g.decision_path.append("chase my tail body")
-            return moves
+        chase_points = [info for info in chase_points for i,c,p,d,t in [info] if (d-t) <= 1]
+        if len(chase_points) == 0: return
+
+        i,c,p,d,t = take_first(prefer_by_score(lambda a: abs(a[3]-a[4]))(chase_points))
+
+        if abs(d-t) <= 1:
+            tail_move = shortest_path_move(g.me.head, p)
+            moves = [a for a in moves if a in tail_move]
+            if len(moves) != 0:
+                g.decision_path.append(f"chase my tail via body {c} direct")
+                return moves
+        detour_move = [a for a in moves if a not in shortest_path_move(g.me.head, p)]
+        if len(detour_move) != 0:
+            g.decision_path.append(f"chase my tail via body {c} detour")
+            return detour_move
 
     def chase_my_tail(moves):
         return par([
@@ -3039,6 +3047,10 @@ if __name__ == "__main__":
     log = {'id': '9cf91249-5176-42ef-b10b-7cbcc53d9527', 'turn': 69, 'me': {'name': 'mark_snake', 'health': 97, 'length': 8, 'body': [(2, 7), (2, 6), (1, 6), (0, 6), (0, 5), (1, 5), (2, 5), (3, 5)], 'id': 'gs_bhvRc6rQYxWKFdPgrdVPyMbB'}, 'others': [{'name': 'SmartyRat', 'health': 37, 'length': 4, 'body': [(7, 2), (6, 2), (6, 3), (5, 3)], 'id': 'gs_fMwxPCqTwb9Tg4HjH9tkSBFK'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 89, 'length': 10, 'body': [(3, 8), (4, 8), (5, 8), (5, 7), (6, 7), (6, 6), (6, 5), (6, 4), (7, 4), (8, 4)], 'id': 'gs_PJrhvbH33Pq37TyRjDymrdtW'}, {'name': 'soma-mini v1[standard]', 'health': 50, 'length': 5, 'body': [(7, 6), (7, 7), (7, 8), (7, 9), (6, 9)], 'id': 'gs_RWD393YWFtKDPjxf3cptbCFf'}], 'food': [(3, 4), (1, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', 'collision type 2 take avoid point'], 'next_coord': (1, 7), 'next_move': 'left', 'time': '0.013s'}
     log ={'id': '5f7d558d-3c25-430e-a5bd-98e94321a149', 'turn': 333, 'me': {'name': 'mark_snake', 'health': 88, 'length': 27, 'body': [(1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (2, 8), (3, 8), (4, 8), (5, 8), (5, 7), (4, 7), (3, 7), (2, 7), (2, 6), (2, 5), (2, 4), (3, 4), (3, 5), (4, 5), (5, 5), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4)], 'id': 'gs_m8vc9hyCCVqG8MWfhWwm8pYD'}, 'others': [{'name': 'Natterlie', 'health': 98, 'length': 30, 'body': [(5, 2), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (9, 9), (9, 8), (8, 8), (7, 8), (7, 7), (7, 6), (6, 6), (6, 7), (6, 8), (6, 9), (5, 9), (4, 9), (3, 9), (2, 9), (1, 9)], 'id': 'gs_kHhkvB7TkRcDHTXjCVPD7vp6'}], 'food': [(5, 6), (10, 10), (5, 3)], 'module': 'decision_flow', 'decision_path': ['1v1'], 'next_coord': (1, 1), 'next_move': 'down', 'time': '0.034s'} 
     log = {'id': 'e4ee404c-7097-404f-b547-2354eab22095', 'turn': 46, 'me': {'name': 'mark_snake', 'health': 58, 'length': 4, 'body': [(9, 1), (9, 2), (9, 3), (9, 4)], 'id': 'gs_FmQq9qFyMPFKtg3b3XfMQ6HX'}, 'others': [{'name': 'Prüzze v2', 'health': 87, 'length': 6, 'body': [(1, 7), (2, 7), (2, 6), (3, 6), (3, 5), (3, 4)], 'id': 'gs_qctcFYTrYy93PVj66RQtBPt7'}, {'name': '@~~~~@', 'health': 100, 'length': 7, 'body': [(8, 2), (8, 3), (7, 3), (7, 4), (7, 5), (7, 6), (7, 6)], 'id': 'gs_gFKxHB9RRgpcYkq8VwSxPGX9'}, {'name': 'Spaceheater', 'health': 95, 'length': 7, 'body': [(5, 7), (6, 7), (7, 7), (7, 8), (8, 8), (9, 8), (9, 9)], 'id': 'gs_pVFk9PdWvCFwrCMGq3ppxd8Q'}], 'food': [(0, 7), (0, 2), (3, 9), (0, 8), (7, 1)], 'module': 'decision_flow', 'decision_path': ['1vn', 'avoid single collision [(8, 1)]', 'partial cut [(9, 0)]'], 'next_coord': (9, 0), 'next_move': 'down', 'time': '0.016s'}
+    log = {'id': 'e85ec98e-37cf-4fe7-beb0-c4960d5076b7', 'turn': 145, 'me': {'name': 'mark_snake', 'health': 90, 'length': 10, 'body': [(5, 8), (4, 8), (4, 7), (4, 6), (3, 6), (2, 6), (1, 6), (1, 7), (1, 8), (1, 9)], 'id': 'gs_JdFfSwmjPyjYt69mQ3QfGG68'}, 'others': [{'name': 'ich heisse marvin', 'health': 100, 'length': 10, 'body': [(8, 9), (8, 8), (8, 7), (7, 7), (6, 7), (5, 7), (5, 6), (5, 5), (6, 5), (6, 5)], 'id': 'gs_KPJPCGVwkQqmTc7SKmTthSKG'}, {'name': 'Red Yarn', 'health': 90, 'length': 12, 'body': [(9, 4), (8, 4), (7, 4), (6, 4), (5, 4), (4, 4), (4, 3), (5, 3), (5, 2), (5, 1), (5, 0), (6, 0)], 'id': 'gs_DbFDWgSppp7tWYTQFqcFwvV9'}], 'food': [(10, 0), (9, 2), (9, 0), (7, 9)], 'module': 'decision_flow', 'decision_path': ['1vn'], 'next_coord': (6, 8), 'next_move': 'right', 'time': '0.029s'}
+    log = {'id': '570a55b4-9271-4205-abf1-e49bcecb6e58', 'turn': 242, 'me': {'name': 'mark_snake', 'health': 99, 'length': 22, 'body': [(2, 4), (3, 4), (4, 4), (5, 4), (5, 5), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (9, 2), (9, 3), (8, 3)], 'id': 'gs_Fd9wkxcXWSjPmRvVTcfMvR7F'}, 'others': [{'name': 'ich heisse marvin', 'health': 93, 'length': 17, 'body': [(4, 2), (5, 2), (6, 2), (6, 3), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (3, 1), (2, 1), (2, 2)], 'id': 'gs_HTRHpxFwq9j8SYVBCj4bVPXR'}], 'food': [(4, 9), (7, 8), (0, 10), (7, 9), (0, 6), (0, 1), (2, 7)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase my tail body'], 'next_coord': (2, 5), 'next_move': 'up', 'time': '0.019s'}
+    log = {'id': '570a55b4-9271-4205-abf1-e49bcecb6e58', 'turn': 243, 'me': {'name': 'mark_snake', 'health': 98, 'length': 22, 'body': [(2, 5), (2, 4), (3, 4), (4, 4), (5, 4), (5, 5), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (9, 2), (9, 3)], 'id': 'gs_Fd9wkxcXWSjPmRvVTcfMvR7F'}, 'others': [{'name': 'ich heisse marvin', 'health': 92, 'length': 17, 'body': [(3, 2), (4, 2), (5, 2), (6, 2), (6, 3), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (3, 1), (2, 1)], 'id': 'gs_HTRHpxFwq9j8SYVBCj4bVPXR'}], 'food': [(4, 9), (7, 8), (0, 10), (7, 9), (0, 6), (0, 1), (2, 7)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('ich heisse marvin', 3, (3, 1))]", 'chase my tail body', 'get food (2, 7)'], 'next_coord': (2, 6), 'next_move': 'up', 'time': '0.020s'}
+    log = {'id': '570a55b4-9271-4205-abf1-e49bcecb6e58', 'turn': 245, 'me': {'name': 'mark_snake', 'health': 100, 'length': 23, 'body': [(2, 7), (2, 6), (2, 5), (2, 4), (3, 4), (4, 4), (5, 4), (5, 5), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (9, 1)], 'id': 'gs_Fd9wkxcXWSjPmRvVTcfMvR7F'}, 'others': [{'name': 'ich heisse marvin', 'health': 90, 'length': 17, 'body': [(2, 1), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (6, 3), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0)], 'id': 'gs_HTRHpxFwq9j8SYVBCj4bVPXR'}], 'food': [(4, 9), (7, 8), (0, 10), (7, 9), (0, 6), (0, 1)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('ich heisse marvin', 1, (3, 1))]", 'get food (0, 6)'], 'next_coord': (1, 7), 'next_move': 'left', 'time': '0.018s'}
 
 
 
