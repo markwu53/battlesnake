@@ -108,15 +108,18 @@ def main(game_state, log=True, log_db=False):
 
             cond(g.me.health < 20)(get_food),
 
-            par([
-                #these are effective in killing the only other
-                cond(len(g.others) == 1 and g.me.length > g.other.length)(longer_push),
-                cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_other_tail),
-                (wayout),
-            ]),
+            # par([
+            #     cond(len(g.others) == 1 and g.me.length > g.other.length)(longer_push),
+            #     cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_other_tail),
+            #     (wayout),
+            # ]),
             #cond(len(g.others) == 1 and g.me.length > g.other.length)(par([ longer_push, (chase_other_tail), ])),
 
-            #(wayout),
+            par([
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(longer_push),
+            cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_my_tail),
+            (wayout),
+            ]),
 
             (cond(g.me.length > 8)(avoid_next_step_confinement)),
             avoid_two_snake_trap,
@@ -149,7 +152,7 @@ def main(game_state, log=True, log_db=False):
             #try to reproduce this effect earlier when I'm longer than local target
             cond(len(g.others) > 1 and g.me.length >= 12)(local_chasing),
 
-            cond(g.me.length >= 35)(chase_my_tail),
+            #cond(g.me.length >= 35)(chase_my_tail),
             avoid_next_step_suppressed,
 
             split_choice_2,
@@ -498,11 +501,51 @@ def main(game_state, log=True, log_db=False):
         if len(tail_moves) != 0:
             return tail_moves
 
+    def chase_my_tail_1(moves):
+        if on_border(g.me.tail): return
+        if is_adjacent(g.me.head, g.me.tail):
+            if g.me.tail in moves:
+                g.decision_path.append("chase my tail")
+                return [g.me.tail]
+
+    def chase_my_tail_2(moves):
+        if on_border(g.me.tail): return
+        if path_distance_pq(g.me.head, g.me.tail) == 2:
+            tail_move = shortest_path_move(g.me.head, g.me.tail)
+            moves = [a for a in moves if a in tail_move]
+            if len(moves) != 0:
+                food_move = [a for a in moves if a in g.food]
+                if len(food_move) != 0:
+                    g.decision_path.append("chase my tail food1")
+                    return food_move
+                g.decision_path.append("chase my tail")
+                return moves
+    
+    def chase_my_tail_body(moves):
+        chase_points = [(i,c, path_distance_pq(g.me.head, c)) for i,c in enumerate(g.me.body) 
+                        if c != g.me.head and c != g.me.tail
+                        and not on_border(c)
+                        and path_connected(g.me.head, c)
+                        ]
+        chase_points_12 = [(i,c,d) for i,c,d in chase_points if abs(g.me.length-i-1-d) <= 1]
+        if len(chase_points_12) == 0: return
+        i,c,d = take_first(prefer_by_rank(lambda a: a[0])(chase_points_12))
+        tail_move = shortest_path_move(g.me.head, c)
+        moves = [a for a in moves if a in tail_move]
+        if len(moves) != 0:
+            g.decision_path.append("chase my tail body")
+            return moves
+
     def chase_my_tail(moves):
         return par([
-            cond(g.me.health < 50)(food1),
-            tail_move(g.me.tail),
+            chase_my_tail_1,
+            chase_my_tail_2,
+            chase_my_tail_body,
         ])(moves)
+        # return par([
+        #     cond(g.me.health < 50)(food1),
+        #     tail_move(g.me.tail),
+        # ])(moves)
 
     def food1(moves):
         tail_moves = shortest_path_move(g.me.head, g.me.tail)
