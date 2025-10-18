@@ -174,6 +174,7 @@ def main(game_state, log=True, log_db=False):
             (cond(g.me.length <= 15)(avoid_single_move)),
             (cond(g.me.length >= 10)(prefer_less_split)),
             (cond(g.me.length <= 16)(prefer_away_border)),
+            split_choice_2,
 
             avoid_equal_collision,
 
@@ -1201,7 +1202,7 @@ def main(game_state, log=True, log_db=False):
                 split_choose_my_tail,
                 (split_choose_other_tail),
                 (split_choose_more_space),
-                split_prefer_diagonal_cut_set,
+                #(split_prefer_diagonal_cut_set),
             ]),
         ])(moves)
 
@@ -1246,18 +1247,24 @@ def main(game_state, log=True, log_db=False):
             g.decision_path.append("split choice")
             return ok_set
 
-    def move_space(a):
-        if a not in g.me.territory:
+    def move_space(a, occupied=None):
+        if occupied is None:
+            occupied = complement(g.me.territory)
+        if a in occupied:
             return []
-        return path_connected_set(a, complement(g.me.territory))
+        return path_connected_set(a, occupied)
 
     def split_choose_spacious(moves):
         ngroup = move_connected_group(moves)
         if ngroup != 2: return
-        spacious_move = [a for a in moves if len(move_space(a)) >= 0.8 * g.me.length]
-        if len(spacious_move) != 0:
-            g.decision_path.append("split2 choose spacious")
-            return spacious_move
+        occupied = complement(g.me.territory)+[a for a in g.me.allowed_moves if a not in moves]
+        spacious_move = [a for a in moves if len(move_space(a, occupied)) >= 0.8 * g.me.length]
+        not_spacious_move = [a for a in moves if a not in spacious_move]
+        if len(not_spacious_move) != 0:
+            moves = [a for a in moves if a not in not_spacious_move]
+            if len(moves) != 0:
+                g.decision_path.append("split2 choose spacious")
+                return moves
 
     def split_choose_my_tail(moves):
         ngroup = move_connected_group(moves)
@@ -1293,8 +1300,14 @@ def main(game_state, log=True, log_db=False):
     def split_choose_more_space(moves):
         ngroup = move_connected_group(moves)
         if ngroup != 2: return
-        g.decision_path.append("split2 choose more space")
-        return prefer_by_score(lambda a: len(move_space(a)))(moves)
+        occupied = complement(g.me.territory)+[a for a in g.me.allowed_moves if a not in moves]
+        space_move =  prefer_by_score(lambda a: len(move_space(a, occupied)))(moves)
+        less_space = [a for a in moves if a not in space_move]
+        if len(less_space) != 0:
+            moves = [a for a in moves if a not in less_space]
+            if len(moves) != 0:
+                g.decision_path.append("split2 choose more space")
+                return moves
  
     def split_prefer_diagonal_cut_set(moves):
         ngroup = move_connected_group(moves)
@@ -3105,6 +3118,7 @@ if __name__ == "__main__":
     log = {'id': 'a942118d-002e-4dd7-b602-c906a21dfa62', 'turn': 91, 'me': {'name': 'mark_snake', 'health': 50, 'length': 6, 'body': [(0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10)], 'id': 'gs_hVYxPp63j8GJDYTHcxd4kfjd'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 93, 'length': 13, 'body': [(5, 10), (4, 10), (3, 10), (2, 10), (2, 9), (3, 9), (4, 9), (4, 8), (3, 8), (3, 7), (4, 7), (5, 7), (6, 7)], 'id': 'gs_Y79MxMCY6wxdS8D74CVKBTtJ'}, {'name': 'ich heisse marvin', 'health': 62, 'length': 8, 'body': [(5, 4), (5, 5), (4, 5), (4, 6), (3, 6), (3, 5), (3, 4), (3, 3)], 'id': 'gs_myJMSFvWMkQQJJYYY6mpbKM6'}], 'food': [(0, 4), (1, 0), (6, 3), (7, 0), (9, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'next to food'], 'next_coord': (0, 4), 'next_move': 'down', 'time': '0.048s'}
     log = {'id': '5e74779c-cbf5-419f-9dd7-d00f6ffa244e', 'turn': 46, 'me': {'name': 'mark_snake', 'health': 93, 'length': 9, 'body': [(4, 6), (3, 6), (2, 6), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10)], 'id': 'gs_cY8f7CbPhfXpwBQ3rQFwkwbF'}, 'others': [{'name': 'SmartyRat', 'health': 84, 'length': 5, 'body': [(4, 8), (5, 8), (5, 7), (5, 6), (6, 6)], 'id': 'gs_cHB73yXm483PP9CDQQqrfhcV'}, {'name': '@~~~~@', 'health': 56, 'length': 4, 'body': [(7, 3), (6, 3), (6, 4), (7, 4)], 'id': 'gs_xK8bPbd7VGvJqTpJ8t7RKGgT'}, {'name': 'soma-mini v1[standard]', 'health': 56, 'length': 4, 'body': [(5, 1), (4, 1), (3, 1), (3, 2)], 'id': 'gs_t8yW9TDJSVxjTRCHT9Y4x7d4'}], 'food': [(9, 6), (7, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'longer confront push'], 'next_coord': (4, 7), 'next_move': 'up', 'time': '0.037s'}
     log = {'id': 'fe94ef9b-6200-4da0-a435-c05bb041864c', 'turn': 282, 'me': {'name': 'mark_snake', 'health': 89, 'length': 27, 'body': [(5, 7), (5, 6), (6, 6), (6, 5), (6, 4), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (2, 7), (3, 7), (3, 8), (3, 9)], 'id': 'gs_6ffDrjddkdyMGGfHXSpgMTgb'}, 'others': [{'name': 'slieks', 'health': 98, 'length': 21, 'body': [(10, 6), (9, 6), (9, 5), (8, 5), (8, 4), (8, 3), (9, 3), (9, 2), (8, 2), (8, 1), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (8, 6), (8, 7), (8, 8), (7, 8), (7, 7)], 'id': 'gs_vgXVJdTtGj9xcmMMMVbGgmcM'}], 'food': [(10, 0), (7, 10), (0, 8), (2, 10), (10, 1)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase my tail via body (5, 6) detour', 'get food (7, 10)'], 'next_coord': (5, 8), 'next_move': 'up', 'time': '0.037s'}
+    log = {'id': '1b155bd7-80d9-4706-b408-69ab61fa4ed2', 'turn': 138, 'me': {'name': 'mark_snake', 'health': 81, 'length': 11, 'body': [(7, 9), (7, 8), (8, 8), (9, 8), (10, 8), (10, 7), (10, 6), (9, 6), (9, 5), (9, 4), (8, 4)], 'id': 'gs_b3y7b6yF6DVrQ3XJFkxThkk4'}, 'others': [{'name': 'slieks', 'health': 71, 'length': 8, 'body': [(2, 2), (2, 3), (2, 4), (2, 5), (3, 5), (3, 4), (3, 3), (4, 3)], 'id': 'gs_JMSrrqmQYJycPb9khCCyGVq4'}, {'name': 'Game of Chicken', 'health': 100, 'length': 16, 'body': [(4, 10), (5, 10), (5, 9), (5, 8), (5, 7), (5, 6), (5, 5), (4, 5), (4, 6), (4, 7), (3, 7), (3, 8), (2, 8), (2, 9), (1, 9), (1, 9)], 'id': 'gs_4QjHCVCrgxFqm4hXtKHWXHwC'}, {'name': 'Red Yarn', 'health': 88, 'length': 12, 'body': [(6, 0), (7, 0), (8, 0), (9, 0), (9, 1), (8, 1), (8, 2), (9, 2), (9, 3), (8, 3), (7, 3), (7, 2)], 'id': 'gs_rKfXKBM7qHk9YKSFPr9Q6hpB'}], 'food': [(0, 3)], 'module': 'decision_flow', 'decision_path': ['1vn'], 'next_coord': (8, 9), 'next_move': 'right', 'time': '0.053s'}
 
 
 
