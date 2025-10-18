@@ -167,8 +167,10 @@ def main(game_state, log=True, log_db=False):
 
             (cond(g.me.length >= 12)(confined_follow_tail)),
 
-            cond(len(g.others) == 1 and g.me.length == g.other.length)(equal_push),
-            cond(len(g.others) == 1 and g.me.length < g.other.length)(shorter_push),
+            #disable equal_push and shorter_push
+            #cond(len(g.others) == 1 and g.me.length == g.other.length)(equal_push),
+            #cond(len(g.others) == 1 and g.me.length < g.other.length)(shorter_push),
+
             #cond(len(g.others) == 1 and g.me.length > g.other.length)(border_go_up),
             cond(len(g.others) == 1 and g.me.length < g.other.length)(border_go_up),
             (cond(g.me.length <= 15)(avoid_single_move)),
