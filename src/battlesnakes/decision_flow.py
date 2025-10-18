@@ -78,6 +78,8 @@ def main(game_state, log=True, log_db=False):
             #looks not useful, disable it
             #(cond(g.me.length >= 7)(avoid_serious_cut_danger)),
 
+            (prefer_not(entering_danger(trap_kill_situation))),
+
             (collision_cut_oppotunity),
 
             (suppressed_chasing_kill_oppotunity),
@@ -86,8 +88,6 @@ def main(game_state, log=True, log_db=False):
             (prefer_not(entering_danger(suppressed_chasing_kill_situation))),
             (prefer_not(entering_danger(border_confront_kill_situation))),
 
-            #disable this since this should be taken care of by split_choice
-            #(prefer_not(entering_danger(trap_kill_situation))),
 
             #two step collision mean crowded, don't go
             (cond(len(g.others) > 1)(avoid_two_step_collision)),
@@ -3071,6 +3071,7 @@ if __name__ == "__main__":
     log = {'id': '570a55b4-9271-4205-abf1-e49bcecb6e58', 'turn': 245, 'me': {'name': 'mark_snake', 'health': 100, 'length': 23, 'body': [(2, 7), (2, 6), (2, 5), (2, 4), (3, 4), (4, 4), (5, 4), (5, 5), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (9, 1)], 'id': 'gs_Fd9wkxcXWSjPmRvVTcfMvR7F'}, 'others': [{'name': 'ich heisse marvin', 'health': 90, 'length': 17, 'body': [(2, 1), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (6, 3), (5, 3), (4, 3), (3, 3), (2, 3), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0)], 'id': 'gs_HTRHpxFwq9j8SYVBCj4bVPXR'}], 'food': [(4, 9), (7, 8), (0, 10), (7, 9), (0, 6), (0, 1)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('ich heisse marvin', 1, (3, 1))]", 'get food (0, 6)'], 'next_coord': (1, 7), 'next_move': 'left', 'time': '0.018s'}
     log = {'id': 'c6fcd1a3-6c33-4453-b1cc-402d5a311d63', 'turn': 62, 'me': {'name': 'mark_snake', 'health': 89, 'length': 10, 'body': [(6, 8), (5, 8), (5, 7), (5, 6), (5, 5), (4, 5), (3, 5), (3, 6), (3, 7), (3, 8)], 'id': 'gs_Dpgc9QwFYCSWh3VKPHFMPV3Y'}, 'others': [{'name': 'snakey_wakey', 'health': 100, 'length': 9, 'body': [(10, 8), (10, 7), (10, 6), (10, 5), (9, 5), (8, 5), (7, 5), (7, 4), (7, 4)], 'id': 'gs_kB4mTBxv9JXFcFxXJyCdcYRY'}, {'name': 'go-st', 'health': 68, 'length': 7, 'body': [(5, 3), (6, 3), (7, 3), (7, 2), (6, 2), (5, 2), (4, 2)], 'id': 'gs_HKT77bbtTqg7Xf3DqgKM8QQd'}, {'name': 'soma-mini v1[standard]', 'health': 90, 'length': 8, 'body': [(4, 0), (5, 0), (6, 0), (6, 1), (5, 1), (4, 1), (3, 1), (3, 0)], 'id': 'gs_xBJWYm6RTStW3vg3YFbcFqwc'}], 'food': [(2, 9)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('soma-mini v1[standard]', 1, (3, 0))]", 'preliminary cut kill target: snakey_wakey', 'get food (2, 9)'], 'next_coord': (6, 9), 'next_move': 'up', 'time': '0.030s'}
     log = {'id': '26eb21d8-6ede-4c62-9fe9-3109a6a158ee', 'turn': 192, 'me': {'name': 'mark_snake', 'health': 98, 'length': 17, 'body': [(10, 6), (10, 5), (9, 5), (8, 5), (8, 6), (8, 7), (8, 8), (8, 9), (8, 10), (7, 10), (7, 9), (6, 9), (5, 9), (4, 9), (3, 9), (3, 10), (2, 10)], 'id': 'gs_R3mQFY7kbgBgfwCSytb4ffK7'}, 'others': [{'name': 'Frank The Tank', 'health': 85, 'length': 16, 'body': [(7, 3), (7, 4), (7, 5), (6, 5), (5, 5), (4, 5), (3, 5), (2, 5), (2, 4), (2, 3), (2, 2), (2, 1), (1, 1), (1, 0), (2, 0), (3, 0)], 'id': 'gs_wXMJ6qMCk4xDMQSYJSTSyDXH'}], 'food': [(5, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase my tail via body (9, 5) detour'], 'next_coord': (10, 7), 'next_move': 'up', 'time': '0.005s'}
+    log = {'id': 'a3055944-26b9-490a-9104-521c77ee364d', 'turn': 141, 'me': {'name': 'mark_snake', 'health': 97, 'length': 17, 'body': [(3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (9, 4), (9, 3), (9, 2), (9, 1), (8, 1)], 'id': 'gs_m997RJTv3dQFGRJWwqKy8BbT'}, 'others': [{'name': 'slieks', 'health': 89, 'length': 11, 'body': [(2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (1, 6), (1, 7), (0, 7), (0, 8), (0, 9)], 'id': 'gs_WC6WqPkgKqmgcCqYrqYmhpr6'}, {'name': 'soma-mini v1[standard]', 'health': 99, 'length': 15, 'body': [(5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (4, 7), (4, 8), (5, 8), (5, 9), (5, 10), (4, 10), (4, 9), (3, 9), (3, 8)], 'id': 'gs_JjTGh96YbWBwWfp7rK37R9Bf'}], 'food': [(8, 10), (10, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', 'preliminary cut kill target: slieks', 'try collision cut kill (2, 0)'], 'next_coord': (2, 0), 'next_move': 'left', 'time': '0.005s'}
 
 
 
