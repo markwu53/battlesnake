@@ -88,10 +88,10 @@ def main(game_state, log=True, log_db=False):
             (prefer_not(entering_danger(suppressed_chasing_kill_situation))),
             (prefer_not(entering_danger(border_confront_kill_situation))),
 
+            (type_2_collision),
+
             #two step collision mean crowded, don't go
             (cond(len(g.others) > 1)(avoid_two_step_collision)),
-
-            (type_2_collision),
 
             (make_forming_trap),
             (cut_kill_oppotunity),
