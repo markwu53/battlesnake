@@ -121,6 +121,7 @@ def main(game_state, log=True, log_db=False):
             cond(len(g.others) == 1 and g.me.length > g.other.length)(longer_push),
             cond(len(g.others) == 1 and g.me.length > g.other.length)(longer_push_territory),
             cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_my_tail),
+            cond(len(g.others) == 1 and g.me.length <= g.other.length)(chase_my_tail_body),
 
             (cond(g.me.length > 8)(avoid_next_step_confinement)),
             avoid_two_snake_trap,
@@ -476,10 +477,8 @@ def main(game_state, log=True, log_db=False):
         return False
 
     def get_food(moves):
-        food_near = [f for f in g.food if distance_pq(f, g.me.head) <= 8 and distance_to_border(f) != (0,0)]
-
-        if len(g.others) == 1:
-            food_near = [f for f in food_near if path_distance_pq(f, g.me.head) <=3]
+        #food_near = [f for f in g.food if distance_pq(f, g.me.head) <= 8 and distance_to_border(f) != (0,0)]
+        food_near = [f for f in g.food if f in g.me.territory and distance_to_border(f) != (0,0)]
 
         food_good = [f for f in food_near 
                      if path_connected(f, g.me.head) 
@@ -572,7 +571,7 @@ def main(game_state, log=True, log_db=False):
                 g.decision_path.append("chase my tail")
                 return moves
     
-    def chase_my_tail_body(moves):
+    def chase_my_tail_body2(moves):
         chase_points = [(i,c, p, path_distance_pq(g.me.head, p), g.me.length-i-1) 
                         for i,c in enumerate(g.me.body) 
                         if c != g.me.head and c != g.me.tail
@@ -591,6 +590,24 @@ def main(game_state, log=True, log_db=False):
             if len(moves) != 0:
                 g.decision_path.append(f"chase my tail via body {c} direct")
                 return moves
+        detour_move = [a for a in moves if a not in shortest_path_move(g.me.head, p)]
+        if len(detour_move) != 0:
+            g.decision_path.append(f"chase my tail via body {c} detour")
+            return detour_move
+
+    def chase_my_tail_body(moves):
+        chase_points = [(i,c, p, path_distance_pq(g.me.head, p), g.me.length-i-1) 
+                        for i,c in enumerate(g.me.body) 
+                        if c != g.me.head and c != g.me.tail
+                        and not on_border(c)
+                        and path_connected(g.me.head, c)
+                        for p in adj_cells(c) if p in g.me.territory
+                        ]
+        chase_points = [info for info in chase_points for i,c,p,d,t in [info] if (d-t) <= -2]
+        if len(chase_points) == 0: return
+
+        i,c,p,d,t = take_first(prefer_by_score(lambda a: (a[3]-a[4]))(chase_points))
+
         detour_move = [a for a in moves if a not in shortest_path_move(g.me.head, p)]
         if len(detour_move) != 0:
             g.decision_path.append(f"chase my tail via body {c} detour")
@@ -3138,6 +3155,7 @@ if __name__ == "__main__":
     log = {'id': '9e0580fe-50d1-4d16-ac80-79827d7c405f', 'turn': 283, 'me': {'name': 'mark_snake', 'health': 72, 'length': 20, 'body': [(1, 4), (0, 4), (0, 3), (0, 2), (0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (10, 2), (9, 2), (8, 2), (7, 2), (6, 2)], 'id': 'gs_hMtVKdmwXrGRpSJRRBhqKSqR'}, 'others': [{'name': 'go-st', 'health': 96, 'length': 22, 'body': [(5, 6), (5, 7), (5, 8), (5, 9), (5, 10), (6, 10), (7, 10), (8, 10), (9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (10, 6), (10, 5), (10, 4), (10, 3), (9, 3), (9, 4), (9, 5), (9, 6), (8, 6)], 'id': 'gs_bMMm9cg9xKHd6Cd4hXVG48qD'}], 'food': [(7, 3)], 'module': 'decision_flow', 'decision_path': ['1v1', 'avoid next step confinement [(2, 4), (1, 3)]'], 'next_coord': (1, 5), 'next_move': 'up', 'time': '0.023s'}
     log = {'id': '063831ac-d6f0-48c0-bc0b-5c72709d4b30', 'turn': 115, 'me': {'name': 'mark_snake', 'health': 69, 'length': 11, 'body': [(8, 5), (8, 4), (8, 3), (8, 2), (7, 2), (6, 2), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6)], 'id': 'gs_dfcfgXmmPrdw3ryYJvxmC6bD'}, 'others': [{'name': 'Game of Chicken', 'health': 100, 'length': 16, 'body': [(4, 3), (4, 2), (4, 1), (5, 1), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (2, 1), (1, 1), (1, 2), (1, 3), (2, 3), (2, 3)], 'id': 'gs_Q376SmgWhBp78VMMvpFmDFw7'}], 'food': [(10, 0), (2, 4)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (10, 0)'], 'next_coord': (9, 5), 'next_move': 'right', 'time': '0.023s'}
     log = {'id': '4fbc7e52-6417-42a6-b01a-e90e6d5f3f74', 'turn': 87, 'me': {'name': 'mark_snake', 'health': 94, 'length': 10, 'body': [(7, 4), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8)], 'id': 'gs_jpvGRDm8hYwFYV6bJtcPh8xT'}, 'others': [{'name': 'SmartyRat', 'health': 66, 'length': 6, 'body': [(7, 2), (6, 2), (5, 2), (5, 1), (6, 1), (7, 1)], 'id': 'gs_HqSdqdqgGTTBb4YwHhh6Vv8P'}, {'name': 'go-st', 'health': 34, 'length': 5, 'body': [(2, 3), (2, 2), (2, 1), (2, 0), (3, 0)], 'id': 'gs_Dr8Fy9q4kWhkJR6kDpKjxSY6'}, {'name': 'Red Yarn', 'health': 61, 'length': 10, 'body': [(4, 7), (3, 7), (3, 6), (3, 5), (3, 4), (3, 3), (4, 3), (5, 3), (5, 4), (5, 5)], 'id': 'gs_3CpkJBXS4WKKvMjXwhBWjFwP'}], 'food': [(0, 10), (4, 0), (10, 2), (5, 7)], 'module': 'decision_flow', 'decision_path': ['1vn'], 'next_coord': (7, 5), 'next_move': 'up', 'time': '0.043s'}
+    log = {'id': '0d0f3aae-9038-4e65-afff-71145b5a0911', 'turn': 123, 'me': {'name': 'mark_snake', 'health': 95, 'length': 6, 'body': [(3, 10), (3, 9), (2, 9), (1, 9), (0, 9), (0, 8)], 'id': 'gs_mSCCfVVvxDM6pFWCBhxwK7Hd'}, 'others': [{'name': 'snakey_wakey', 'health': 98, 'length': 7, 'body': [(6, 7), (5, 7), (4, 7), (4, 8), (5, 8), (5, 9), (6, 9)], 'id': 'gs_jM9cd3QcHDP3Vy7hT3FMfxQ6'}, {'name': 'ich heisse marvin', 'health': 66, 'length': 11, 'body': [(2, 7), (2, 6), (1, 6), (1, 5), (1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (5, 5), (5, 6)], 'id': 'gs_fvGvwVxV7xVYbFX3FWCqTFQJ'}, {'name': 'Red Yarn', 'health': 76, 'length': 13, 'body': [(3, 2), (2, 2), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (8, 4), (8, 5), (8, 6), (9, 6)], 'id': 'gs_HfYHw9gd8dcPGRxW3dyKqf7J'}], 'food': [(5, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'multi-step collision [((4, 10), 3)]'], 'next_coord': (2, 10), 'next_move': 'left', 'time': '0.029s'}
 
 
 
