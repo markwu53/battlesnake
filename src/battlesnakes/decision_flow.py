@@ -1,5 +1,6 @@
 import time
 import sqlite3
+import random
 
 class Snake:
     def __init__(self, name, body, health, id=None):
@@ -186,7 +187,8 @@ def main(game_state, log=True, log_db=False):
             #this is not accurate, so put in very low priority
             (cond(g.me.length < 10 and len(g.others) >= 2)(prefer_open_space)),
 
-            prefer(is_straight),
+            #prefer(is_straight),
+            take_random,
 
             id,
         ])(moves)
@@ -2880,6 +2882,9 @@ def main(game_state, log=True, log_db=False):
 
     def prefer_not(check, message=None):
         return prefer(lambda a: not check(a), message)
+
+    def take_random(moves):
+        return [random.choice(moves)]
 
     def take_first(moves):
         try:

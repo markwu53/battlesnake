@@ -1,5 +1,6 @@
+import random
 a = list(range(5))
-b = a[-8:]
+b = random.choice(a)
 
 print(b)
 
