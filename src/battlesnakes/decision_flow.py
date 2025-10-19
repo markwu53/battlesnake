@@ -1494,7 +1494,6 @@ def main(game_state, log=True, log_db=False):
                 if len(oset) >= wayout_length: continue
 
                 danger_set.append(a)
-                print(a, b)
                 #only need one killer move to make me confined
                 break
 
@@ -2410,7 +2409,6 @@ def main(game_state, log=True, log_db=False):
                 cut_move = shortest_path_move(g.me.head, cut_point)
                 moves = [a for a in moves if a in cut_move]
                 if len(moves) != 0:
-                    print(snake.name, cut_set_pieces)
                     g.decision_path.append(f"partial cut {snake.name} {piece}")
                     return moves
             elif len(piece) == 2:
