@@ -183,7 +183,7 @@ def main(game_state, log=True, log_db=False):
             (cond(g.me.length <= 15)(avoid_single_move)),
             (cond(g.me.length >= 10)(prefer_less_split)),
             (cond(g.me.length <= 16)(prefer_away_border)),
-            split_choice_2,
+            (split_choice_2),
 
             avoid_equal_collision,
 
@@ -1264,6 +1264,8 @@ def main(game_state, log=True, log_db=False):
         return seq([
             split_avoid_preliminary_trap,
             #(avoid_static_confinement),
+            multistep_terrritories(1),
+
             par([
                 split_choose_spacious,
                 split_choose_my_tail,
@@ -1324,7 +1326,7 @@ def main(game_state, log=True, log_db=False):
     def split_choose_spacious(moves):
         ngroup = move_connected_group(moves)
         if ngroup != 2: return
-        occupied = complement(g.me.territory)+[a for a in g.me.allowed_moves if a not in moves]
+        occupied = complement(g.me.territory2)+[a for a in g.me.allowed_moves if a not in moves]
         spacious_move = [a for a in moves if len(move_space(a, occupied)) >= 0.8 * g.me.length]
         not_spacious_move = [a for a in moves if a not in spacious_move]
         if len(not_spacious_move) != 0:
@@ -1337,7 +1339,7 @@ def main(game_state, log=True, log_db=False):
         ngroup = move_connected_group(moves)
         if ngroup != 2: return
         def has_my_tail(a):
-            aset = path_connected_set(a, complement(g.me.territory))
+            aset = path_connected_set(a, complement(g.me.territory2)+[a for a in g.me.allowed_moves if a not in moves])
             if g.me.tail in aset:
                 return True
             if g.me.health == 100:
@@ -1353,7 +1355,7 @@ def main(game_state, log=True, log_db=False):
         ngroup = move_connected_group(moves)
         if ngroup != 2: return
         def has_other_tail(a):
-            aset = path_connected_set(a, complement(g.me.territory))
+            aset = path_connected_set(a, complement(g.me.territory2)+[a for a in g.me.allowed_moves if a not in moves])
             if any([snake.tail in aset for snake in g.others]):
                 return True
             if any([is_adjacent(snake.tail, a) for snake in g.others if snake.health == 100 for a in aset]):
@@ -1367,7 +1369,8 @@ def main(game_state, log=True, log_db=False):
     def split_choose_more_space(moves):
         ngroup = move_connected_group(moves)
         if ngroup != 2: return
-        occupied = complement(g.me.territory)+[a for a in g.me.allowed_moves if a not in moves]
+        #occupied = complement(g.me.territory)+[a for a in g.me.allowed_moves if a not in moves]
+        occupied = complement(g.me.territory2)+[a for a in g.me.allowed_moves if a not in moves]
         space_move =  prefer_by_score(lambda a: len(move_space(a, occupied)))(moves)
         less_space = [a for a in moves if a not in space_move]
         if len(less_space) != 0:
@@ -2665,6 +2668,25 @@ def main(game_state, log=True, log_db=False):
         if len(g.others) == 1:
             g.other = take_first(g.others)
 
+    def multistep_terrritories(step):
+        def fn(moves):
+            occupied = g.occupied_cells[step]
+            snakes = g.snakes
+            for snake in snakes:
+                layers = path_connected_layers(snake.head, occupied)
+                snake.cell_distance2 = {p:i for i,layer in enumerate(layers) for p in layer}
+                snake.head_space2 = [p for layer in layers for p in layer if p != snake.head]
+            for snake in snakes:
+                others = [s for s in snakes if snake.head != s.head]
+                snake.territory2 = [p for p in snake.head_space2
+                                if all([
+                                    snake.cell_distance2[p] < other.cell_distance2.get(p, 999) 
+                                    if snake.length < other.length else
+                                    snake.cell_distance2[p] <= other.cell_distance2.get(p, 999) 
+                                        for other in others])
+                                ]
+        return fn
+
     def territories(moves):
         hypothetic_development_territories(g.snakes)
 
@@ -3216,6 +3238,7 @@ if __name__ == "__main__":
     log = {'id': '276d4278-64cf-42ba-870f-562317de4264', 'turn': 131, 'me': {'name': 'mark_snake', 'health': 92, 'length': 10, 'body': [(1, 10), (1, 9), (2, 9), (2, 8), (3, 8), (4, 8), (5, 8), (5, 9), (5, 10), (6, 10)], 'id': 'gs_FfvbR7FCVtMJgJpQTCW4vMxW'}, 'others': [{'name': 'go-st', 'health': 87, 'length': 10, 'body': [(0, 7), (1, 7), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6)], 'id': 'gs_K8MJRqMSC6jhvVtxFrdhGVJF'}], 'food': [(10, 1), (9, 2), (10, 0), (3, 1), (0, 3)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase my tail via body (3, 8) detour'], 'next_coord': (0, 10), 'next_move': 'left', 'time': '0.009s'}
     log = {'id': '4cdd5c9e-cc93-4684-a195-365be24f17d9', 'turn': 45, 'me': {'name': 'mark_snake', 'health': 83, 'length': 5, 'body': [(8, 9), (8, 8), (8, 7), (7, 7), (7, 8)], 'id': 'gs_tC9pfPhSk9YkPwW9KX8S4F4C'}, 'others': [{'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 87, 'length': 8, 'body': [(2, 7), (2, 6), (1, 6), (1, 5), (1, 4), (2, 4), (2, 3), (3, 3)], 'id': 'gs_CwrWVgm7TkTCRjKPBHrYGGvM'}, {'name': 'Lancer', 'health': 81, 'length': 6, 'body': [(8, 5), (8, 6), (7, 6), (6, 6), (6, 5), (5, 5)], 'id': 'gs_xK8yHC4CCxyd6dPWMKbdMwqK'}, {'name': 'soma-mini v1[standard]', 'health': 92, 'length': 6, 'body': [(7, 10), (6, 10), (5, 10), (5, 9), (4, 9), (4, 8)], 'id': 'gs_KkFfKdjSkkGPrgdQMHVFVCjF'}], 'food': [(2, 9), (8, 1)], 'module': 'decision_flow', 'decision_path': ['1vn', 'collision type 2 take risk'], 'next_coord': (7, 9), 'next_move': 'left', 'time': '0.013s'}
     log = {'id': '7cae8151-e0ca-40b1-b60b-28403882d24b', 'turn': 94, 'me': {'name': 'mark_snake', 'health': 91, 'length': 10, 'body': [(4, 2), (5, 2), (6, 2), (6, 3), (7, 3), (8, 3), (8, 2), (8, 1), (9, 1), (9, 0)], 'id': 'gs_KXJjhg9wpbWrPjXCjHhH4gY9'}, 'others': [{'name': 'SmartyRat', 'health': 67, 'length': 6, 'body': [(0, 4), (1, 4), (2, 4), (2, 3), (2, 2), (2, 1)], 'id': 'gs_d4VxbSpWY6BvFrGJkCXpPJKF'}, {'name': 'go-st', 'health': 96, 'length': 13, 'body': [(1, 5), (2, 5), (3, 5), (4, 5), (4, 6), (3, 6), (2, 6), (2, 7), (3, 7), (4, 7), (5, 7), (5, 8), (6, 8)], 'id': 'gs_XKjbYT7pwqSqg64WdXbBXb8F'}, {'name': 'ich heisse marvin', 'health': 97, 'length': 10, 'body': [(8, 8), (9, 8), (9, 7), (8, 7), (8, 6), (7, 6), (7, 5), (6, 5), (6, 4), (5, 4)], 'id': 'gs_tBmxXCM6tRgyrYrb9w4GRwkc'}], 'food': [(1, 10), (0, 3), (1, 7)], 'module': 'decision_flow', 'decision_path': ['1vn', 'take random'], 'next_coord': (4, 3), 'next_move': 'up', 'time': '0.053s'}
+    log = {'id': 'a782046c-0aab-4724-a00f-ff2a6ef48717', 'turn': 109, 'me': {'name': 'mark_snake', 'health': 74, 'length': 7, 'body': [(8, 1), (8, 2), (7, 2), (7, 3), (7, 4), (8, 4), (9, 4)], 'id': 'gs_jdvRr8JpFt6mgjW9JXrtGHyQ'}, 'others': [{'name': 'FerralSnake-standard', 'health': 48, 'length': 10, 'body': [(8, 5), (7, 5), (6, 5), (6, 6), (7, 6), (7, 7), (6, 7), (6, 8), (7, 8), (8, 8)], 'id': 'gs_dyTXQ36MFpFbX7fJBkyJJHPH'}, {'name': 'Copy of snake2_v3_FINAL_final(1)', 'health': 99, 'length': 11, 'body': [(1, 10), (1, 9), (1, 8), (1, 7), (1, 6), (0, 6), (0, 5), (1, 5), (2, 5), (3, 5), (4, 5)], 'id': 'gs_6MjKdYCpQXhBpdcWCrgtYBFf'}, {'name': 'Frank The Tank', 'health': 97, 'length': 12, 'body': [(2, 1), (1, 1), (0, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (4, 1), (5, 1), (6, 1), (6, 2)], 'id': 'gs_q4BwKySjMkdVXvm6WY69vV7H'}], 'food': [(10, 0), (10, 9)], 'module': 'decision_flow', 'decision_path': ['1vn', 'split2 choose spacious'], 'next_coord': (9, 1), 'next_move': 'right', 'time': '0.023s'}
 
 
 
