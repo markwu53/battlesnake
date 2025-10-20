@@ -416,6 +416,7 @@ def main(game_state, log=True, log_db=False):
         piece = take_first(pieces)
 
         terminals = [a for a in piece if is_connected_peice_terminal(a, piece)]
+        if len(terminals) == 0: return
         target_terminal = prefer_by_score(lambda a: path_distance_pq(a, g.me.head))(terminals)
         target_terminal = take_first(target_terminal)
         terminal_moves = shortest_path_move(g.me.head, target_terminal)
