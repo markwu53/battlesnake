@@ -165,6 +165,8 @@ def main(game_state, log=True, log_db=False):
 
             (cond(g.me.length <= 12)(multi_step_collision)),
 
+            move_close_to_open_space,
+
             #do split choice again with lower priority, no length condition
             #split_choice_2,
 
@@ -177,7 +179,6 @@ def main(game_state, log=True, log_db=False):
             #cond(len(g.others) == 1 and g.me.length > g.other.length)(border_go_up),
             cond(len(g.others) == 1 and g.me.length < g.other.length)(border_go_up),
             (cond(g.me.length <= 15)(avoid_single_move)),
-            move_close_to_open_space,
             (cond(g.me.length >= 10)(prefer_less_split)),
             (cond(g.me.length <= 16)(prefer_away_border)),
             split_choice_2,
@@ -385,7 +386,7 @@ def main(game_state, log=True, log_db=False):
         new_territory = list(set([p for p in territory if p not in lost] + gain))
         return new_territory
 
-    def move_close_to_open_space(moves):
+    def move_close_to_open_space2(moves):
         if len(moves) != 3: return
         ngroup = move_connected_group(moves)
         if ngroup != 1: return
@@ -396,6 +397,32 @@ def main(game_state, log=True, log_db=False):
         if path_connected(a,b, occupied): return
         g.decision_path.append("move close to open space")
         return prefer_by_score(lambda a: len(path_connected_set(a, occupied)))([a,b])
+
+    def is_connected_peice_terminal(a, piece):
+        nabors = [b for b in piece if b != a and (is_adjacent(a, b) or distance_vector_abs(a, b) == (1,1))]
+        return len(nabors) == 1
+
+    def move_close_to_open_space(moves):
+        killers = [snake for snake in g.others if snake.length > g.me.length and path_distance_pq(snake.head, g.me.head) <= 6]
+        if len(killers) == 0: return
+
+        ngroup = move_connected_group(moves)
+        if ngroup != 1: return
+
+        territory_border = [a for a in g.me.territory for p in adj_cells(a) if p not in g.me.territory and p not in g.occupied_cells[0]]
+        territory_border = sorted(list(set(territory_border)))
+        pieces = connected_pieces(territory_border)
+        if len(pieces) > 1: return
+        piece = take_first(pieces)
+
+        terminals = [a for a in piece if is_connected_peice_terminal(a, piece)]
+        target_terminal = prefer_by_score(lambda a: path_distance_pq(a, g.me.head))(terminals)
+        target_terminal = take_first(target_terminal)
+        terminal_moves = shortest_path_move(g.me.head, target_terminal)
+        terminal_moves = [a for a in moves if a in terminal_moves]
+        if len(terminal_moves) != 0:
+            g.decision_path.append(f"move close to open space {target_terminal}")
+            return terminal_moves
 
     def prefer_open_space(moves):
         aset = path_connected_set(g.me.head)
@@ -3156,6 +3183,7 @@ if __name__ == "__main__":
     log = {'id': '063831ac-d6f0-48c0-bc0b-5c72709d4b30', 'turn': 115, 'me': {'name': 'mark_snake', 'health': 69, 'length': 11, 'body': [(8, 5), (8, 4), (8, 3), (8, 2), (7, 2), (6, 2), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6)], 'id': 'gs_dfcfgXmmPrdw3ryYJvxmC6bD'}, 'others': [{'name': 'Game of Chicken', 'health': 100, 'length': 16, 'body': [(4, 3), (4, 2), (4, 1), (5, 1), (6, 1), (6, 0), (5, 0), (4, 0), (3, 0), (2, 0), (2, 1), (1, 1), (1, 2), (1, 3), (2, 3), (2, 3)], 'id': 'gs_Q376SmgWhBp78VMMvpFmDFw7'}], 'food': [(10, 0), (2, 4)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (10, 0)'], 'next_coord': (9, 5), 'next_move': 'right', 'time': '0.023s'}
     log = {'id': '4fbc7e52-6417-42a6-b01a-e90e6d5f3f74', 'turn': 87, 'me': {'name': 'mark_snake', 'health': 94, 'length': 10, 'body': [(7, 4), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (7, 8), (6, 8), (5, 8), (4, 8)], 'id': 'gs_jpvGRDm8hYwFYV6bJtcPh8xT'}, 'others': [{'name': 'SmartyRat', 'health': 66, 'length': 6, 'body': [(7, 2), (6, 2), (5, 2), (5, 1), (6, 1), (7, 1)], 'id': 'gs_HqSdqdqgGTTBb4YwHhh6Vv8P'}, {'name': 'go-st', 'health': 34, 'length': 5, 'body': [(2, 3), (2, 2), (2, 1), (2, 0), (3, 0)], 'id': 'gs_Dr8Fy9q4kWhkJR6kDpKjxSY6'}, {'name': 'Red Yarn', 'health': 61, 'length': 10, 'body': [(4, 7), (3, 7), (3, 6), (3, 5), (3, 4), (3, 3), (4, 3), (5, 3), (5, 4), (5, 5)], 'id': 'gs_3CpkJBXS4WKKvMjXwhBWjFwP'}], 'food': [(0, 10), (4, 0), (10, 2), (5, 7)], 'module': 'decision_flow', 'decision_path': ['1vn'], 'next_coord': (7, 5), 'next_move': 'up', 'time': '0.043s'}
     log = {'id': '0d0f3aae-9038-4e65-afff-71145b5a0911', 'turn': 123, 'me': {'name': 'mark_snake', 'health': 95, 'length': 6, 'body': [(3, 10), (3, 9), (2, 9), (1, 9), (0, 9), (0, 8)], 'id': 'gs_mSCCfVVvxDM6pFWCBhxwK7Hd'}, 'others': [{'name': 'snakey_wakey', 'health': 98, 'length': 7, 'body': [(6, 7), (5, 7), (4, 7), (4, 8), (5, 8), (5, 9), (6, 9)], 'id': 'gs_jM9cd3QcHDP3Vy7hT3FMfxQ6'}, {'name': 'ich heisse marvin', 'health': 66, 'length': 11, 'body': [(2, 7), (2, 6), (1, 6), (1, 5), (1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (5, 5), (5, 6)], 'id': 'gs_fvGvwVxV7xVYbFX3FWCqTFQJ'}, {'name': 'Red Yarn', 'health': 76, 'length': 13, 'body': [(3, 2), (2, 2), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3), (8, 4), (8, 5), (8, 6), (9, 6)], 'id': 'gs_HfYHw9gd8dcPGRxW3dyKqf7J'}], 'food': [(5, 10)], 'module': 'decision_flow', 'decision_path': ['1vn', 'multi-step collision [((4, 10), 3)]'], 'next_coord': (2, 10), 'next_move': 'left', 'time': '0.029s'}
+    log = {'id': '04395357-ccbe-420c-91b9-e094c22b4f4e', 'turn': 171, 'me': {'name': 'mark_snake', 'health': 83, 'length': 12, 'body': [(3, 2), (2, 2), (2, 1), (1, 1), (1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (1, 3)], 'id': 'gs_FxSP7HyVJScTh9Qjgh6MJWfH'}, 'others': [{'name': 'slieks', 'health': 91, 'length': 11, 'body': [(9, 10), (10, 10), (10, 9), (10, 8), (10, 7), (9, 7), (9, 8), (9, 9), (8, 9), (8, 8), (7, 8)], 'id': 'gs_7QBcqKmy36ybyJhWbgjw8BmY'}, {'name': 'Prüzze v2', 'health': 69, 'length': 15, 'body': [(2, 5), (1, 5), (1, 6), (2, 6), (2, 7), (2, 8), (2, 9), (3, 9), (3, 8), (4, 8), (5, 8), (5, 7), (5, 6), (4, 6), (3, 6)], 'id': 'gs_mQj4VxDBVJyrqjH8kkWTh8JS'}, {'name': 'Natterlie', 'health': 95, 'length': 16, 'body': [(6, 5), (7, 5), (8, 5), (8, 6), (9, 6), (9, 5), (9, 4), (9, 3), (8, 3), (7, 3), (7, 4), (6, 4), (6, 3), (6, 2), (6, 1), (7, 1)], 'id': 'gs_XSGpD6RRcBkv9btmDQWjVh4W'}], 'food': [(8, 4), (4, 5)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('slieks', 2, (7, 10))]", 'move close to open space'], 'next_coord': (3, 1), 'next_move': 'down', 'time': '0.023s'}
 
 
 
