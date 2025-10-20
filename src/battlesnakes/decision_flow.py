@@ -164,8 +164,8 @@ def main(game_state, log=True, log_db=False):
 
             (get_food),
 
-            cond(len(g.others) == 1 and g.me.length <= g.other.length)(chase_my_tail_body),
             (cond(g.me.length <= 12)(multi_step_collision)),
+            cond(len(g.others) == 1 and g.me.length <= g.other.length)(chase_my_tail_body),
 
             move_close_to_open_space,
 
