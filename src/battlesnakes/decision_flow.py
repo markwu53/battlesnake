@@ -179,7 +179,7 @@ def main(game_state, log=True, log_db=False):
 
             #cond(len(g.others) == 1 and g.me.length > g.other.length)(border_go_up),
             cond(len(g.others) == 1 and g.me.length < g.other.length)(border_go_up),
-            cond(len(g.others) == 1 and g.me.length <= g.other.length)(chase_my_tail_body),
+            #cond(len(g.others) == 1 and g.me.length <= g.other.length)(chase_my_tail_body),
             (cond(g.me.length <= 15)(avoid_single_move)),
             (cond(g.me.length >= 10)(prefer_less_split)),
             (cond(g.me.length <= 16)(prefer_away_border)),
@@ -190,9 +190,8 @@ def main(game_state, log=True, log_db=False):
             #this is not accurate, so put in very low priority
             (cond(g.me.length < 10 and len(g.others) >= 2)(prefer_open_space)),
 
-            message("test"),
-            #prefer(is_straight),
-            take_random,
+            prefer(is_straight),
+            #take_random,
 
             id,
         ])(moves)
@@ -3236,6 +3235,7 @@ if __name__ == "__main__":
     log = {'id': 'ece100ea-5cd4-4fd9-98e8-667195dfd046', 'turn': 40, 'me': {'name': 'mark_snake', 'health': 84, 'length': 6, 'body': [(0, 8), (1, 8), (2, 8), (2, 9), (2, 10), (3, 10)], 'id': 'gs_6YWCC68QW9Cfk94Ch8TR4hWC'}, 'others': [{'name': 'snakey_wakey', 'health': 78, 'length': 7, 'body': [(3, 7), (4, 7), (5, 7), (5, 6), (5, 5), (5, 4), (5, 3)], 'id': 'gs_FrWc7yy9cwJ8DfMGP8GygM7f'}, {'name': 'Natterlie', 'health': 100, 'length': 8, 'body': [(4, 10), (4, 9), (5, 9), (6, 9), (6, 8), (7, 8), (7, 7), (7, 7)], 'id': 'gs_tR9tVrK8Q68KPmSSDPScScST'}, {'name': 'ich heisse marvin', 'health': 81, 'length': 5, 'body': [(1, 5), (1, 6), (1, 7), (2, 7), (2, 6)], 'id': 'gs_DmmYgCGyrvBGVKY9WBRVXYJ8'}], 'food': [(1, 2)], 'module': 'decision_flow', 'decision_path': ['1vn', 'multi-step collision [((0, 9), 3)]'], 'next_coord': (0, 7), 'next_move': 'down', 'time': '0.016s'}
     log = {'id': '430340b8-717c-4cdc-b24b-ed62fca73353', 'turn': 18, 'me': {'name': 'mark_snake', 'health': 86, 'length': 4, 'body': [(4, 8), (5, 8), (6, 8), (7, 8)], 'id': 'gs_td8RDkccFKTP7yCbGdWxbKY6'}, 'others': [{'name': 'Wim HU', 'health': 84, 'length': 4, 'body': [(7, 7), (8, 7), (9, 7), (9, 6)], 'id': 'gs_BHg7CPjVWcXC4cPRCh4HRMhT'}, {'name': 'Lancer', 'health': 95, 'length': 5, 'body': [(8, 4), (8, 3), (8, 2), (8, 1), (7, 1)], 'id': 'gs_6f64QXXb3dhWvY4DrqdwV4T6'}, {'name': 'Natterlie', 'health': 100, 'length': 6, 'body': [(2, 6), (2, 5), (3, 5), (4, 5), (4, 4), (4, 4)], 'id': 'gs_wkTpVYmpwjbRhpf8TpKtVDJB'}], 'food': [(9, 8)], 'module': 'decision_flow', 'decision_path': ['1vn', 'go to open space (6, 9)', 'take random'], 'next_coord': (4, 7), 'next_move': 'down', 'time': '0.175s'}
     log = {'id': '5d3ace4b-3fda-4a44-aa6d-ce0cd37ddf5e', 'turn': 186, 'me': {'name': 'mark_snake', 'health': 97, 'length': 13, 'body': [(6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (9, 8), (9, 7), (9, 6), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2)], 'id': 'gs_qYjDSHkxKHTMbh3gFhQT773M'}, 'others': [{'name': 'Jeremy', 'health': 90, 'length': 18, 'body': [(2, 6), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (3, 1), (2, 1), (2, 2), (3, 2), (3, 3), (4, 3)], 'id': 'gs_Kqh37Sd6Q8QDVPXrVCRdrb97'}], 'food': [(5, 9), (3, 6)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (5, 9)', 'chase my tail via body (9, 8) detour'], 'next_coord': (5, 10), 'next_move': 'left', 'time': '0.041s'}
+    log = {'id': '179a1acf-f4ca-4682-b741-a3491a9fdf8c', 'turn': 204, 'me': {'name': 'mark_snake', 'health': 88, 'length': 12, 'body': [(9, 9), (8, 9), (7, 9), (6, 9), (6, 10), (5, 10), (5, 9), (5, 8), (5, 7), (6, 7), (7, 7), (8, 7)], 'id': 'gs_6HjDDrBK6kdtRSGYjh3fjqYc'}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'length': 18, 'body': [(5, 1), (5, 0), (4, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (3, 9), (2, 9), (2, 10), (1, 10)], 'id': 'gs_QSKJmyGpBjpMpk6hSgR87KqQ'}], 'food': [(10, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase my tail via body (6, 9) detour', 'take random'], 'next_coord': (9, 10), 'next_move': 'up', 'time': '0.024s'}
 
 
 
