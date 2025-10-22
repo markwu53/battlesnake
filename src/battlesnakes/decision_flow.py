@@ -413,6 +413,7 @@ def main(game_state, log=True, log_db=False):
 
         territory_border = [a for a in g.me.territory for p in adj_cells(a) if p not in g.me.territory and p not in g.occupied_cells[0]]
         territory_border = sorted(list(set(territory_border)))
+        if len(territory_border) == 0: return
         pieces = connected_pieces(territory_border)
         if len(pieces) != 1: return
         piece = take_first(pieces)
