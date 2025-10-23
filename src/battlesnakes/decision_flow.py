@@ -84,7 +84,7 @@ def main(game_state, log=True, log_db=False):
             (collision_cut_oppotunity),
 
             (suppressed_chasing_kill_oppotunity),
-            (trap_kill_oppotunity),
+            #(trap_kill_oppotunity),
 
             (prefer_not(entering_danger(suppressed_chasing_kill_situation))),
             (prefer_not(entering_danger(border_confront_kill_situation))),
@@ -95,6 +95,8 @@ def main(game_state, log=True, log_db=False):
             #two step collision mean crowded, don't go
             (cond(len(g.others) > 1)(avoid_two_step_collision)),
 
+            (cond(g.me.length >= 10)(split_choice)),
+
             (cut_kill_oppotunity),
             general_suppressed_chasing_kill_oppotunity,
 
@@ -103,9 +105,10 @@ def main(game_state, log=True, log_db=False):
             border_confront_kill_oppotunity,
             general_confront_kill_oppotunity,
 
+
             partial_cut_oppotunity,
 
-            (cond(g.me.length >= 12)(split_choice)),
+            #(cond(g.me.length >= 12)(split_choice)),
             (cond(len(g.others) == 1)(split_choice)),
 
             cond(g.me.health < 20)(get_food),
@@ -125,7 +128,7 @@ def main(game_state, log=True, log_db=False):
 
             (cond(g.me.length > 8)(avoid_next_step_confinement)),
             avoid_two_snake_trap,
-            (cond(10 <= g.me.length < 12)(split_choice)),
+            #(cond(10 <= g.me.length < 12)(split_choice)),
             #cond(7 <= g.me.length <= 9)(collision_take_risk),
             (cond(g.me.length <= 10)(multi_step_collision)),
 
