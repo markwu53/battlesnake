@@ -1510,6 +1510,7 @@ def main(game_state, log=True, log_db=False):
         if min_dist == 999:
             return
         killer = take_first([snake for snake, dist in distances if dist == min_dist])
+        others = [snake for snake in g.others if snake.head != killer.head]
         danger_set = []
         for a in moves:
             me2 = possible_next_state(g.me, a)
@@ -1544,6 +1545,7 @@ def main(game_state, log=True, log_db=False):
 
                 #no tails
                 if any([snake.tail in oset for snake in [me2, snake2]]): continue
+                if any([snake.body[-2] in oset for snake in others]): continue
 
                 #trimmed
                 indexes = [i for i,c in enumerate(me2.body) if c != me2.tail and any([p in oset for p in adj_cells(c)])]
@@ -1998,7 +2000,8 @@ def main(game_state, log=True, log_db=False):
                     attack_vulnerables_equal_distance,
                     (attack_vulnerables_distance_2),
                     attack_vulnerables_path_distance_2,
-                    (attack_vulnerables_distance_4),
+                    #disable this
+                    #(attack_vulnerables_distance_4),
                     (attack_vulnerables_distance_excess),
                     (attack_vulnerables_negative_distance),
                 ])(moves)
@@ -2128,6 +2131,17 @@ def main(game_state, log=True, log_db=False):
     def trap_kill_oppotunity(moves):
         for snake in g.others:
             if trap_kill_situation(g.me, snake):
+                if any([on_border(c) for c in g.me.body if c != g.me.head]):
+                    #trap is done
+                    continue
+                if on_border(g.me.head):
+                    #trap just made, don't go back
+                    if len(moves) != 2: continue
+                    if not all([on_border(a) for a in moves ]): continue
+                    moves = [a for a in moves if not path_connected(a, snake.head)]
+                    if len(moves) != 0:
+                        g.decision_path.append(f"avoid going back after trap kill {snake.name}")
+                        return moves
                 trap_kill = [a for a in moves if on_border(a)]
                 if len(trap_kill) != 0:
                     g.decision_path.append(f"make trap kill {snake.name}")
@@ -2138,18 +2152,15 @@ def main(game_state, log=True, log_db=False):
                     return preserve_trap
 
     def trap_kill_situation(killer: Snake, target: Snake):
-        if off_border_1(killer.head):
-            for i,c in enumerate(killer.body):
-                if c in killer.body[-1:]: continue
-                if c == killer.head: continue
-                if not is_adjacent(target.head, c): continue
-                if not on_border(target.head): continue
-                if on_border(c): continue
-                b = killer.body[i-1]
-                if get_adjacent_dir(c, b) == get_adjacent_dir(target.neck, target.head):
-                    if not any([on_border(killer.body[j]) for j in range(i)]):
-                        #an open trap
-                        return True
+        for i,c in enumerate(killer.body):
+            if c in killer.body[-1:]: continue
+            if c == killer.head: continue
+            if not is_adjacent(target.head, c): continue
+            if not on_border(target.head): continue
+            if on_border(c): continue
+            b = killer.body[i-1]
+            if get_adjacent_dir(c, b) == get_adjacent_dir(target.neck, target.head):
+                return True
         return False
 
     def border_confront_kill_oppotunity(moves):
@@ -3239,6 +3250,8 @@ if __name__ == "__main__":
     log = {'id': '5d3ace4b-3fda-4a44-aa6d-ce0cd37ddf5e', 'turn': 186, 'me': {'name': 'mark_snake', 'health': 97, 'length': 13, 'body': [(6, 10), (7, 10), (8, 10), (9, 10), (9, 9), (9, 8), (9, 7), (9, 6), (10, 6), (10, 5), (10, 4), (10, 3), (10, 2)], 'id': 'gs_qYjDSHkxKHTMbh3gFhQT773M'}, 'others': [{'name': 'Jeremy', 'health': 90, 'length': 18, 'body': [(2, 6), (1, 6), (1, 5), (1, 4), (1, 3), (1, 2), (1, 1), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (3, 1), (2, 1), (2, 2), (3, 2), (3, 3), (4, 3)], 'id': 'gs_Kqh37Sd6Q8QDVPXrVCRdrb97'}], 'food': [(5, 9), (3, 6)], 'module': 'decision_flow', 'decision_path': ['1v1', 'get food (5, 9)', 'chase my tail via body (9, 8) detour'], 'next_coord': (5, 10), 'next_move': 'left', 'time': '0.041s'}
     log = {'id': '179a1acf-f4ca-4682-b741-a3491a9fdf8c', 'turn': 204, 'me': {'name': 'mark_snake', 'health': 88, 'length': 12, 'body': [(9, 9), (8, 9), (7, 9), (6, 9), (6, 10), (5, 10), (5, 9), (5, 8), (5, 7), (6, 7), (7, 7), (8, 7)], 'id': 'gs_6HjDDrBK6kdtRSGYjh3fjqYc'}, 'others': [{'name': 'Frank The Tank', 'health': 99, 'length': 18, 'body': [(5, 1), (5, 0), (4, 0), (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (3, 9), (2, 9), (2, 10), (1, 10)], 'id': 'gs_QSKJmyGpBjpMpk6hSgR87KqQ'}], 'food': [(10, 0)], 'module': 'decision_flow', 'decision_path': ['1v1', 'chase my tail via body (6, 9) detour', 'take random'], 'next_coord': (9, 10), 'next_move': 'up', 'time': '0.024s'}
     log = {'id': 'f87c82f3-5e42-4555-916b-4b66962b187e', 'turn': 55, 'me': {'name': 'mark_snake', 'health': 76, 'length': 6, 'body': [(3, 4), (4, 4), (4, 5), (4, 6), (3, 6), (2, 6)], 'id': 'gs_f8jg7Sp8M3cWWVhQb63hhKMS'}, 'others': [{'name': 'SmartyRat', 'health': 55, 'length': 4, 'body': [(8, 7), (9, 7), (9, 8), (8, 8)], 'id': 'gs_QtQDTxq9yHbd88WtHHw4mCyH'}, {'name': 'soma-mini v1[standard]', 'health': 99, 'length': 6, 'body': [(6, 3), (5, 3), (5, 4), (5, 5), (6, 5), (7, 5)], 'id': 'gs_tpMc3TKRSQbd6FDTTqPF9pxP'}, {'name': 'Red Yarn', 'health': 95, 'length': 7, 'body': [(2, 3), (1, 3), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0)], 'id': 'gs_KTm3dghFBCTffYmTfwTGcCmb'}], 'food': [(7, 1)], 'module': 'decision_flow', 'decision_path': ['1vn', 'collision type 2 take risk'], 'next_coord': (3, 3), 'next_move': 'down', 'time': '0.023s'}
+    log = {'id': '64e83e38-7b34-473f-abfc-aaef98921c7b', 'turn': 178, 'me': {'name': 'mark_snake', 'health': 44, 'length': 15, 'body': [(3, 7), (3, 8), (3, 9), (4, 9), (5, 9), (5, 8), (6, 8), (6, 7), (5, 7), (4, 7), (4, 6), (5, 6), (6, 6), (6, 5), (5, 5)], 'id': 'gs_h6krYPySKCmCv78rkdxBSFMG'}, 'others': [{'name': 'SmartyRat', 'health': 93, 'length': 9, 'body': [(0, 10), (1, 10), (2, 10), (2, 9), (2, 8), (1, 8), (1, 7), (1, 6), (2, 6)], 'id': 'gs_MR4hGCrCGg9m48TKPq347cCR'}, {'name': 'go-st', 'health': 99, 'length': 15, 'body': [(6, 4), (7, 4), (7, 5), (8, 5), (9, 5), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (8, 1), (8, 2)], 'id': 'gs_hrVx9HwkKDDrHVyKTjg8f7QW'}, {'name': 'soma-mini v1[standard]', 'health': 89, 'length': 12, 'body': [(5, 3), (5, 2), (5, 1), (4, 1), (4, 2), (3, 2), (2, 2), (2, 1), (3, 1), (3, 0), (4, 0), (5, 0)], 'id': 'gs_GQwdcScDc86Kbpt4j4TRpj8R'}], 'food': [(8, 0), (8, 9)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('SmartyRat', 1, (0, 9))]", 'attack vulnerables'], 'next_coord': (2, 7), 'next_move': 'left', 'time': '0.015s'}
+    log = {'id': '690ec022-ff55-4b11-99a7-2ec4377b307f', 'turn': 164, 'me': {'name': 'mark_snake', 'health': 92, 'length': 11, 'body': [(6, 0), (6, 1), (6, 2), (7, 2), (8, 2), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (8, 6)], 'id': 'gs_MSqcxBBwvKvc4wjcBvjG4kBQ'}, 'others': [{'name': 'CrystalSnake1', 'health': 66, 'length': 15, 'body': [(10, 4), (10, 5), (10, 6), (10, 7), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (7, 8), (7, 7), (6, 7), (5, 7), (5, 8), (5, 9)], 'id': 'gs_xRhJJqkY4WSBmxTx36MtCVpc'}], 'food': [(9, 0), (6, 4)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('CrystalSnake1', 3, (10, 1))]", 'preliminary cut kill target: CrystalSnake1', 'go cut to (8, 1)'], 'next_coord': (7, 0), 'next_move': 'right', 'time': '0.007s'}
 
 
 
