@@ -1,6 +1,7 @@
 import time
 import sqlite3
 import random
+import math
 
 class Snake:
     def __init__(self, name, body, health, id=None):
@@ -169,6 +170,7 @@ def main(game_state, log=True, log_db=False):
 
             (cond(g.me.length <= 12)(multi_step_collision)),
 
+            cond(len(g.others) == 1 and g.me.length < g.other.length)(shorter_direct_connect),
             move_close_to_open_space,
 
             #do split choice again with lower priority, no length condition
@@ -403,9 +405,77 @@ def main(game_state, log=True, log_db=False):
         g.decision_path.append("move close to open space")
         return prefer_by_score(lambda a: len(path_connected_set(a, occupied)))([a,b])
 
-    def is_connected_peice_terminal(a, piece):
+    def is_connected_piece_terminal(a, piece):
+        if len(piece) == 1: return True
         nabors = [b for b in piece if b != a and (is_adjacent(a, b) or distance_vector_abs(a, b) == (1,1))]
         return len(nabors) == 1
+
+    def cosine_angle(s1, s2, s3):
+        #s1, s2, s3 are sides length
+        #find angle between s1 and s2
+        if s1 == 0 or s2 == 0: return 0
+        cos_angle = (s1**2 + s2**2 - s3**2) / (2 * s1 * s2)
+        return cos_angle
+
+    def shorter_direct_connect(moves):
+        #used in 1v1 and shorter
+        if path_distance_pq(g.other.head, g.me.head) != distance_pq(g.other.head, g.me.head): return
+        ngroup = move_connected_group(moves)
+        if ngroup != 1: return
+
+        territory_border = [a for a in g.me.territory for p in adj_cells(a) if p not in g.me.territory and p not in g.occupied_cells[0]]
+        territory_border = sorted(list(set(territory_border)))
+        if len(territory_border) == 0: return
+        pieces = connected_pieces(territory_border)
+        if len(pieces) != 1: return
+        piece = take_first(pieces)
+
+        terminals = [a for a in piece if is_connected_piece_terminal(a, piece)]
+        if len(terminals) == 0: return
+        target_terminal = prefer_by_score(lambda a: path_distance_pq(a, g.me.head))(terminals)
+        target_terminal = take_first(target_terminal)
+        terminal_moves = shortest_path_move(g.me.head, target_terminal)
+        if len(terminal_moves) == 1:
+            return terminal_moves
+        x0,y0 = g.me.head
+        x1,y1 = target_terminal
+        v1 = (x0,y1)
+        v2 = (x1,y0)
+        length_other_head_to_terminal = math.sqrt((x1 - g.other.head[0])**2 + (y1 - g.other.head[1])**2)
+        length_other_head_to_v1 = math.sqrt((v1[0] - g.other.head[0])**2 + (v1[1] - g.other.head[1])**2)
+        length_other_head_to_v2 = math.sqrt((v2[0] - g.other.head[0])**2 + (v2[1] - g.other.head[1])**2)
+        length_terminal_to_v1 = math.sqrt((x1 - v1[0])**2 + (y1 - v1[1])**2)
+        length_terminal_to_v2 = math.sqrt((x1 - v2[0])**2 + (y1 - v2[1])**2)
+        if abs(length_other_head_to_v1 - (length_other_head_to_terminal + length_terminal_to_v1)) < 0.1:
+            v2_moves = shortest_path_move(g.me.head, v2)
+            terminal_moves = [a for a in terminal_moves if a in v2_moves]
+            if len(terminal_moves) != 0:
+                g.decision_path.append(f"move close to open space {target_terminal} via v2")
+                return terminal_moves
+        elif abs(length_other_head_to_v2 - (length_other_head_to_terminal + length_terminal_to_v2)) < 0.1:
+            v1_moves = shortest_path_move(g.me.head, v1)
+            terminal_moves = [a for a in terminal_moves if a in v1_moves]
+            if len(terminal_moves) != 0:
+                g.decision_path.append(f"move close to open space {target_terminal} via v1")
+                return terminal_moves
+        else:
+            #prefer v to terminal that is more perpendicular to other head to terminal line
+            cos1 = cosine_angle(length_other_head_to_terminal, length_terminal_to_v1, length_other_head_to_v1)
+            cos2 = cosine_angle(length_other_head_to_terminal, length_terminal_to_v2, length_other_head_to_v2)
+            cos1 = abs(cos1)
+            cos2 = abs(cos2)
+            if cos1 < cos2:
+                v1_moves = shortest_path_move(g.me.head, v1)
+                terminal_moves = [a for a in terminal_moves if a in v1_moves]
+                if len(terminal_moves) != 0:
+                    g.decision_path.append(f"move close to open space {target_terminal} via v1 prefer")
+                    return terminal_moves
+            else:
+                v2_moves = shortest_path_move(g.me.head, v2)
+                terminal_moves = [a for a in terminal_moves if a in v2_moves]
+                if len(terminal_moves) != 0:
+                    g.decision_path.append(f"move close to open space {target_terminal} via v2 prefer")
+                    return terminal_moves
 
     def move_close_to_open_space(moves):
         killers = [snake for snake in g.others if snake.length > g.me.length and path_distance_pq(snake.head, g.me.head) <= 6]
@@ -421,7 +491,7 @@ def main(game_state, log=True, log_db=False):
         if len(pieces) != 1: return
         piece = take_first(pieces)
 
-        terminals = [a for a in piece if is_connected_peice_terminal(a, piece)]
+        terminals = [a for a in piece if is_connected_piece_terminal(a, piece)]
         if len(terminals) == 0: return
         target_terminal = prefer_by_score(lambda a: path_distance_pq(a, g.me.head))(terminals)
         target_terminal = take_first(target_terminal)
@@ -3255,6 +3325,7 @@ if __name__ == "__main__":
     log = {'id': 'f87c82f3-5e42-4555-916b-4b66962b187e', 'turn': 55, 'me': {'name': 'mark_snake', 'health': 76, 'length': 6, 'body': [(3, 4), (4, 4), (4, 5), (4, 6), (3, 6), (2, 6)], 'id': 'gs_f8jg7Sp8M3cWWVhQb63hhKMS'}, 'others': [{'name': 'SmartyRat', 'health': 55, 'length': 4, 'body': [(8, 7), (9, 7), (9, 8), (8, 8)], 'id': 'gs_QtQDTxq9yHbd88WtHHw4mCyH'}, {'name': 'soma-mini v1[standard]', 'health': 99, 'length': 6, 'body': [(6, 3), (5, 3), (5, 4), (5, 5), (6, 5), (7, 5)], 'id': 'gs_tpMc3TKRSQbd6FDTTqPF9pxP'}, {'name': 'Red Yarn', 'health': 95, 'length': 7, 'body': [(2, 3), (1, 3), (0, 3), (0, 2), (0, 1), (0, 0), (1, 0)], 'id': 'gs_KTm3dghFBCTffYmTfwTGcCmb'}], 'food': [(7, 1)], 'module': 'decision_flow', 'decision_path': ['1vn', 'collision type 2 take risk'], 'next_coord': (3, 3), 'next_move': 'down', 'time': '0.023s'}
     log = {'id': '64e83e38-7b34-473f-abfc-aaef98921c7b', 'turn': 178, 'me': {'name': 'mark_snake', 'health': 44, 'length': 15, 'body': [(3, 7), (3, 8), (3, 9), (4, 9), (5, 9), (5, 8), (6, 8), (6, 7), (5, 7), (4, 7), (4, 6), (5, 6), (6, 6), (6, 5), (5, 5)], 'id': 'gs_h6krYPySKCmCv78rkdxBSFMG'}, 'others': [{'name': 'SmartyRat', 'health': 93, 'length': 9, 'body': [(0, 10), (1, 10), (2, 10), (2, 9), (2, 8), (1, 8), (1, 7), (1, 6), (2, 6)], 'id': 'gs_MR4hGCrCGg9m48TKPq347cCR'}, {'name': 'go-st', 'health': 99, 'length': 15, 'body': [(6, 4), (7, 4), (7, 5), (8, 5), (9, 5), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (10, 0), (9, 0), (9, 1), (8, 1), (8, 2)], 'id': 'gs_hrVx9HwkKDDrHVyKTjg8f7QW'}, {'name': 'soma-mini v1[standard]', 'health': 89, 'length': 12, 'body': [(5, 3), (5, 2), (5, 1), (4, 1), (4, 2), (3, 2), (2, 2), (2, 1), (3, 1), (3, 0), (4, 0), (5, 0)], 'id': 'gs_GQwdcScDc86Kbpt4j4TRpj8R'}], 'food': [(8, 0), (8, 9)], 'module': 'decision_flow', 'decision_path': ['1vn', "vulnerable snakes: [('SmartyRat', 1, (0, 9))]", 'attack vulnerables'], 'next_coord': (2, 7), 'next_move': 'left', 'time': '0.015s'}
     log = {'id': '690ec022-ff55-4b11-99a7-2ec4377b307f', 'turn': 164, 'me': {'name': 'mark_snake', 'health': 92, 'length': 11, 'body': [(6, 0), (6, 1), (6, 2), (7, 2), (8, 2), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (8, 6)], 'id': 'gs_MSqcxBBwvKvc4wjcBvjG4kBQ'}, 'others': [{'name': 'CrystalSnake1', 'health': 66, 'length': 15, 'body': [(10, 4), (10, 5), (10, 6), (10, 7), (9, 7), (9, 8), (9, 9), (8, 9), (7, 9), (7, 8), (7, 7), (6, 7), (5, 7), (5, 8), (5, 9)], 'id': 'gs_xRhJJqkY4WSBmxTx36MtCVpc'}], 'food': [(9, 0), (6, 4)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('CrystalSnake1', 3, (10, 1))]", 'preliminary cut kill target: CrystalSnake1', 'go cut to (8, 1)'], 'next_coord': (7, 0), 'next_move': 'right', 'time': '0.007s'}
+    log = {'id': 'e31d0b7d-362e-4846-99f4-e71dede70d2a', 'turn': 329, 'me': {'name': 'mark_snake', 'health': 95, 'length': 24, 'body': [(1, 0), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (1, 7), (1, 8), (1, 9), (1, 10), (2, 10), (3, 10), (4, 10), (4, 9), (4, 8), (4, 7), (4, 6), (4, 5), (4, 4), (4, 3), (4, 2)], 'id': 'gs_cmHk7tCXmMkM3JVfXH3jqVh6'}, 'others': [{'name': 'Geriatric Jagwire', 'health': 91, 'length': 26, 'body': [(5, 10), (6, 10), (6, 9), (6, 8), (6, 7), (6, 6), (7, 6), (7, 7), (7, 8), (8, 8), (8, 7), (9, 7), (10, 7), (10, 6), (9, 6), (9, 5), (8, 5), (7, 5), (6, 5), (6, 4), (6, 3), (6, 2), (6, 1), (6, 0), (5, 0), (4, 0)], 'id': 'gs_6SYpg9tCjWfkrfFF9bfc6BTD'}], 'food': [(0, 10)], 'module': 'decision_flow', 'decision_path': ['1v1', "vulnerable snakes: [('Geriatric Jagwire', 4, (5, 6))]", "vulnerable but I'm short"], 'next_coord': (2, 0), 'next_move': 'right', 'time': '0.006s'}
 
 
 
