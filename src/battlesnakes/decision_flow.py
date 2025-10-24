@@ -1275,10 +1275,11 @@ def main(game_state, log=True, log_db=False):
         if len(collision) == 0: return
         collision = take_first(collision)
 
+        if len(g.others) > 1 and path_distance_pq(avoid, g.me.tail) <= 2:
+            g.decision_path.append("collision type 2 take avoid point loop tail")
+            return [avoid]
+
         if len(g.others) > 1 and sum(distance_to_border(avoid)) <= 2:
-            if path_distance_pq(avoid, g.me.tail) <= 2:
-                g.decision_path.append("collision type 2 take avoid point near tail")
-                return [avoid]
             g.decision_path.append("collision type 2 take risk")
             return [collision]
 
