@@ -3246,7 +3246,7 @@ def main(game_state, log=True, log_db=False):
     if log_db:
         init_db()
 
-    g.log["module"] = "decision_flow"
+    g.log["module"] = "decision_flow - github"
     start_time = time.time()
     #g.e.localtime = time.localtime()
 
