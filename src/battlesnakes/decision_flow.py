@@ -76,7 +76,7 @@ def main(game_state, log=True, log_db=False):
             (split_avoid_confinement),
 
             (type_1_collision),
-            
+ 
             #looks not useful, disable it
             #(cond(g.me.length >= 7)(avoid_serious_cut_danger)),
 
@@ -1293,7 +1293,9 @@ def main(game_state, log=True, log_db=False):
         if len(avoid) == 0: return
         avoid = take_first(avoid)
         middle = ([a for a in moves if distance_vector_abs(a, avoid) == (1,1)])
-        collision = ([a for a in moves if a != avoid and a not in middle])
+        if len(middle) == 0: return
+        middle = take_first(middle)
+        collision = ([a for a in moves if a != avoid and a != middle])
         if len(collision) == 0: return
         collision = take_first(collision)
 
@@ -1303,7 +1305,7 @@ def main(game_state, log=True, log_db=False):
 
         if len(g.others) > 1 and sum(distance_to_border(avoid)) <= 2:
             g.decision_path.append("collision type 2 take risk")
-            return [collision]
+            return prefer_by_rank(lambda a: sum(distance_to_border(a)))([collision, middle])
 
         cut_set = [p for a in g.me.territory for p in adj_cells(a) if p not in g.me.territory and p in g.me.head_space]
         cut_set = sorted(list(set(cut_set)))
@@ -3339,6 +3341,7 @@ if __name__ == "__main__":
     log = {'id': '7ec16231-8599-443a-8e4a-d831c5089f71', 'turn': 181, 'me': {'name': 'mark_snake', 'health': 81, 'length': 12, 'body': [(4, 5), (4, 6), (5, 6), (6, 6), (7, 6), (8, 6), (9, 6), (9, 5), (8, 5), (7, 5), (6, 5), (6, 4)], 'id': 'gs_KMSjQTvg6wM9V4hrTpRBgVRW'}, 'others': [{'name': 'go-st', 'health': 62, 'length': 12, 'body': [(6, 1), (6, 2), (7, 2), (7, 3), (7, 4), (8, 4), (8, 3), (9, 3), (10, 3), (10, 2), (10, 1), (9, 1)], 'id': 'gs_MBmvbP7BW4VSCFqHCddTQhbF'}, {'name': 'ich heisse marvin', 'health': 99, 'length': 13, 'body': [(2, 7), (2, 8), (3, 8), (4, 8), (4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (8, 8), (8, 7), (7, 7), (6, 7)], 'id': 'gs_9GDxFvBMvwwCTJWbxjB8jJQd'}, {'name': '@~~~~@', 'health': 92, 'length': 16, 'body': [(5, 4), (5, 3), (4, 3), (3, 3), (3, 2), (3, 1), (2, 1), (2, 0), (1, 0), (1, 1), (1, 2), (2, 2), (2, 3), (2, 4), (3, 4), (3, 5)], 'id': 'gs_KVwRDtMf7FpY4R9f9mHjfPdQ'}], 'food': [(0, 7), (1, 5)], 'module': 'decision_flow', 'decision_path': ['1vn', 'avoid two step collision'], 'next_coord': (4, 4), 'next_move': 'down', 'time': '0.011s'}
     log = {'id': 'd40f57cc-4f44-40bb-80a0-a1ec543b39d9', 'turn': 108, 'me': {'name': 'mark_snake', 'health': 67, 'length': 10, 'body': [(1, 5), (1, 4), (1, 3), (1, 2), (2, 2), (2, 1), (3, 1), (3, 2), (3, 3), (3, 4)], 'id': 'gs_Qbtt4c9wvvMDCVKcMT6CfQ94'}, 'others': [{'name': 'Lancer', 'health': 98, 'length': 13, 'body': [(6, 2), (6, 3), (7, 3), (7, 4), (7, 5), (8, 5), (9, 5), (10, 5), (10, 4), (10, 3), (10, 2), (10, 1), (9, 1)], 'id': 'gs_KfbHjv9gSmTRMHJp4tT4rRCR'}, {'name': 'go-st', 'health': 86, 'length': 11, 'body': [(4, 6), (5, 6), (6, 6), (6, 7), (7, 7), (8, 7), (8, 8), (8, 9), (7, 9), (6, 9), (5, 9)], 'id': 'gs_8QgFTWhDTSSfctGbwyYKwDvb'}, {'name': 'soma-mini v1[standard]', 'health': 83, 'length': 8, 'body': [(4, 4), (5, 4), (5, 3), (5, 2), (5, 1), (5, 0), (4, 0), (4, 1)], 'id': 'gs_qxrybVrGYtrGHm3VfyXXDwc6'}], 'food': [(3, 5), (10, 6)], 'module': 'decision_flow - github', 'decision_path': ['1vn'], 'next_coord': (2, 5), 'next_move': 'right', 'time': '0.041s'}
     log = {'id': 'c30f7bab-0842-4b0c-b7dc-5f3cab6c9549', 'turn': 101, 'me': {'name': 'mark_snake', 'health': 90, 'length': 8, 'body': [(3, 6), (3, 7), (2, 7), (2, 8), (3, 8), (4, 8), (5, 8), (5, 7)], 'id': 'gs_RXybRyPjC3rC9XWQYqvbxHBB'}, 'others': [{'name': 'Wim HU', 'health': 92, 'length': 10, 'body': [(5, 6), (6, 6), (6, 7), (6, 8), (7, 8), (7, 7), (7, 6), (7, 5), (7, 4), (8, 4)], 'id': 'gs_xj9kk6JB6hKhpmxMhYDPGVX8'}, {'name': 'Lancer', 'health': 86, 'length': 11, 'body': [(1, 10), (1, 9), (2, 9), (3, 9), (4, 9), (5, 9), (6, 9), (7, 9), (7, 10), (6, 10), (5, 10)], 'id': 'gs_4Vg49FvSptwG7BYS6494HJCG'}, {'name': 'Cutiee', 'health': 76, 'length': 13, 'body': [(0, 5), (1, 5), (2, 5), (3, 5), (3, 4), (3, 3), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2), (7, 3), (6, 3)], 'id': 'gs_yRRjWQWrwW4Qq6GPcyDBj6SW'}], 'food': [(2, 1)], 'module': 'decision_flow - github', 'decision_path': ['1vn'], 'next_coord': (4, 6), 'next_move': 'right', 'time': '0.001s'}
+    log = {'id': 'b4043864-5a79-4cc2-968c-c4bef3fee2a2', 'turn': 99, 'me': {'name': 'mark_snake', 'health': 100, 'length': 8, 'body': [(8, 9), (7, 9), (6, 9), (5, 9), (4, 9), (4, 8), (4, 7), (4, 7)], 'id': 'gs_9pXffyjrCPMSrc7V3chDRMBC'}, 'others': [{'name': 'Kakemonsteret-v2', 'health': 86, 'length': 10, 'body': [(8, 1), (8, 2), (9, 2), (9, 1), (9, 0), (10, 0), (10, 1), (10, 2), (10, 3), (10, 4)], 'id': 'gs_FjxMHBy3cgFDG4XmQrpxSjvP'}, {'name': 'snakey_wakey', 'health': 93, 'length': 13, 'body': [(9, 8), (9, 7), (9, 6), (9, 5), (9, 4), (9, 3), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (7, 7), (6, 7)], 'id': 'gs_36dhvhYr9YPDVVjkjxFKqJVM'}, {'name': 'Wim HU', 'health': 66, 'length': 9, 'body': [(3, 0), (4, 0), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (7, 3), (7, 4)], 'id': 'gs_jM7XBvVmpVdwvGmQhSbW8pG8'}], 'food': [(4, 10)], 'module': 'decision_flow - github', 'decision_path': ['1vn', "vulnerable snakes: [('Kakemonsteret-v2', 5, (5, 0))]", 'collision type 2 take risk'], 'next_coord': (8, 8), 'next_move': 'down', 'time': '0.009s'}
 
 
 
