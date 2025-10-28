@@ -152,8 +152,6 @@ def main(game_state, log=True, log_db=False):
             cond(len(g.others) > 1)(corner_push),
             #cond(len(g.others) == 1 and g.me.length > 20)(gain_territory),
 
-            (cond(g.me.length <= 6)(killer_near_prefer_away_border)),
-
             #try disable this
             #cond(len(g.others) == 1 and g.me.length > g.other.length)(chase_to_the_end),
 
@@ -171,6 +169,7 @@ def main(game_state, log=True, log_db=False):
             (get_food),
 
             (cond(g.me.length <= 12)(multi_step_collision)),
+            (cond(g.me.length <= 6)(killer_near_prefer_away_border)),
 
             cond(len(g.others) == 1 and g.me.length < g.other.length)(shorter_direct_connect),
             move_close_to_open_space,
@@ -3350,6 +3349,7 @@ if __name__ == "__main__":
     log = {'id': '3e891171-1325-4162-aed2-caeb2fb7e06d', 'turn': 113, 'me': {'name': 'mark_snake', 'health': 82, 'length': 8, 'body': [(3, 8), (4, 8), (5, 8), (5, 7), (4, 7), (4, 6), (5, 6), (6, 6)], 'id': 'gs_4SSD4PGKMkBgwpvwkDQpD87S'}, 'others': [{'name': 'go-st', 'health': 46, 'length': 9, 'body': [(4, 9), (5, 9), (6, 9), (7, 9), (8, 9), (8, 8), (8, 7), (8, 6), (8, 5)], 'id': 'gs_PMBWGHJjhYkDy3Gk96HBwccW'}, {'name': 'ich heisse marvin', 'health': 100, 'length': 11, 'body': [(1, 8), (2, 8), (2, 7), (2, 6), (2, 5), (2, 4), (2, 3), (2, 2), (3, 2), (3, 3), (3, 3)], 'id': 'gs_mq8dD4MMDchPTDJMrbMf7F7X'}, {'name': 'Red Yarn', 'health': 92, 'length': 13, 'body': [(4, 5), (4, 4), (4, 3), (5, 3), (5, 2), (5, 1), (5, 0), (6, 0), (7, 0), (7, 1), (7, 2), (7, 3), (7, 4)], 'id': 'gs_cDQJcfhbcwxqyKMwcQKPMXgX'}], 'food': [(0, 6), (1, 2)], 'module': 'decision_flow - github', 'decision_path': ['1vn'], 'next_coord': (3, 9), 'next_move': 'up', 'time': '0.003s'}
     log = {'id': 'fd5a7d2e-a6b8-41c3-8955-9d0d1864305d', 'turn': 291, 'me': {'name': 'mark_snake', 'health': 99, 'length': 24, 'body': [(8, 3), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5), (1, 5), (0, 5), (0, 4)], 'id': 'gs_YQchRBqkmK8vSwF9wdf3cjXc'}, 'others': [{'name': 'Cutiee ✨', 'health': 95, 'length': 23, 'body': [(7, 6), (7, 5), (8, 5), (9, 5), (9, 6), (9, 7), (9, 8), (8, 8), (7, 8), (7, 9), (8, 9), (8, 10), (7, 10), (6, 10), (5, 10), (5, 9), (4, 9), (4, 8), (4, 7), (4, 6), (4, 5), (4, 4), (5, 4)], 'id': 'gs_67dbkKV6xxDGBhFJfWQhF3Tb'}], 'food': [(0, 6)], 'module': 'decision_flow - github', 'decision_path': ['1v1', 'preliminary cut kill target: Cutiee ✨', 'go cut to (5, 4)'], 'next_coord': (8, 4), 'next_move': 'up', 'time': '0.014s'}
     log = {'id': 'fd5a7d2e-a6b8-41c3-8955-9d0d1864305d', 'turn': 292, 'me': {'name': 'mark_snake', 'health': 98, 'length': 24, 'body': [(8, 4), (8, 3), (8, 2), (7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (2, 10), (2, 9), (2, 8), (2, 7), (2, 6), (2, 5), (1, 5), (0, 5)], 'id': 'gs_YQchRBqkmK8vSwF9wdf3cjXc'}, 'others': [{'name': 'Cutiee ✨', 'health': 94, 'length': 23, 'body': [(6, 6), (7, 6), (7, 5), (8, 5), (9, 5), (9, 6), (9, 7), (9, 8), (8, 8), (7, 8), (7, 9), (8, 9), (8, 10), (7, 10), (6, 10), (5, 10), (5, 9), (4, 9), (4, 8), (4, 7), (4, 6), (4, 5), (4, 4)], 'id': 'gs_67dbkKV6xxDGBhFJfWQhF3Tb'}], 'food': [(0, 6)], 'module': 'decision_flow - github', 'decision_path': ['1v1', '1v1 longer push'], 'next_coord': (7, 4), 'next_move': 'left', 'time': '0.013s'}
+    log = {'id': 'a3a78d3f-bf5a-47c6-a4ae-986fb159fe54', 'turn': 35, 'me': {'name': 'mark_snake', 'health': 69, 'length': 4, 'body': [(8, 9), (8, 8), (8, 7), (8, 6)], 'id': 'gs_qQwxYTyxkCRbgbphFcpfY7TY'}, 'others': [{'name': 'Frank The Tank', 'health': 73, 'length': 5, 'body': [(4, 9), (3, 9), (3, 8), (4, 8), (5, 8)], 'id': 'gs_MKD93HC9w6hvkS3jR39rbWvY'}, {'name': 'ich heisse marvin', 'health': 84, 'length': 7, 'body': [(1, 6), (2, 6), (3, 6), (3, 5), (3, 4), (3, 3), (2, 3)], 'id': 'gs_fGymXcF4ySXDrx6RcH39JfkH'}, {'name': 'mark_snake_test GREEN', 'health': 67, 'length': 4, 'body': [(6, 3), (6, 2), (7, 2), (8, 2)], 'id': 'gs_hkQ3BF7fkSmTpvxpt6QcpqTS'}], 'food': [(0, 10), (4, 10), (8, 10)], 'module': 'decision_flow - github', 'decision_path': ['1vn', 'killer near prefer away border', 'split2 choose my tail', 'split2 choose my tail'], 'next_coord': (9, 9), 'next_move': 'right', 'time': '0.093s'}
 
 
 

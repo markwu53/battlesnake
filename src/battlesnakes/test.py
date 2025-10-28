@@ -16,3 +16,9 @@ def sort(xs):
         for pivot in [len(xs) // 2]
     ][0]
 
+def sort(xs):
+    def sort2(length):
+        if length <= 1:
+            return xs
+        return sort(xs[:length//2]) + [xs[length//2]] + sort(xs[length//2+1:])
+    return sort2(len(xs))
