@@ -158,6 +158,9 @@ def main(game_state, log=True, log_db=False):
             #these are effective in killing the only other
             #cond(len(g.others) == 1 and g.me.length > g.other.length)(par([longer_push, chase_other_tail])),
 
+            (cond(g.me.length <= 6)(killer_near_prefer_away_border)),
+
+
             #try to reproduce this effect earlier when I'm longer than local target
             cond(len(g.others) > 1 and g.me.length >= 12)(local_chasing),
 
@@ -169,7 +172,6 @@ def main(game_state, log=True, log_db=False):
             (get_food),
 
             (cond(g.me.length <= 12)(multi_step_collision)),
-            (cond(g.me.length <= 6)(killer_near_prefer_away_border)),
 
             cond(len(g.others) == 1 and g.me.length < g.other.length)(shorter_direct_connect),
             move_close_to_open_space,
